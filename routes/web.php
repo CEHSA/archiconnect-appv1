@@ -1,5 +1,14 @@
 <?php
 
+// Temporary route to clear config cache in production
+Route::get('/clear-prod-config-0a9b1c3d4e5f', function () {
+    if (app()->environment('production')) {
+        \Illuminate\Support\Facades\Artisan::call('config:cache');
+        return 'Production configuration cache cleared!';
+    }
+    return 'Not in production environment.';
+});
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\FreelancerProfileController;
@@ -66,22 +75,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Authenticated admin routes
     Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])->middleware('auth:admin')->name('logout');
-    
+
     Route::middleware(['auth:admin'])->group(function () { // This is the correct group for authenticated admin routes
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         // Admin profile routes
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile/information', [AdminProfileController::class, 'updateInformation'])->name('profile.information.update');
         Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password.update');
-        
+
         // Admin job management
         Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::resource('job-assignments', AdminJobAssignmentController::class);
         Route::resource('job-assignments.tasks', AdminAssignmentTaskController::class)->shallow(); // Added for admin task management
-        
+
         // Admin user management
         Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
-        
+
         // Admin Reports Routes
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -91,27 +100,27 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/financials', [ReportController::class, 'financials'])->name('financials');
             // Route::get('/generate-pdf', [ReportController::class, 'generatePdf'])->name('generate-pdf'); // Removed as method is missing
         });
-        
+
         // Admin Messages Routes
         Route::resource('messages', AdminMessageController::class);
         Route::get('/messages/conversations/{conversation}', [AdminMessageController::class, 'showConversation'])->name('messages.showConversation');
-        
+
         // Admin Settings Routes
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [AdminSettingsController::class, 'store'])->name('settings.store');
-        
+
         // Admin Work Submissions
         Route::resource('work-submissions', AdminWorkSubmissionController::class);
-        
+
         // Admin Budget Appeals
         Route::resource('budget-appeals', AdminBudgetAppealController::class)->except(['create', 'store']);
-        
+
         // Admin Disputes Management
         Route::resource('disputes', AdminDisputeController::class);
-        
+
         // Admin Briefing Requests
         Route::resource('briefing-requests', AdminBriefingRequestController::class);
-        
+
         // Admin Payments
         Route::resource('payments', AdminPaymentController::class);
 
