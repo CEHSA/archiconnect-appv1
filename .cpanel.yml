@@ -1,0 +1,39 @@
+---
+deployment:
+  tasks:
+    # Define deployment path
+    - export DEPLOYPATH=/home/architex/public_html/login
+
+    # Prepare the deployment directory
+    - /bin/mkdir -p $DEPLOYPATH
+
+    # Copy all project files to deployment path
+    - /bin/cp -R app bootstrap config database public resources routes vendor composer.json composer.lock artisan .htaccess $DEPLOYPATH
+
+    # Copy environment file
+    - /bin/cp .env.production $DEPLOYPATH/.env
+
+    # Create necessary directories
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/sessions
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/views
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/cache
+    - /bin/mkdir -p $DEPLOYPATH/storage/app/public
+    - /bin/mkdir -p $DEPLOYPATH/bootstrap/cache
+
+    # Copy storage directory (excluding .gitignore files)
+    - /bin/cp -R storage $DEPLOYPATH
+
+    # Set proper permissions
+    - /bin/chmod -R 755 $DEPLOYPATH/storage
+    - /bin/chmod -R 755 $DEPLOYPATH/bootstrap/cache
+
+    # Install composer dependencies
+    - cd $DEPLOYPATH && php -d memory_limit=512M /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+
+    # Run Laravel commands
+    - cd $DEPLOYPATH && php artisan key:generate --force
+    - cd $DEPLOYPATH && php artisan migrate --force
+    - cd $DEPLOYPATH && php artisan config:cache
+    - cd $DEPLOYPATH && php artisan route:cache
+    - cd $DEPLOYPATH && php artisan view:cache
+    - cd $DEPLOYPATH && php artisan storage:link
