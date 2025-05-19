@@ -1,14 +1,5 @@
 <?php
 
-// Temporary route to clear config cache in production
-Route::get('/clear-prod-config-0a9b1c3d4e5f', function () {
-    if (app()->environment('production')) {
-        \Illuminate\Support\Facades\Artisan::call('config:cache');
-        return 'Production configuration cache cleared!';
-    }
-    return 'Not in production environment.';
-});
-
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\FreelancerProfileController;
