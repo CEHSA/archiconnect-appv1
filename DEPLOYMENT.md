@@ -42,7 +42,7 @@ This guide provides instructions for deploying the ArchiConnect App to a cPanel 
 5. Add the cPanel repository as a remote to your local Git repository:
 
    ```bash
-   git remote add cpanel https://username@login.architex.co.za:2083/cpsess####/frontend/paper_lantern/version_control/repositories/archiconnect-app.git
+   git remote add cpanel https://architex@architex.co.za:2083/cpsess9411141945/frontend/jupiter/version_control/repositories/archiconnect-app.git
    ```
 
    (Replace the URL with the one provided by cPanel)
@@ -184,3 +184,4 @@ php artisan migrate --force
 2. Keep your `.env` file secure and never commit it to version control
 3. Regularly update dependencies to patch security vulnerabilities
 4. Set up proper backups for your application and database
+
