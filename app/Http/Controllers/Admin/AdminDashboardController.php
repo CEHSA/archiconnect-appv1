@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActivityLog; // Import the AdminActivityLog model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,9 +26,12 @@ class AdminDashboardController extends Controller
             ['name' => 'Commercial Office Renovation', 'status' => 'open', 'date' => '06/15/2023'],
             ['name' => 'Restaurant Interior Design', 'status' => 'draft', 'date' => '06/20/2023'],
         ];
-        $recentActivity = [
-            ['name' => 'Site Analysis', 'status' => 'Task completed', 'date' => '06/15/2023'],
-        ];
+
+        // Fetch recent admin activities
+        $recentActivity = AdminActivityLog::with('admin') // Eager load admin details
+                                          ->latest()      // Order by created_at descending
+                                          ->take(10)      // Get the latest 10 activities
+                                          ->get();
 
         return view('admin.dashboard', compact('stats', 'recentJobs', 'recentActivity'));
     }

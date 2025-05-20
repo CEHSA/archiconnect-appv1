@@ -22,6 +22,9 @@ use App\Listeners\NotifyAdminsOfNewBriefingRequest; // Add this line
 use App\Listeners\NotifyUsersOfNewJobComment; // Add this line
 use App\Listeners\NotifyUsersOfJobCommentStatusUpdate; // Add this line
 
+use App\Events\UserCreatedByAdmin; // New event for admin activity logging
+use App\Listeners\LogAdminActivity; // New listener for admin activity
+
 use App\Events\DisputeCreated;
 use App\Listeners\NotifyAdminOfNewDispute;
 use App\Listeners\NotifyReportedUserOfDispute;
@@ -48,6 +51,9 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
+        UserCreatedByAdmin::class => [
+            LogAdminActivity::class,
+        ],
         \App\Events\JobCommentStatusUpdated::class => [ // Add this line
             NotifyUsersOfJobCommentStatusUpdate::class, // Add this line
         ], // Add this line

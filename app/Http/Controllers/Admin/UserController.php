@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Admin; // Import Admin model
+use App\Events\UserCreatedByAdmin; // Import the event
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Import Auth facade
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -59,12 +62,18 @@ class UserController extends Controller
             'role' => ['required', 'string', Rule::in(User::ROLES)],
         ]);
 
-        User::create([
+        $newUser = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
         ]);
+
+        // Dispatch the event
+        $admin = Auth::guard('admin')->user();
+        if ($admin instanceof Admin && $newUser instanceof User) {
+            event(new UserCreatedByAdmin($newUser, $admin));
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }

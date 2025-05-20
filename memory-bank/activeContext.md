@@ -3,65 +3,86 @@
 ## 1. Current Work Focus
 
 * **What is the immediate task or feature being worked on?**
-  * Investigating a 500 server error when an admin tries to add a new user. This also involved investigating admin login failures.
+  * Implemented an admin activity logging system.
+  * This system logs admin actions and displays them on the admin dashboard.
+  * Focused initially on logging the "user created by admin" action.
 * **Specific Goals for this Session:**
-  * Identify the cause of the 500 error.
-  * Attempt to log in to the admin panel to reproduce the error.
-  * Provide recommendations based on findings.
+  * Create database table for admin activity logs.
+  * Create a model for admin activity logs.
+  * Create an event and listener for logging admin actions.
+  * Integrate logging for user creation by an admin.
+  * Display recent admin activity on the admin dashboard.
 
 ## 2. Recent Changes & Decisions
 
 * **What significant changes were made recently?**
-  * Set `LOG_LEVEL=debug` in `.env.production` to attempt to capture more detailed logs (later reverted to `error`).
-  * Attempted to log in to admin panel via browser multiple times; all attempts failed.
-  * Attempted to access `db-check.php` script, which resulted in a 404.
-  * Reviewed relevant code (routes, `Admin\UserController`, `User` model, `admin.users.create` view).
+  * **Migration:** Created `create_admin_activity_logs_table` migration.
+    * Columns: `id`, `admin_id` (FK to `admins`), `action_type`, `description`, `loggable_id`, `loggable_type`, `timestamps`.
+  * **Model:** Created `app/Models/AdminActivityLog.php`.
+    * Fillable fields: `admin_id`, `action_type`, `description`, `loggable_id`, `loggable_type`.
+    * Relationships: `admin()` (BelongsTo Admin), `loggable()` (MorphTo).
+  * **Event:** Created `app/Events/UserCreatedByAdmin.php`.
+    * Carries the created `User` model, the `Admin` model, `actionType`, and `description`.
+  * **Listener:** Created `app/Listeners/LogAdminActivity.php`.
+    * Handles events, extracts data, and creates `AdminActivityLog` entries.
+    * Currently fetches admin via `Auth::guard('admin')->user()`.
+  * **Event Service Provider:** Updated `app/Providers/EventServiceProvider.php` to map `UserCreatedByAdmin` event to `LogAdminActivity` listener.
+  * **Controller (User):** Modified `app/Http/Controllers/Admin/UserController.php` in the `store` method.
+    * Dispatches `UserCreatedByAdmin` event after a new user is created by an admin.
+  * **Controller (Dashboard):** Modified `app/Http/Controllers/Admin/AdminDashboardController.php`.
+    * Fetches the 10 latest `AdminActivityLog` entries (with admin relationship eager-loaded).
+    * Passes these logs to the `admin.dashboard` view.
+  * **View (Dashboard):** Updated `resources/views/admin/dashboard.blade.php`.
+    * Modified the "Recent Activity" section to display data from the fetched `AdminActivityLog` objects, including description, admin name, and timestamp.
 * **Key decisions made during the last session:**
-  * Concluded that the primary code for user creation appears correct.
-  * Hypothesized that the issue is likely related to database connectivity or configuration, especially since `SESSION_DRIVER=database` and login is also failing.
-  * Decided to recommend database and server-level checks to the user.
+  * Decided to create a generic listener (`LogAdminActivity`) that can be reused for various admin-related events.
+  * Started with a specific event (`UserCreatedByAdmin`) as the first action to be logged.
+  * Used polymorphic relationships in `AdminActivityLog` to allow logging actions related to different types of models.
 
 ## 3. Next Steps & Pending Tasks
 
 * **What are the immediate next steps based on the current focus?**
-  * User to investigate database connectivity, credentials, table structures (especially `sessions` and `users`), and user permissions as per recommendations.
-  * User to check web server error logs for more fundamental error messages.
+  * Test the user creation flow by an admin to ensure the activity is logged and displayed correctly.
+  * Expand logging to other admin actions (e.g., user updates/deletes, job management, settings changes) by:
+    * Creating new specific events (e.g., `UserUpdatedByAdmin`, `JobUpdatedByAdmin`).
+    * Dispatching these events from the relevant controller methods.
+    * Ensuring the `LogAdminActivity` listener can correctly interpret these events (potentially by defining an event contract/interface).
+  * Refine the `LogAdminActivity` listener to be more robust, perhaps using an event contract.
 * **Broader pending tasks from `projectbrief.md` or `productContext.md`:**
   * User Registration (Client, Freelancer)
-  * User Login & Authentication (currently problematic for admin)
+  * User Login & Authentication
   * User Profiles (Client, Freelancer)
-  * Admin Dashboard (Basic)
+  * Admin Dashboard (Basic functionality now enhanced with activity logging)
 
 ## 4. Active Considerations & Questions
 
 * **Are there any open questions or points needing clarification?**
-  * The root cause of the login failure and the 500 error is not definitively pinpointed but is strongly suspected to be database-related.
+  * How to best handle the variety of data that might come from different admin action events in the `LogAdminActivity` listener (an event contract would be good).
+  * What specific admin actions should be prioritized for logging next?
 * **Potential roadblocks or challenges anticipated?**
-  * User may need database/server administration access to perform the recommended checks.
+  * Ensuring all relevant admin actions across the application are identified and have events dispatched for them.
 
 ## 5. Important Patterns & Preferences (Observed or Stated)
 
 * **Coding Style Preferences:**
-  * (To be filled as observed)
+  * Standard Laravel conventions
 * **Architectural Preferences:**
-  * Standard Laravel MVC patterns are in use.
-  * Use of Blade components for views.
-  * Route-model binding is utilized.
-  * Database-driven sessions.
+  * Standard Laravel MVC patterns
+  * Use of Blade components for views
+  * Laravel Events & Listeners for decoupled actions (now used for activity logging).
 * **Testing Preferences:**
-  * (To be filled as observed)
+  * (Not directly addressed in this task)
 * **Tooling/Workflow Preferences:**
-  * (To be filled as observed)
+  * VS Code as IDE
+  * Artisan commands for generating classes.
 
 ## 6. Learnings & Insights from Current Work
 
 * **What has been learned recently about the project, codebase, or tools?**
-  * Admin login is currently failing.
-  * Laravel log file (`storage/logs/laravel.log`) is not being generated or found, even with `LOG_LEVEL=debug` and config cache cleared.
-  * The `User::ROLES` constant is correctly defined in the `User` model.
-  * The `Admin\UserController` and associated view for creating users appear to be correctly implemented.
-  * The application uses `SESSION_DRIVER=database`.
+  * The event system in Laravel is suitable for implementing activity logging.
+  * Polymorphic relationships are useful for creating a generic activity log table.
+  * Eager loading (`with()`) is important for performance when displaying related data in views.
 * **Any "Aha!" moments or important realizations?**
-  * Persistent login failures combined with a database session driver strongly point to database issues as a root cause for wider application instability, including the 500 error on user creation.
+  * A generic listener combined with specific events provides a good balance of reusability and clarity for an activity logging system.
 
 *This document is the most dynamic and should be updated frequently, ideally at the beginning and end of each development session. It links information from `productContext.md`, `systemPatterns.md`, and `techContext.md` to the immediate tasks at hand.*

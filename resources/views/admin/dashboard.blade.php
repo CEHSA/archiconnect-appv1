@@ -83,16 +83,20 @@
         <div class="bg-white p-6 rounded-xl shadow-lg">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
              <div class="space-y-4">
-                @forelse ($recentActivity as $activity)
+                @forelse ($recentActivity as $activity_log)
                     <div class="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-center">
-                            <p class="font-medium text-gray-700">{{ $activity['name'] }}</p>
-                            <p class="text-xs text-gray-500">{{ $activity['date'] }}</p>
+                        <p class="text-sm text-gray-700">{{ $activity_log->description }}</p>
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-xs text-gray-500">
+                                By: {{ $activity_log->admin ? $activity_log->admin->name : 'System' }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                {{ $activity_log->created_at->format('m/d/Y H:i A') }}
+                            </p>
                         </div>
-                        <p class="text-sm text-gray-500">{{ $activity['status'] }}</p>
                     </div>
                 @empty
-                    <p class="text-gray-500">No recent activity.</p>
+                    <p class="text-gray-500">No recent admin activity.</p>
                 @endforelse
             </div>
         </div>

@@ -35,47 +35,130 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Freelancer\BudgetAppealController as FreelancerBudgetAppealController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan; // Added for cache clearing route
 use App\Models\User;
 
-// Temporary route to clear all caches - REMOVE AFTER USE
-Route::get('/clear-all-my-caches-now-plz-7xS2rP9Z', function () {
+// Temporary diagnostic routes - REMOVE AFTER USE
+Route::get('/diagnose-user-class', function () {
     try {
-        $output = '';
-        $output .= 'Attempting to clear caches...<br>';
+        $output = [];
 
-        // Clear all standard Laravel caches
-        Artisan::call('optimize:clear');
-        $output .= 'optimize:clear completed. Output: ' . Artisan::output() . '<br>';
+        // 1. Basic class checks
+        $output[] = "1. Class name check:";
+        $output[] = "User::class = " . User::class;
+        $output[] = "class_exists(): " . (class_exists(User::class) ? 'true' : 'false');
+        $output[] = "";
 
-        // Explicitly clear other caches if not covered or if optimize:clear fails partially
-        Artisan::call('cache:clear');
-        $output .= 'cache:clear completed. Output: ' . Artisan::output() . '<br>';
+        // 2. Get declared classes to verify loading
+        $output[] = "2. Is User in declared classes?";
+        $declaredClasses = get_declared_classes();
+        $userClass = array_filter($declaredClasses, fn($class) => str_contains($class, 'User'));
+        $output[] = "Found User classes: " . implode(", ", $userClass);
+        $output[] = "";
 
-        Artisan::call('view:clear');
-        $output .= 'view:clear completed. Output: ' . Artisan::output() . '<br>';
+        // 3. Check constants using different methods
+        $output[] = "3. Constants check:";
+        try {
+            $output[] = "All declared constants in User class:";
+            $reflect = new ReflectionClass(User::class);
+            $constants = $reflect->getConstants();
+            $output[] = "ReflectionClass::getConstants(): " . json_encode($constants, JSON_PRETTY_PRINT);
 
-        Artisan::call('route:clear');
-        $output .= 'route:clear completed. Output: ' . Artisan::output() . '<br>';
+            $output[] = "\nTrying direct ROLES constant access:";
+            $output[] = "defined('ROLES'): " . (defined('ROLES') ? 'true' : 'false');
+            $output[] = "defined('User::ROLES'): " . (defined('User::ROLES') ? 'true' : 'false');
+            $output[] = "defined('\\App\\Models\\User::ROLES'): " . (defined('\\App\\Models\\User::ROLES') ? 'true' : 'false');
 
-        Artisan::call('config:clear');
-        $output .= 'config:clear completed. Output: ' . Artisan::output() . '<br>';
-
-        // Attempt to reset Opcache if available
-        if (function_exists('opcache_reset')) {
-            opcache_reset();
-            $output .= 'Opcache reset attempted.<br>';
-        } else {
-            $output .= 'Opcache reset function not available (this is okay if PHP-FPM was restarted by version cycling).<br>';
+            // Try to directly reference it (will throw error if undefined)
+            try {
+                $roles = User::ROLES;
+                $output[] = "Direct access User::ROLES succeeded. Value: " . json_encode($roles);
+            } catch (\Error $e) {
+                $output[] = "Direct access User::ROLES failed: " . $e->getMessage();
+            }
+        } catch (\Exception $e) {
+            $output[] = "Error during constants check: " . $e->getMessage();
         }
+        $output[] = "";
 
-        $output .= '<br><strong>All cache clearing commands attempted.</strong> Please close this tab and test your site now.';
-        return $output;
-    } catch (\Exception $e) {
-        return "Error during cache clearing: " . $e->getMessage() . "<br><pre>" . $e->getTraceAsString() . "</pre>";
+        // 4. Try creating an instance
+        $output[] = "4. Instance creation:";
+        $user = new User();
+        $output[] = "Successfully created User instance";
+        $output[] = "get_class(): " . get_class($user);
+        $output[] = "";
+
+        // 5. Reflection information
+        $output[] = "5. Reflection info:";
+        $reflect = new ReflectionClass(User::class);
+        $output[] = "Constants: " . json_encode($reflect->getConstants());
+        $output[] = "Namespace: " . $reflect->getNamespaceName();
+        $output[] = "Location: " . $reflect->getFileName();
+        $output[] = "";
+
+        // 6. Try accessing constant through instance (though not standard practice)
+        $output[] = "6. Alternative constant access attempts:";
+        $output[] = "defined('App\\Models\\User::ROLES'): " . (defined('App\\Models\\User::ROLES') ? 'true' : 'false');
+
+        // Return results as formatted HTML
+        return "<pre>" . implode("\n", $output) . "</pre>";
+    } catch (\Throwable $e) {
+        return "Error in diagnostic route: " . $e->getMessage() . "\n" . $e->getTraceAsString();
     }
 });
-// END Temporary route
+
+Route::get('/diagnose-user-file', function () {
+    try {
+        $output = [];
+
+        // 1. Get User.php file details
+        $userFile = app_path('Models/User.php');
+        $output[] = "1. File Information:";
+        $output[] = "Path: " . $userFile;
+        $output[] = "Exists: " . (file_exists($userFile) ? 'Yes' : 'No');
+        $output[] = "Size: " . filesize($userFile) . " bytes";
+        $output[] = "Last Modified: " . date("Y-m-d H:i:s", filemtime($userFile));
+        $output[] = "Permissions: " . decoct(fileperms($userFile) & 0777);
+        $output[] = "";
+
+        // 2. Read file content
+        $output[] = "2. File Content Analysis:";
+        $content = file_get_contents($userFile);
+        if ($content === false) {
+            $output[] = "Failed to read file content";
+        } else {
+            // Look for ROLES constant definition
+            if (preg_match('/public const ROLES = \[(.*?)\];/s', $content, $matches)) {
+                $output[] = "Found ROLES constant definition:";
+                $output[] = $matches[0];
+
+                // Get some context around the match
+                $pos = strpos($content, $matches[0]);
+                $start = max(0, $pos - 100);
+                $length = strlen($matches[0]) + 200;
+                $context = substr($content, $start, $length);
+
+                $output[] = "\nContext around ROLES definition:";
+                $output[] = "..." . htmlspecialchars($context) . "...";
+
+                // Check for invisible characters
+                $output[] = "\nHex dump of ROLES definition:";
+                $output[] = chunk_split(bin2hex($matches[0]), 2, ' ');
+            } else {
+                $output[] = "ROLES constant definition not found in file content!";
+            }
+        }
+
+        // 3. Compare with reflection
+        $output[] = "\n3. Reflection vs File Content Comparison:";
+        $reflect = new ReflectionClass(User::class);
+        $output[] = "Constants from Reflection: " . json_encode($reflect->getConstants(), JSON_PRETTY_PRINT);
+        $output[] = "File Location from Reflection: " . $reflect->getFileName();
+
+        return "<pre>" . implode("\n", $output) . "</pre>";
+    } catch (\Throwable $e) {
+        return "Error in diagnostic route: " . $e->getMessage() . "\n" . $e->getTraceAsString();
+    }
+});
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -107,7 +190,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Authenticated admin routes
     Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])->middleware('auth:admin')->name('logout');
 
-    Route::middleware(['auth:admin'])->group(function () { // This is the correct group for authenticated admin routes
+    Route::middleware(['auth:admin'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         // Admin profile routes
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
@@ -117,7 +200,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Admin job management
         Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::resource('job-assignments', AdminJobAssignmentController::class);
-        Route::resource('job-assignments.tasks', AdminAssignmentTaskController::class)->shallow(); // Added for admin task management
+        Route::resource('job-assignments.tasks', AdminAssignmentTaskController::class)->shallow();
 
         // Admin user management
         Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
@@ -129,7 +212,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/freelancer-performance', [ReportController::class, 'freelancerPerformance'])->name('freelancer-performance');
             Route::get('/client-project-status', [ReportController::class, 'clientProjectStatus'])->name('client-project-status');
             Route::get('/financials', [ReportController::class, 'financials'])->name('financials');
-            // Route::get('/generate-pdf', [ReportController::class, 'generatePdf'])->name('generate-pdf'); // Removed as method is missing
         });
 
         // Admin Messages Routes
@@ -179,95 +261,54 @@ Route::middleware('auth')->group(function () {
     Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
 
     // Client Routes
-    // Note: Client and Freelancer routes are inside the main 'auth' group (default guard)
-    // If they need to be standalone, they should be moved outside the main 'auth' group as well.
-    // For now, assuming they use the default 'web' guard and 'auth' middleware.
     Route::middleware(['role:' . User::ROLE_CLIENT])->prefix('client')->name('client.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'clientDashboard'])->name('dashboard');
-        // Client Profile Routes
         Route::resource('profile', ClientProfileController::class)->except(['index', 'show', 'destroy']);
-        // Client Briefing Scheduling Routes
         Route::resource('briefing-requests', BriefingRequestController::class);
-        // Client Work Submission Review Routes
         Route::resource('work-submissions', WorkSubmissionController::class)->only(['index', 'show']);
-        // Client Job Routes
         Route::resource('jobs', JobController::class);
-        // Job Proposals Routes
-        Route::get('/jobs/{job}/proposals', [ProposalController::class, 'jobProposals'])
-            ->name('jobs.proposals');
-        Route::patch('/proposals/{proposal}/status', [ProposalController::class, 'updateStatus'])
-            ->name('proposals.update-status');
-        // Job Comments Routes
+        Route::get('/jobs/{job}/proposals', [ProposalController::class, 'jobProposals'])->name('jobs.proposals');
+        Route::patch('/proposals/{proposal}/status', [ProposalController::class, 'updateStatus'])->name('proposals.update-status');
         Route::get('/jobs/{job}/comments', [JobCommentController::class, 'index'])->name('jobs.comments.index');
         Route::post('/jobs/{job}/comments', [JobCommentController::class, 'store'])->name('jobs.comments.store');
-
-        // Client Message Routes
         Route::get('/messages', [ClientMessageController::class, 'index'])->name('messages.index');
         Route::get('/messages/{conversation}', [ClientMessageController::class, 'show'])->name('messages.show');
         Route::post('/messages', [ClientMessageController::class, 'store'])->name('messages.store');
-
-        // Client Disputes Routes
         Route::get('/disputes', [DisputeController::class, 'clientIndex'])->name('disputes.index');
     });
 
     // Freelancer Routes
     Route::middleware(['role:' . User::ROLE_FREELANCER])->prefix('freelancer')->name('freelancer.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'freelancerDashboard'])->name('dashboard');
-        // Freelancer Profile Routes
         Route::resource('profile', FreelancerProfileController::class)->except(['index', 'show', 'destroy']);
-        // Job Browsing & Proposal Routes
-        Route::get('/jobs', [JobController::class, 'browse'])->name('jobs.browse'); // This uses the general JobController
-        Route::get('/jobs/{job}', [FreelancerJobController::class, 'show'])->name('jobs.show'); // New route for specific job view
+        Route::get('/jobs', [JobController::class, 'browse'])->name('jobs.browse');
+        Route::get('/jobs/{job}', [FreelancerJobController::class, 'show'])->name('jobs.show');
         Route::resource('proposals', ProposalController::class)->only(['index', 'store', 'show']);
-        // Job Comments Routes
         Route::get('/jobs/{job}/comments', [JobCommentController::class, 'index'])->name('jobs.comments.index');
         Route::post('/comments/{comment}/discussed', [JobCommentController::class, 'markAsDiscussed'])->name('comments.discussed');
         Route::get('/comments/needs-attention', [JobCommentController::class, 'needsAttention'])->name('comments.needs-attention');
-
-        // Freelancer Job Assignments Routes
         Route::get('/assignments', [FreelancerJobAssignmentController::class, 'index'])->name('assignments.index');
         Route::get('/assignments/{assignment}', [FreelancerJobAssignmentController::class, 'show'])->name('assignments.show');
         Route::patch('/assignments/{assignment}/status', [FreelancerJobAssignmentController::class, 'updateStatus'])->name('assignments.update-status');
-
-        // Freelancer Message Routes
         Route::get('/messages', [FreelancerMessageController::class, 'index'])->name('messages.index');
-        Route::get('/messages/create-admin', [FreelancerMessageController::class, 'createAdminMessage'])->name('messages.createAdmin'); // New route for admin message
+        Route::get('/messages/create-admin', [FreelancerMessageController::class, 'createAdminMessage'])->name('messages.createAdmin');
         Route::get('/messages/{conversation}', [FreelancerMessageController::class, 'show'])->name('messages.show');
-        Route::get('/assignments/{assignment}/messages/create', [FreelancerMessageController::class, 'create'])->name('assignments.messages.create'); // For assignment-specific messages
+        Route::get('/assignments/{assignment}/messages/create', [FreelancerMessageController::class, 'create'])->name('assignments.messages.create');
         Route::post('/messages', [FreelancerMessageController::class, 'store'])->name('messages.store');
-
-        // Freelancer Time Log Routes
         Route::get('/time-logs', [FreelancerTimeLogController::class, 'index'])->name('time-logs.index');
         Route::post('/assignment-tasks/{task}/time-logs/start', [FreelancerTimeLogController::class, 'startTimer'])->name('assignment-tasks.time-logs.start');
         Route::post('/time-logs/{timeLog}/stop', [FreelancerTimeLogController::class, 'stopTimer'])->name('time-logs.stop');
         Route::patch('/time-logs/{timeLog}', [FreelancerTimeLogController::class, 'updateLog'])->name('time-logs.update');
         Route::delete('/time-logs/{timeLog}', [FreelancerTimeLogController::class, 'destroy'])->name('time-logs.destroy');
-
-
-        // Freelancer Work Submission Routes
         Route::get('/assignments/{assignment}/submissions/create', [FreelancerWorkSubmissionController::class, 'create'])->name('assignments.submissions.create');
         Route::post('/assignments/{assignment}/submissions', [FreelancerWorkSubmissionController::class, 'store'])->name('assignments.submissions.store');
-        // Potentially add index/show for freelancer to view their own submissions later if needed
-        // Route::get('/assignments/{assignment}/submissions', [FreelancerWorkSubmissionController::class, 'index'])->name('assignments.submissions.index');
-        // Route::get('/submissions/{submission}', [FreelancerWorkSubmissionController::class, 'show'])->name('submissions.show');
-
-        // Freelancer Task Progress Routes (nested under assignments)
         Route::get('/assignments/{assignment}/progress/create', [FreelancerTaskProgressController::class, 'create'])->name('assignments.progress.create');
         Route::post('/assignments/{assignment}/progress', [FreelancerTaskProgressController::class, 'store'])->name('assignments.progress.store');
         Route::get('/task-progress/{taskProgress}/download', [FreelancerTaskProgressController::class, 'download'])->name('task-progress.download');
-
-        // Freelancer Budget Appeal Routes (nested under assignments)
         Route::resource('assignments.budget-appeals', FreelancerBudgetAppealController::class)->only(['create', 'store'])->shallow();
-
-        // Freelancer Assignment Tasks Routes (nested under assignments)
         Route::resource('assignments.tasks', FreelancerAssignmentTaskController::class)->shallow();
-
-        // Freelancer Disputes Routes
         Route::get('/disputes', [DisputeController::class, 'freelancerIndex'])->name('disputes.index');
-        // Note: Dispute creation is already handled by job_assignments.disputes.create and .store
-
     });
 });
-
 
 require __DIR__.'/auth.php';
