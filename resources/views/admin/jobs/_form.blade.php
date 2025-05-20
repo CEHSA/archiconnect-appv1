@@ -103,33 +103,75 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var quill = new Quill('#editor-container', {
-                theme: 'snow',
-                placeholder: 'Write job description here...',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline', 'strike'],
-                        ['blockquote', 'code-block'],
-                        [{ 'header': 1 }, { 'header': 2 }],
-                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        [{ 'indent': '-1' }, { 'indent': '+1' }],
-                        ['clean']
-                    ]
+            try {
+                console.log('Initializing Quill editor...');
+                var quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Write job description here...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ 'header': 1 }, { 'header': 2 }],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            [{ 'indent': '-1' }, { 'indent': '+1' }],
+                            ['clean']
+                        ]
+                    }
+                });
+                console.log('Quill editor initialized.');
+
+                var descriptionInput = document.querySelector('#description');
+                if (!descriptionInput) {
+                    console.error('Description textarea #description not found!');
+                    return;
                 }
-            });
 
-            // Set initial content if exists
-            var descriptionInput = document.querySelector('#description');
-            if (descriptionInput.value) {
-                quill.root.innerHTML = descriptionInput.value;
+                // Set initial content if exists
+                if (descriptionInput.value) {
+                    console.log('Setting initial Quill content from textarea.');
+                    quill.root.innerHTML = descriptionInput.value;
+                }
+
+                // Try to get the form by ID from create.blade.php or edit.blade.php
+                var form = document.getElementById('createJobForm') || document.getElementById('editJobForm');
+
+                if (form) {
+                    console.log('Form found:', form.id);
+                    form.onsubmit = function () {
+                        try {
+                            console.log('Form submission triggered for:', form.id);
+                            descriptionInput.value = quill.root.innerHTML;
+                            console.log('Updated description textarea value:', descriptionInput.value);
+                            if (!descriptionInput.value || descriptionInput.value === '<p><br></p>') {
+                                console.warn('Description is empty or just a blank paragraph. This might cause validation errors.');
+                            }
+                        } catch (e) {
+                            console.error('Error in onsubmit handler:', e);
+                        }
+                        return true; // Allow submission
+                    };
+                } else {
+                    console.error('Could not find form with ID "createJobForm" or "editJobForm". Description will not be auto-updated.');
+                    // Fallback for other forms if any, though less ideal
+                    var genericForm = document.querySelector('form');
+                    if (genericForm) {
+                        console.warn('Attaching to the first form found on page as a fallback:', genericForm);
+                        genericForm.onsubmit = function () {
+                             try {
+                                console.log('Form submission triggered for generic form.');
+                                descriptionInput.value = quill.root.innerHTML;
+                                console.log('Updated description textarea value (generic form):', descriptionInput.value);
+                            } catch (e) {
+                                console.error('Error in generic onsubmit handler:', e);
+                            }
+                            return true;
+                        };
+                    }
+                }
+            } catch (e) {
+                console.error('Error during Quill setup or form binding:', e);
             }
-
-            // Update hidden input before form submission
-            var form = document.querySelector('form');
-            form.onsubmit = function () {
-                descriptionInput.value = quill.root.innerHTML;
-                return true;
-            };
         });
     </script>
 @endpush

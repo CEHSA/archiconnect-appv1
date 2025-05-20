@@ -1,0 +1,66 @@
+{
+    "enableStatusBarItem": true,
+    "enableQuickPick": true,
+    "uploadOnSave": true,
+    "autoDelete": true,
+    "checkGitignore": false,
+    "activeTargets": [
+        "Production Server"
+    ],
+    "concurrency": 5,
+    "ignore": [
+        ".git/**/*",
+        ".vscode/**/*",
+        "node_modules/**/*",
+        "vendor/**/*",
+        "tests/**/*",
+        ".env",
+        ".env.example",
+        ".gitignore",
+        ".gitattributes",
+        "README.md",
+        "pro-deployer.js",
+        "pro-deployer.json",
+        "pro-deployer-package.json"
+    ],
+    "include": [
+        "app/**/*",
+        "bootstrap/**/*",
+        "config/**/*",
+        "database/**/*",
+        "public/**/*",
+        "resources/**/*",
+        "routes/**/*",
+        "storage/**/*",
+        "artisan",
+        "composer.json",
+        "composer.lock",
+        ".htaccess",
+        ".env.production"
+    ],
+    "targets": [
+        {
+            "name": "Production Server",
+            "type": "sftp",
+            "host": "your-server.com",
+            "port": 22,
+            "user": "your-username",
+            "password": "your-password",
+            "dir": "/path/to/remote/directory",
+            "baseDir": "/",
+            "privateKey": null,
+            "passphrase": null
+        },
+        {
+            "name": "Staging Server",
+            "type": "ftp",
+            "host": "staging-server.com",
+            "port": 21,
+            "user": "staging-username",
+            "password": "staging-password",
+            "dir": "/path/to/staging/directory",
+            "baseDir": "/",
+            "transferDataType": "binary"
+        }
+    ]
+}

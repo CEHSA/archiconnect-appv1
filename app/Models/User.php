@@ -34,6 +34,12 @@ class User extends Authenticatable
     public const ROLE_CLIENT = 'client';
     public const ROLE_FREELANCER = 'freelancer';
 
+    public const ROLES = [
+        self::ROLE_ADMIN,
+        self::ROLE_CLIENT,
+        self::ROLE_FREELANCER,
+    ];
+
     /**
      * The attributes that should be hidden for serialization.
      *

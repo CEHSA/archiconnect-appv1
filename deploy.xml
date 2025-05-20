@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="archiconnect-app" default="deploy" basedir=".">
+    <!-- Define properties -->
+    <property name="build.dir" value="build"/>
+    <property name="dist.dir" value="${build.dir}/dist"/>
+    <property name="exclude.list" value=".git*, .env*, node_modules/**, vendor/**, tests/**, *.log, .editorconfig, .styleci.yml, .gitattributes, .gitignore, phpunit.xml"/>
+
+    <!-- Main deploy target -->
+    <target name="deploy" depends="prepare,archive,cleanup" description="Deploy the application to cPanel">
+        <echo message="Deployment completed successfully"/>
+    </target>
+
+    <!-- Prepare the build -->
+    <target name="prepare" description="Prepare for deployment">
+        <delete dir="${build.dir}" quiet="true"/>
+        <mkdir dir="${dist.dir}"/>
+
+        <!-- Copy files to distribution directory -->
+        <copy todir="${dist.dir}">
+            <fileset dir="." excludes="${exclude.list}"/>
+        </copy>
+
+        <!-- Install dependencies -->
+        <exec command="composer install --no-dev --optimize-autoloader" passthru="true"/>
+        <exec command="npm install --production" passthru="true"/>
+        <exec command="npm run build" passthru="true"/>
+    </target>
+
+    <!-- Create deployment archive -->
+    <target name="archive" description="Create deployment archive">
+        <zip destfile="${build.dir}/deployment.zip" basedir="${dist.dir}">
+            <fileset dir="${dist.dir}">
+                <include name="**/**"/>
+            </fileset>
+        </zip>
+    </target>
+
+    <!-- Cleanup build artifacts -->
+    <target name="cleanup" description="Clean up build artifacts">
+        <delete dir="${dist.dir}" quiet="true"/>
+    </target>
+
+    <!-- Custom tasks for cPanel deployment -->
+    <target name="cpanel-upload" depends="deploy" description="Upload to cPanel via FTP">
+        <!-- Add your FTP credentials in a .env file or configure them here -->
+        <property file=".env"/>
+        <ftp
+            server="${CPANEL_HOST}"
+            userid="${CPANEL_USER}"
+            password="${CPANEL_PASSWORD}"
+            remotedir="${CPANEL_PATH}">
+            <fileset dir="${build.dir}">
+                <include name="deployment.zip"/>
+            </fileset>
+        </ftp>
+    </target>
+
+    <!-- Post-deployment tasks -->
+    <target name="post-deploy" description="Run post-deployment tasks">
+        <exec command="php artisan migrate --force" passthru="true"/>
+        <exec command="php artisan config:cache" passthru="true"/>
+        <exec command="php artisan route:cache" passthru="true"/>
+        <exec command="php artisan view:cache" passthru="true"/>
+    </target>
+</project>

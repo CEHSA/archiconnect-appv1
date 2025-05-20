@@ -163,6 +163,49 @@ Replace `/home/architex/public_html/login` with the actual path to your applicat
      chmod -R 755 storage bootstrap/cache
      ```
 
+## Alternative Deployment Method: SFTP
+
+In addition to the Git-based deployment method described above, you can also deploy the application using SFTP. This method is useful when Git deployment is not available or when you need more control over the deployment process.
+
+### SFTP Prerequisites
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- Access to an SFTP server
+
+### Setup
+
+1. Install the required dependencies:
+
+```bash
+npm install
+```
+
+1. Configure the deployment settings:
+
+Edit the `deploy-config.js` file and update the following settings:
+
+- SFTP connection details (host, port, username, password/privateKey)
+- Remote directory path
+- Files to include/exclude
+- Post-deployment commands
+
+### Deployment
+
+There are two ways to deploy the application:
+
+```bash
+# Option 1: Using npm script
+npm run deploy
+
+# Option 2: Using the shell script directly
+./deploy.sh
+```
+
+### Configuration Options
+
+The `deploy-config.js` file contains all the configuration options for the deployment. See the file for detailed documentation on each option.
+
 ## Maintenance and Updates
 
 To update the application:
@@ -184,4 +227,3 @@ php artisan migrate --force
 2. Keep your `.env` file secure and never commit it to version control
 3. Regularly update dependencies to patch security vulnerabilities
 4. Set up proper backups for your application and database
-

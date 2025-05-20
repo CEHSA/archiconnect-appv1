@@ -35,7 +35,47 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Freelancer\BudgetAppealController as FreelancerBudgetAppealController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan; // Added for cache clearing route
 use App\Models\User;
+
+// Temporary route to clear all caches - REMOVE AFTER USE
+Route::get('/clear-all-my-caches-now-plz-7xS2rP9Z', function () {
+    try {
+        $output = '';
+        $output .= 'Attempting to clear caches...<br>';
+
+        // Clear all standard Laravel caches
+        Artisan::call('optimize:clear');
+        $output .= 'optimize:clear completed. Output: ' . Artisan::output() . '<br>';
+
+        // Explicitly clear other caches if not covered or if optimize:clear fails partially
+        Artisan::call('cache:clear');
+        $output .= 'cache:clear completed. Output: ' . Artisan::output() . '<br>';
+
+        Artisan::call('view:clear');
+        $output .= 'view:clear completed. Output: ' . Artisan::output() . '<br>';
+
+        Artisan::call('route:clear');
+        $output .= 'route:clear completed. Output: ' . Artisan::output() . '<br>';
+
+        Artisan::call('config:clear');
+        $output .= 'config:clear completed. Output: ' . Artisan::output() . '<br>';
+
+        // Attempt to reset Opcache if available
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+            $output .= 'Opcache reset attempted.<br>';
+        } else {
+            $output .= 'Opcache reset function not available (this is okay if PHP-FPM was restarted by version cycling).<br>';
+        }
+
+        $output .= '<br><strong>All cache clearing commands attempted.</strong> Please close this tab and test your site now.';
+        return $output;
+    } catch (\Exception $e) {
+        return "Error during cache clearing: " . $e->getMessage() . "<br><pre>" . $e->getTraceAsString() . "</pre>";
+    }
+});
+// END Temporary route
 
 Route::get('/', function () {
     return redirect()->route('login');
