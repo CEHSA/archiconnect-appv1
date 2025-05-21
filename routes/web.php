@@ -198,7 +198,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password.update');
 
         // Admin job management
-        Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+        Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']); // Added 'destroy'
         Route::resource('job-assignments', AdminJobAssignmentController::class);
         Route::resource('job-assignments.tasks', AdminAssignmentTaskController::class)->shallow();
 

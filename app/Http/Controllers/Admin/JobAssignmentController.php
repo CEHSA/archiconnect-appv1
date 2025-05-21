@@ -26,8 +26,16 @@ class JobAssignmentController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Job $job)
+    public function create(Request $request)
     {
+        $jobId = $request->query('job_id'); // Get job_id from query parameter
+        if (!$jobId) {
+            // Or redirect back with an error, or to a job selection page
+            abort(404, 'Job ID is required to create an assignment.');
+        }
+
+        $job = Job::findOrFail($jobId); // Find the job or fail
+
         // Get users with the freelancer role
         $freelancers = User::where('role', User::ROLE_FREELANCER)->orderBy('name')->get();
 
@@ -40,9 +48,10 @@ class JobAssignmentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Job $job)
+    public function store(Request $request)
     {
         $validated = $request->validate([
+            'job_id' => ['required', 'exists:jobs,id'], // Ensure job_id is submitted and valid
             'freelancer_id' => [
                 'required',
                 'exists:users,id',
@@ -54,14 +63,17 @@ class JobAssignmentController extends Controller
                     }
                 },
                 // Ensure the freelancer is not already assigned to this job
-                function ($attribute, $value, $fail) use ($job) {
-                    if ($job->assignments()->where('freelancer_id', $value)->exists()) {
+                function ($attribute, $value, $fail) use ($request) {
+                    $job = Job::find($request->input('job_id'));
+                    if ($job && $job->assignments()->where('freelancer_id', $value)->exists()) {
                         $fail('This freelancer is already assigned to this job.');
                     }
                 },
             ],
             'admin_remarks' => ['nullable', 'string', 'max:5000'],
         ]);
+
+        $job = Job::findOrFail($validated['job_id']); // Fetch the job
 
         $assignment = new JobAssignment();
         $assignment->job_id = $job->id;
@@ -75,19 +87,21 @@ class JobAssignmentController extends Controller
         // Dispatch the event
         event(new JobAssigned($assignment->load(['job', 'freelancer', 'assignedByAdmin']))); // Eager load for the listener
 
-        return redirect()->route('admin.jobs.assignments.index', $job)
+        return redirect()->route('admin.jobs.show', $job) // Changed redirect to job show page
                          ->with('success', 'Freelancer assigned successfully. Notification will be sent.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(JobAssignment $assignment) // Renamed variable for clarity due to shallow nesting
+    public function show($assignmentId) // Changed to accept ID
     {
+        $assignment = JobAssignment::findOrFail($assignmentId); // Explicitly find or fail
+
         $assignment->load([
-            'job', 
-            'freelancer', 
-            'assignedByAdmin', 
+            'job',
+            'freelancer',
+            'assignedByAdmin',
             'workSubmissions' => function ($query) {
                 $query->orderBy('submitted_at', 'desc');
             },
@@ -107,8 +121,9 @@ class JobAssignmentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(JobAssignment $assignment) // Renamed variable
+    public function edit($assignmentId) // Changed to accept ID
     {
+        $assignment = JobAssignment::findOrFail($assignmentId); // Explicitly find or fail
         $assignment->load(['job', 'freelancer']); // Eager load relationships
         // Define possible statuses - adjust as needed based on workflow
         $statuses = [
@@ -142,10 +157,14 @@ class JobAssignmentController extends Controller
             event(new JobCompleted($assignment->load(['job.client.user', 'freelancer.user']))); // Eager load relationships for the listener
         }
 
-        // TODO: Add other notifications based on status changes (e.g., notify admin if freelancer accepts/declines)
-
-        return redirect()->route('admin.jobs.assignments.index', $assignment->job_id)
-                         ->with('success', 'Assignment updated successfully.');
+        if ($assignment->job_id) {
+            return redirect()->route('admin.jobs.show', $assignment->job_id)
+                             ->with('success', 'Assignment updated successfully.');
+        } else {
+            // Fallback if job_id is somehow null on the assignment
+            return redirect()->route('admin.dashboard')
+                             ->with('warning', 'Assignment updated, but could not redirect to job details as job reference was missing.');
+        }
     }
 
     /**
@@ -156,9 +175,7 @@ class JobAssignmentController extends Controller
         $jobId = $assignment->job_id; // Store job ID before deleting
         $assignment->delete();
 
-        // TODO: Notify freelancer if their assignment is removed?
-
-        return redirect()->route('admin.jobs.assignments.index', $jobId)
+        return redirect()->route('admin.jobs.show', $jobId) // Changed redirect to job show page
                          ->with('success', 'Assignment removed successfully.');
     }
 }

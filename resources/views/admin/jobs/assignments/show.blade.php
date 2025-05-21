@@ -1,7 +1,7 @@
 <x-admin-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Assignment Details for Job:') }} {{ $assignment->job->title }}
+            {{ __('Assignment Details for Job:') }} {{ $assignment->job?->title ?? __('Job Not Found') }}
         </h2>
     </x-slot>
 
@@ -11,10 +11,15 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
                     <div class="mb-6">
-                        <a href="{{ route('admin.jobs.assignments.index', $assignment->job_id) }}" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-400 active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 mr-2">
-                            {{ __('Back to Assignments List') }}
-                        </a>
-                        <a href="{{ route('admin.assignments.edit', $assignment) }}" class="inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-400 active:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                        @if($assignment->job_id)
+                            <a href="{{ route('admin.jobs.show', $assignment->job_id) }}" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-400 active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 mr-2">
+                                {{ __('Back to Job Details') }}
+                            </a>
+                        @else
+                            <!-- Optionally, provide a different link or message if job_id is missing -->
+                            <span class="text-sm text-gray-500 dark:text-gray-400 mr-2">{{ __('Job reference missing') }}</span>
+                        @endif
+                        <a href="{{ route('admin.job-assignments.edit', $assignment) }}" class="inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-400 active:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                             {{ __('Edit Assignment') }}
                         </a>
                     </div>
@@ -25,7 +30,15 @@
                             <dl class="mt-2 divide-y divide-gray-200 dark:divide-gray-700">
                                 <div class="py-3 flex justify-between text-sm font-medium">
                                     <dt class="text-gray-500 dark:text-gray-400">{{ __('Job Title') }}</dt>
-                                    <dd class="text-gray-900 dark:text-gray-100"><a href="{{ route('admin.jobs.show', $assignment->job_id) }}" class="text-indigo-600 hover:underline">{{ $assignment->job->title }}</a></dd>
+                                    <dd class="text-gray-900 dark:text-gray-100">
+                                        @if($assignment->job && $assignment->job_id)
+                                            <a href="{{ route('admin.jobs.show', $assignment->job_id) }}" class="text-indigo-600 hover:underline">{{ $assignment->job->title }}</a>
+                                        @elseif($assignment->job)
+                                            {{ $assignment->job->title }} {{-- Should not happen if job_id is null --}}
+                                        @else
+                                            {{ __('Job Not Found') }}
+                                        @endif
+                                    </dd>
                                 </div>
                                 <div class="py-3 flex justify-between text-sm font-medium">
                                     <dt class="text-gray-500 dark:text-gray-400">{{ __('Freelancer') }}</dt>
@@ -92,7 +105,7 @@
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ $submission->title }}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $submission->submitted_at->format('M d, Y H:i') }}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                         @if($submission->status === 'submitted') bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100
                                                         @elseif($submission->status === 'under_review') bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100
                                                         @elseif($submission->status === 'approved_by_admin') bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100
@@ -186,7 +199,7 @@
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $task->order }}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ $task->title }}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                         @switch($task->status)
                                                             @case('pending') bg-yellow-100 text-yellow-800 @break
                                                             @case('in_progress') bg-blue-100 text-blue-800 @break

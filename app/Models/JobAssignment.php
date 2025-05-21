@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough; // Added import
 
 class JobAssignment extends Model
 {
@@ -54,11 +55,18 @@ class JobAssignment extends Model
     }
 
     /**
-     * Get the time logs for this job assignment.
+     * Get the time logs for this job assignment through its tasks.
      */
-    public function timeLogs(): HasMany
+    public function timeLogs(): HasManyThrough
     {
-        return $this->hasMany(TimeLog::class);
+        return $this->hasManyThrough(
+            TimeLog::class,          // Final related model
+            AssignmentTask::class,   // Intermediate model
+            'job_assignment_id',     // Foreign key on intermediate model (AssignmentTask)
+            'assignment_task_id',    // Foreign key on final model (TimeLog)
+            'id',                    // Local key on current model (JobAssignment)
+            'id'                     // Local key on intermediate model (AssignmentTask)
+        );
     }
 
     /**

@@ -16,13 +16,23 @@ class AdminJobPosted
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Job $job;
+    public string $actionType;
+    public string $description;
+    public Job $model; // For LogAdminActivity listener
+    public ?\App\Models\Admin $adminUser; // Admin user who performed the action
 
     /**
      * Create a new event instance.
      */
-    public function __construct(Job $job)
+    public function __construct(Job $job, ?\App\Models\Admin $adminUser = null)
     {
         $this->job = $job;
+        $this->model = $job; // Assign job to model property
+        $this->adminUser = $adminUser ?? Auth::guard('admin')->user(); // Fallback, but ideally passed
+        $this->actionType = 'job_created';
+
+        $adminName = $this->adminUser ? $this->adminUser->name : 'An admin';
+        $this->description = "{$adminName} created a new job: {$job->title} (ID: {$job->id})";
     }
 
     /**

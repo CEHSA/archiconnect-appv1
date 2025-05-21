@@ -24,11 +24,17 @@ class LogAdminActivity
      */
     public function handle(object $event): void
     {
-        // Ensure an admin is authenticated and the event has the necessary data
-        $admin = Auth::guard('admin')->user();
+        // Prioritize admin user from the event, fallback to Auth
+        $admin = null;
+        if (property_exists($event, 'adminUser') && $event->adminUser instanceof \App\Models\Admin) {
+            $admin = $event->adminUser;
+        } else {
+            $admin = Auth::guard('admin')->user();
+        }
 
         if (!$admin) {
-            // Or log a warning, but don't create an activity log if no admin is found
+            // Log a warning if no admin context can be found
+            \Illuminate\Support\Facades\Log::warning('LogAdminActivity: Could not determine admin user for event.', ['event_class' => get_class($event)]);
             return;
         }
 

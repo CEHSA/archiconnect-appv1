@@ -8,6 +8,7 @@ use App\Events\MessageApprovedByAdmin; // Added
 use App\Listeners\NotifyClientOfApprovedMessage; // Added
 use App\Events\AdminJobPosted; // New
 use App\Listeners\NotifyFreelancersAboutNewJob; // New
+use App\Listeners\LogAdminJobCreation; // Added new listener
 use App\Events\FreelancerWorkSubmitted; // New
 use App\Listeners\NotifyAdminOfWorkSubmission; // New
 use App\Events\WorkSubmissionReviewedByAdmin; // New
@@ -75,9 +76,10 @@ class EventServiceProvider extends ServiceProvider
         MessageApprovedByAdmin::class => [ // Added
             NotifyClientOfApprovedMessage::class, // Added
         ], // Added
-        AdminJobPosted::class => [ // New
-            NotifyFreelancersAboutNewJob::class, // New
-        ], // New
+        AdminJobPosted::class => [
+            NotifyFreelancersAboutNewJob::class,
+            LogAdminJobCreation::class, // Changed to new dedicated listener
+        ],
         FreelancerWorkSubmitted::class => [ // New
             NotifyAdminOfWorkSubmission::class, // New
         ], // New

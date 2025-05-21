@@ -67,10 +67,10 @@
                                             <x-status-badge :status="$job->status" />
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                            ${{ number_format($job->budget, 2) }}
+                                            {{ \App\Helpers\CurrencyHelper::formatZAR($job->budget) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                            ${{ number_format($job->hourly_rate, 2) }}
+                                            {{ \App\Helpers\CurrencyHelper::formatZAR($job->hourly_rate) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             {{ $job->createdByAdmin->name ?? __('N/A') }}

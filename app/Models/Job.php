@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Admin; // Added import for Admin model
+use App\Models\JobComment; // Added import for JobComment model
 
 class Job extends Model
 {
@@ -29,6 +30,7 @@ class Job extends Model
         'hourly_rate',
         'not_to_exceed_budget',
         'created_by_user_id',
+        'created_by_admin_id', // Added created_by_admin_id
     ];
 
     /**
@@ -80,5 +82,21 @@ class Job extends Model
         return $this->belongsToMany(User::class, 'job_assignments', 'job_id', 'freelancer_id')
                     ->withPivot('status', 'assigned_by_admin_id', 'freelancer_remarks', 'admin_remarks')
                     ->withTimestamps();
+    }
+
+    /**
+     * Get the admin that created the job.
+     */
+    public function createdByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'created_by_admin_id');
+    }
+
+    /**
+     * Get the comments for the job.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(JobComment::class);
     }
 }

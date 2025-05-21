@@ -3,52 +3,52 @@
 ## 1. Current Work Focus
 
 * **What is the immediate task or feature being worked on?**
-  * Implemented an admin activity logging system.
-  * This system logs admin actions and displays them on the admin dashboard.
-  * Focused initially on logging the "user created by admin" action.
+  * Resolving an "Internal Server Error" (SQLSTATE[42S22]: Column not found: 1054 Unknown column 'queue' in 'INSERT INTO') that occurs when an event listener (`NotifyFreelancersAboutNewJob`) is queued.
+  * The root cause was identified as the application's main `jobs` table (for job postings) conflicting with the table name Laravel's database queue driver expects (`jobs` by default). The original migration for the queue's `jobs` table was repurposed.
 * **Specific Goals for this Session:**
-  * Create database table for admin activity logs.
-  * Create a model for admin activity logs.
-  * Create an event and listener for logging admin actions.
-  * Integrate logging for user creation by an admin.
-  * Display recent admin activity on the admin dashboard.
+  * Correct currency display on admin jobs page.
+  * Ensure admin job creation is logged in recent activity.
+  * Previously: Confirm admin job creation and freelancer assignment process works without errors, and verify freelancer assignment notification logic. (These were largely completed).
 
 ## 2. Recent Changes & Decisions
 
 * **What significant changes were made recently?**
-  * **Migration:** Created `create_admin_activity_logs_table` migration.
-    * Columns: `id`, `admin_id` (FK to `admins`), `action_type`, `description`, `loggable_id`, `loggable_type`, `timestamps`.
-  * **Model:** Created `app/Models/AdminActivityLog.php`.
-    * Fillable fields: `admin_id`, `action_type`, `description`, `loggable_id`, `loggable_type`.
-    * Relationships: `admin()` (BelongsTo Admin), `loggable()` (MorphTo).
-  * **Event:** Created `app/Events/UserCreatedByAdmin.php`.
-    * Carries the created `User` model, the `Admin` model, `actionType`, and `description`.
-  * **Listener:** Created `app/Listeners/LogAdminActivity.php`.
-    * Handles events, extracts data, and creates `AdminActivityLog` entries.
-    * Currently fetches admin via `Auth::guard('admin')->user()`.
-  * **Event Service Provider:** Updated `app/Providers/EventServiceProvider.php` to map `UserCreatedByAdmin` event to `LogAdminActivity` listener.
-  * **Controller (User):** Modified `app/Http/Controllers/Admin/UserController.php` in the `store` method.
-    * Dispatches `UserCreatedByAdmin` event after a new user is created by an admin.
-  * **Controller (Dashboard):** Modified `app/Http/Controllers/Admin/AdminDashboardController.php`.
-    * Fetches the 10 latest `AdminActivityLog` entries (with admin relationship eager-loaded).
-    * Passes these logs to the `admin.dashboard` view.
-  * **View (Dashboard):** Updated `resources/views/admin/dashboard.blade.php`.
-    * Modified the "Recent Activity" section to display data from the fetched `AdminActivityLog` objects, including description, admin name, and timestamp.
+  * **Event System for Logging (By Cline):**
+    * Modified `app/Events/AdminJobPosted.php` to include `actionType`, `description`, and `model` properties for compatibility with `LogAdminActivity` listener.
+    * Updated `app/Providers/EventServiceProvider.php` to map `AdminJobPosted` event to `LogAdminActivity` listener.
+  * **Currency Display (By Cline):**
+    * Updated `resources/views/admin/jobs/index.blade.php` to use `\App\Helpers\CurrencyHelper::formatZAR()` for budget and hourly rate.
+  * **Verification (By Cline & User - Previous):**
+    * Admin job creation and freelancer assignment process completed successfully without on-screen errors.
+    * `SendFreelancerAssignmentNotification` listener verified.
+    * `EventServiceProvider` verified for `JobAssigned` event.
+  * **Controller Updates (By Cline - Previous):**
+    * `JobAssignmentController` methods updated for redirects, fetching JobAssignment, and removing TODOs.
+    * `JobAssignmentController@show` and `edit` methods updated to explicitly find `JobAssignment` by ID.
+  * **View Updates (By Cline - Previous):**
+    * `resources/views/admin/jobs/assignments/create.blade.php` and `show.blade.php` and `edit.blade.php` updated for correct routes and robust display.
+  * **Route Update (By Cline - Previous):**
+    * `routes/web.php` updated for `admin.jobs` resource.
+  * **Model Updates (By Cline - Previous):**
+    * `app/Models/Job.php`: Added `comments`, `createdByAdmin` relationships.
+    * `app/Models/JobAssignment.php`: Corrected `timeLogs` to `HasManyThrough`.
+  * **User Actions (Guided by Cline - Previous):**
+    * Ensured `.env` file is correct for `DB_QUEUE_TABLE`.
+    * User ran `php artisan config:clear`, `php artisan route:clear`, `php artisan migrate`.
 * **Key decisions made during the last session:**
-  * Decided to create a generic listener (`LogAdminActivity`) that can be reused for various admin-related events.
-  * Started with a specific event (`UserCreatedByAdmin`) as the first action to be logged.
-  * Used polymorphic relationships in `AdminActivityLog` to allow logging actions related to different types of models.
+  * Implemented logging for admin job creation by modifying the existing `AdminJobPosted` event and `LogAdminActivity` listener.
+  * Corrected currency display by utilizing the existing `CurrencyHelper`.
+  * Previously: Confirmed freelancer notification logic; resolved multiple routing and relationship exceptions.
 
 ## 3. Next Steps & Pending Tasks
 
 * **What are the immediate next steps based on the current focus?**
-  * Test the user creation flow by an admin to ensure the activity is logged and displayed correctly.
-  * Expand logging to other admin actions (e.g., user updates/deletes, job management, settings changes) by:
-    * Creating new specific events (e.g., `UserUpdatedByAdmin`, `JobUpdatedByAdmin`).
-    * Dispatching these events from the relevant controller methods.
-    * Ensuring the `LogAdminActivity` listener can correctly interpret these events (potentially by defining an event contract/interface).
-  * Refine the `LogAdminActivity` listener to be more robust, perhaps using an event contract.
-* **Broader pending tasks from `projectbrief.md` or `productContext.md`:**
+  * User to verify:
+    * Currency display on `/admin/jobs` page.
+    * That new job creation by admin appears in the "Recent Activity" log.
+* **Broader pending tasks from `projectbrief.md` or `productContext.md` (and previous `activeContext`):**
+  * Test the user creation flow by an admin to ensure the activity is logged and displayed correctly (this was pending before the queue error).
+  * Expand logging to other admin actions.
   * User Registration (Client, Freelancer)
   * User Login & Authentication
   * User Profiles (Client, Freelancer)
@@ -57,10 +57,9 @@
 ## 4. Active Considerations & Questions
 
 * **Are there any open questions or points needing clarification?**
-  * How to best handle the variety of data that might come from different admin action events in the `LogAdminActivity` listener (an event contract would be good).
-  * What specific admin actions should be prioritized for logging next?
+  * Will the user be able to run `php artisan migrate` successfully in their environment? (Limitations were noted previously).
 * **Potential roadblocks or challenges anticipated?**
-  * Ensuring all relevant admin actions across the application are identified and have events dispatched for them.
+  * If `php artisan migrate` cannot be run easily, the fix will be stalled.
 
 ## 5. Important Patterns & Preferences (Observed or Stated)
 
@@ -69,20 +68,19 @@
 * **Architectural Preferences:**
   * Standard Laravel MVC patterns
   * Use of Blade components for views
-  * Laravel Events & Listeners for decoupled actions (now used for activity logging).
+  * Laravel Events & Listeners for decoupled actions.
+  * Laravel Queues for background tasks.
 * **Testing Preferences:**
   * (Not directly addressed in this task)
 * **Tooling/Workflow Preferences:**
   * VS Code as IDE
-  * Artisan commands for generating classes.
+  * Artisan commands for generating classes and running migrations.
 
 ## 6. Learnings & Insights from Current Work
 
 * **What has been learned recently about the project, codebase, or tools?**
-  * The event system in Laravel is suitable for implementing activity logging.
-  * Polymorphic relationships are useful for creating a generic activity log table.
-  * Eager loading (`with()`) is important for performance when displaying related data in views.
-* **Any "Aha!" moments or important realizations?**
-  * A generic listener combined with specific events provides a good balance of reusability and clarity for an activity logging system.
+  * It's crucial to ensure that Laravel's default table names (like `jobs` for queues) do not conflict with application-specific table names if the default configurations are used.
+  * If repurposing a default Laravel migration (like `create_jobs_table`), ensure that any features relying on the original schema (like database queues) are either reconfigured or have new, correct migrations provided.
+  * The `config/queue.php` file allows specifying a custom table name for the database queue driver.
 
 *This document is the most dynamic and should be updated frequently, ideally at the beginning and end of each development session. It links information from `productContext.md`, `systemPatterns.md`, and `techContext.md` to the immediate tasks at hand.*

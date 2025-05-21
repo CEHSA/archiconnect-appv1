@@ -38,12 +38,18 @@ class JobController extends Controller
     public function store(StoreJobRequest $request)
     {
         $validatedData = $request->validated();
-        $validatedData['created_by_admin_id'] = Auth::id();
+        $adminUser = Auth::guard('admin')->user();
+        $validatedData['created_by_admin_id'] = $adminUser ? $adminUser->id : null;
 
         $job = Job::create($validatedData);
 
         // Dispatch the event after the job is created
-        event(new AdminJobPosted($job));
+        if ($adminUser) {
+            event(new AdminJobPosted($job, $adminUser));
+        } else {
+            // Fallback if admin user somehow not found, though guard should prevent this action
+            event(new AdminJobPosted($job));
+        }
 
         return redirect()->route('admin.jobs.index')->with('success', 'Job created successfully and freelancers notified.');
     }
