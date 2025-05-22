@@ -1,7 +1,7 @@
-<x-freelancer-layout>
+<x-layouts.freelancer>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-gray-700 text-3xl font-medium">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Messages') }}
             </h2>
             <a href="{{ route('freelancer.messages.createAdmin') }}" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -30,24 +30,24 @@
                             <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                                 <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
                                     <table class="min-w-full">
-                                        <thead>
+                                        <thead class="bg-cyan-700">
                                             <tr>
-                                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-semibold text-white uppercase tracking-wider">
                                                     {{-- Status Icon --}}
                                                 </th>
-                                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-semibold text-white uppercase tracking-wider">
                                                     {{ __('Participant') }}
                                                 </th>
-                                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-semibold text-white uppercase tracking-wider">
                                                     {{ __('Related Job') }}
                                                 </th>
-                                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-semibold text-white uppercase tracking-wider">
                                                     {{ __('Last Message') }}
                                                 </th>
-                                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-semibold text-white uppercase tracking-wider">
                                                     {{ __('Last Activity') }}
                                                 </th>
-                                                <th class="px-6 py-3 border-b border-gray-200 bg-gray-50"></th>
+                                                <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700"></th>
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white">
@@ -111,7 +111,7 @@
                                                         {{ ($conversation->last_message_at ?? $conversation->updated_at)->diffForHumans() }}
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-200 text-sm leading-5 font-medium">
-                                                        <a href="{{ route('freelancer.messages.show', $conversation) }}" class="text-cyan-600 hover:text-cyan-900">{{ __('View') }}</a>
+                                                        <a href="{{ route('freelancer.messages.show', $conversation) }}" class="text-blue-600 hover:text-blue-700">{{ __('View') }}</a>
                                                     </td>
                                                 </tr>
                                             @endforeach

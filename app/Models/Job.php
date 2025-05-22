@@ -31,6 +31,7 @@ class Job extends Model
         'not_to_exceed_budget',
         'created_by_user_id',
         'created_by_admin_id', // Added created_by_admin_id
+        'assigned_freelancer_id',
     ];
 
     /**
@@ -98,5 +99,13 @@ class Job extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(JobComment::class);
+    }
+
+    /**
+     * Get the freelancer directly assigned to the job.
+     */
+    public function assignedFreelancer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_freelancer_id');
     }
 }

@@ -113,6 +113,38 @@
             </div>
         </div>
 
+        <!-- Reply Form -->
+        <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+            <h5 class="text-sm font-medium text-gray-700 mb-3">{{ __('Reply to Conversation') }}</h5>
+            <form action="{{ route('admin.messages.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
+                
+                <div class="mb-4">
+                    <label for="content" class="block text-sm font-medium text-gray-700">{{ __('Message') }}</label>
+                    <textarea id="content" name="content" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-architimex-primary focus:border-architimex-primary sm:text-sm" placeholder="{{ __('Type your reply here...') }}" required>{{ old('content') }}</textarea>
+                    @error('content')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label for="attachments" class="block text-sm font-medium text-gray-700">{{ __('Attachments (Optional)') }}</label>
+                    <input type="file" id="attachments" name="attachments[]" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-architimex-primary file:text-white hover:file:bg-architimex-primary-darker">
+                    <p class="mt-1 text-xs text-gray-500">{{ __('Max 5MB per file.') }}</p>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <a href="{{ route('admin.messages.index') }}" class="text-gray-600 hover:text-gray-900">
+                        &larr; {{ __('Back to Messages') }}
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-architimex-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-architimex-primary-darker focus:bg-architimex-primary-darker active:bg-architimex-primary-darker focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        {{ __('Send Reply') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <div class="mt-6 flex items-center justify-between">
             <a href="{{ route('admin.messages.index') }}" class="text-gray-600 hover:text-gray-900">
                 &larr; {{ __('Back to Messages') }}

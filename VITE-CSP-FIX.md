@@ -2,16 +2,17 @@
 
 This document explains the changes made to fix the Content Security Policy (CSP) issues with Vite assets.
 
-## Identified Issues:
+## Identified Issues
 
 1. The production environment was attempting to load Vite assets from a development server (http://[::1]:5173).
 2. CSP rules were blocking these requests, causing CSS and JS assets to fail to load.
 
-## Applied Fixes:
+## Applied Fixes
 
 ### 1. CSP Middleware Enhancement
 
 The `AllowViteDevServerInCsp` middleware has been enhanced to:
+
 - Only run in local development environments
 - Support multiple Vite dev server URLs (localhost, 127.0.0.1, [::1])
 - Properly modify all necessary CSP directives
@@ -35,7 +36,7 @@ The `AllowViteDevServerInCsp` middleware has been enhanced to:
 - Added an `env-check.php` file to diagnose environment issues in production
 - Added a `check-vite-build.sh` script to verify Vite assets are properly built
 
-## Deployment Instructions:
+## Deployment Instructions
 
 1. **For Local Development:**
    - Run `npm run dev` to start the Vite development server
@@ -51,7 +52,7 @@ The `AllowViteDevServerInCsp` middleware has been enhanced to:
    - Visit your production site and ensure assets load correctly
    - If issues persist, visit `/env-check.php` to diagnose environment settings
 
-## Important Notes:
+## Important Notes
 
 - Always make sure `npm run build` completes successfully before deployment
 - The production environment should have `APP_ENV=production` and `APP_DEBUG=false` in `.env`

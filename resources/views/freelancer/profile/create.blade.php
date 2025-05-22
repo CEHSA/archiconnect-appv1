@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg border border-green-300">
                 <div class="max-w-xl">
                     <section>
                         <header>
@@ -52,7 +52,7 @@
 
                             <div>
                                 <x-input-label for="availability" :value="__('Availability')" />
-                                <select id="availability" name="availability" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <select id="availability" name="availability" class="mt-1 block w-full border-gray-300 focus:border-cyan-500 focus:ring-cyan-500 rounded-md shadow-sm">
                                     <option value="full-time" {{ old('availability', auth()->user()->freelancerProfile->availability ?? '') == 'full-time' ? 'selected' : '' }}>{{ __('Full-time') }}</option>
                                     <option value="part-time" {{ old('availability', auth()->user()->freelancerProfile->availability ?? '') == 'part-time' ? 'selected' : '' }}>{{ __('Part-time') }}</option>
                                     <option value="contract" {{ old('availability', auth()->user()->freelancerProfile->availability ?? '') == 'contract' ? 'selected' : '' }}>{{ __('Contract/Freelance') }}</option>
@@ -62,7 +62,7 @@
 
                             <div>
                                 <x-input-label for="experience_level" :value="__('Experience Level')" />
-                                <select id="experience_level" name="experience_level" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <select id="experience_level" name="experience_level" class="mt-1 block w-full border-gray-300 focus:border-cyan-500 focus:ring-cyan-500 rounded-md shadow-sm">
                                     <option value="entry" {{ old('experience_level', auth()->user()->freelancerProfile->experience_level ?? '') == 'entry' ? 'selected' : '' }}>{{ __('Entry-level') }}</option>
                                     <option value="intermediate" {{ old('experience_level', auth()->user()->freelancerProfile->experience_level ?? '') == 'intermediate' ? 'selected' : '' }}>{{ __('Intermediate') }}</option>
                                     <option value="senior" {{ old('experience_level', auth()->user()->freelancerProfile->experience_level ?? '') == 'senior' ? 'selected' : '' }}>{{ __('Senior') }}</option>
@@ -85,14 +85,14 @@
                             <!-- Receive New Job Notifications -->
                             <div>
                                 <div class="flex items-center">
-                                    <input id="receive_new_job_notifications" name="receive_new_job_notifications" type="checkbox" class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2" {{ old('receive_new_job_notifications', $freelancerProfile->receive_new_job_notifications ?? true) ? 'checked' : '' }} value="1">
+                                    <input id="receive_new_job_notifications" name="receive_new_job_notifications" type="checkbox" class="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 focus:ring-2" {{ old('receive_new_job_notifications', $freelancerProfile->receive_new_job_notifications ?? true) ? 'checked' : '' }} value="1">
                                     <label for="receive_new_job_notifications" class="ms-2 text-sm font-medium text-gray-900">{{ __('Receive email notifications for new job postings') }}</label>
                                 </div>
                                 <x-input-error class="mt-2" :messages="$errors->get('receive_new_job_notifications')" />
                             </div>
 
                             <div class="flex items-center gap-4">
-                                <x-primary-button>{{ __('Save') }}</x-primary-button>
+                                <x-primary-button class="bg-cyan-700 hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:ring-cyan-500">{{ __('Save') }}</x-primary-button>
 
                                 @if (session('status') === 'profile-updated')
                                     <p

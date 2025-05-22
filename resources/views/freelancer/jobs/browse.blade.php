@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.freelancer>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Browse Jobs') }}
@@ -23,7 +23,7 @@
                                                 · {{ $job->created_at->diffForHumans() }}
                                             </p>
                                         </div>
-                                        <span class="text-lg font-semibold text-architimex-primary">
+                                        <span class="text-lg font-semibold text-cyan-700">
                                             @if($job->budget)
                                                 R{{ number_format($job->budget) }} per hour
                                             @else
@@ -32,15 +32,15 @@
                                         </span>
                                     </div>
 
-                                    <div class="mt-4">
-                                        <p class="text-gray-700">{{ Str::limit($job->description, 200) }}</p>
+                                    <div class="mt-4 prose max-w-none">
+                                        {!! Str::limit($job->description, 200) !!}
                                     </div>
 
                                     @if($job->skills_required)
                                         <div class="mt-4">
                                             <div class="flex flex-wrap gap-2">
                                                 @foreach(explode(',', $job->skills_required) as $skill)
-                                                    <span class="px-2 py-1 text-sm bg-architimex-lightbg rounded">
+                                                    <span class="px-2 py-1 text-sm bg-gray-100 text-gray-700 rounded">
                                                         {{ trim($skill) }}
                                                     </span>
                                                 @endforeach
@@ -56,7 +56,7 @@
                                             </span>
                                         @else
                                             <form action="{{ route('freelancer.proposals.store', $job) }}" method="get">
-                                                <x-primary-button>
+                                                <x-primary-button class="bg-cyan-700 hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:ring-cyan-500">
                                                     {{ __('Submit Proposal') }}
                                                 </x-primary-button>
                                             </form>
@@ -75,4 +75,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-layouts.freelancer>

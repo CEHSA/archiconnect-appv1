@@ -1,10 +1,10 @@
-<x-freelancer-layout>
+<x-layouts.freelancer>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Messages') }} - {{ $conversation->job ? $conversation->job->title : 'No job title' }}
             </h2>
-            <a href="{{ route('freelancer.messages.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+            <a href="{{ route('freelancer.messages.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition ease-in-out duration-150">
                 Back to all messages
             </a>
         </div>
@@ -12,14 +12,14 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
                 <div class="p-6">
                     <div class="flex flex-col">
                         <div class="flex-1 overflow-y-auto" style="max-height: 60vh;">
                             <div class="space-y-4 p-4">
                                 @foreach($conversation->messages as $message)
                                     <div class="flex {{ $message->user_id === Auth::id() ? 'justify-end' : 'justify-start' }}">
-                                        <div class="max-w-3/4 rounded-lg {{ $message->user_id === Auth::id() ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900' }} px-4 py-2 shadow">
+                                        <div class="max-w-3/4 rounded-lg {{ $message->user_id === Auth::id() ? 'bg-cyan-700 text-white' : 'bg-gray-100 text-gray-900' }} px-4 py-2 shadow">
                                             <div class="font-bold text-sm mb-1">
                                                 {{ $message->user->name }}
                                                 @if($message->status === 'pending')
@@ -60,7 +60,7 @@
                                                     </div>
                                                 </div>
                                             @endif
-                                            <div class="text-xs mt-1 {{ $message->user_id === Auth::id() ? 'text-blue-200' : 'text-gray-500' }}">
+                                            <div class="text-xs mt-1 {{ $message->user_id === Auth::id() ? 'text-cyan-200' : 'text-gray-500' }}">
                                                 {{ $message->created_at->format('M j, Y g:i A') }}
                                                 @if($message->read_at && $message->user_id === Auth::id())
                                                     <span class="ml-2">Read</span>
@@ -79,7 +79,7 @@
 
                                 <div class="mb-4">
                                     <label for="content" class="block text-sm font-medium text-gray-700">Message</label>
-                                    <textarea id="content" name="content" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Type your message here..." required></textarea>
+                                    <textarea id="content" name="content" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm" placeholder="Type your message here..." required></textarea>
                                     @error('content')
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
@@ -95,7 +95,7 @@
                                 </div>
 
                                 <div>
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         Send Message
                                     </button>
                                     <p class="mt-2 text-xs text-gray-500">

@@ -34,6 +34,7 @@ use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Freelancer\BudgetAppealController as FreelancerBudgetAppealController;
+use App\Http\Controllers\Freelancer\JobApplicationController as FreelancerJobApplicationController; // Added
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
 
@@ -198,11 +199,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password.update');
 
         // Admin job management
+        Route::get('jobs/{job}/post-to-freelancers', [AdminJobController::class, 'postToFreelancers'])->name('jobs.post-to-freelancers');
+        Route::post('jobs/{job}/send-postings', [AdminJobController::class, 'sendPostings'])->name('jobs.send-postings');
         Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']); // Added 'destroy'
         Route::post('jobs/{job}/comments', [JobCommentController::class, 'store'])->name('jobs.comments.store'); // Added for admin job comments
         Route::post('job-assignments/{jobAssignment}/notes', [AdminJobAssignmentController::class, 'storeNote'])->name('job-assignments.notes.store'); // Added for assignment notes
         Route::resource('job-assignments', AdminJobAssignmentController::class);
         Route::resource('job-assignments.tasks', AdminAssignmentTaskController::class)->shallow();
+        Route::get('jobs/current', [AdminJobController::class, 'currentJobs'])->name('jobs.current'); // New route for current jobs
 
         // Admin user management
         Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
@@ -217,6 +221,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         // Admin Messages Routes
+        Route::get('/messages/history', [AdminMessageController::class, 'history'])->name('messages.history'); // New route for history
         Route::resource('messages', AdminMessageController::class);
         Route::get('/messages/conversations/{conversation}', [AdminMessageController::class, 'showConversation'])->name('messages.showConversation');
 
@@ -245,6 +250,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('time-logs/{timeLog}', [AdminTimeLogController::class, 'show'])->name('time-logs.show');
         Route::post('time-logs/{timeLog}/review', [AdminTimeLogController::class, 'review'])->name('time-logs.review');
         Route::get('time-logs/{timeLog}/download-proof', [AdminTimeLogController::class, 'downloadProof'])->name('time-logs.download-proof');
+
+        // Admin Job Applications Management
+        Route::get('job-applications', [AdminJobApplicationController::class, 'index'])->name('job-applications.index'); // Assuming a new AdminJobApplicationController
+        Route::get('job-applications/{application}', [AdminJobApplicationController::class, 'show'])->name('job-applications.show');
+        Route::patch('job-applications/{application}/status', [AdminJobApplicationController::class, 'updateStatus'])->name('job-applications.updateStatus');
     });
 });
 
@@ -286,7 +296,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'freelancerDashboard'])->name('dashboard');
         Route::resource('profile', FreelancerProfileController::class)->except(['index', 'show', 'destroy']);
         Route::get('/jobs', [JobController::class, 'browse'])->name('jobs.browse');
+        Route::get('/posted-jobs', [FreelancerJobController::class, 'postedJobsIndex'])->name('posted-jobs.index'); // New route for posted jobs
         Route::get('/jobs/{job}', [FreelancerJobController::class, 'show'])->name('jobs.show');
+        Route::post('/jobs/{job}/accept', [FreelancerJobController::class, 'acceptJob'])->name('jobs.accept'); // New route for accepting a job
+        Route::get('/jobs/{job}/message-admin/create', [FreelancerMessageController::class, 'createAdminMessageForJob'])->name('jobs.message-admin.create'); // Message admin about job
+        Route::post('/jobs/{job}/message-admin', [FreelancerMessageController::class, 'storeAdminMessageForJob'])->name('jobs.message-admin.store'); // Send message to admin about job
+        
+        // Freelancer Job Applications
+        Route::get('/job-applications/create/{job_posting_id}', [FreelancerJobApplicationController::class, 'create'])->name('job-applications.create');
+        Route::post('/job-applications', [FreelancerJobApplicationController::class, 'store'])->name('job-applications.store');
+        // Route::get('/job-applications/{application}', [FreelancerJobApplicationController::class, 'show'])->name('job-applications.show'); // Optional: for viewing submitted application
+
         Route::resource('proposals', ProposalController::class)->only(['index', 'store', 'show']);
         Route::get('/jobs/{job}/comments', [JobCommentController::class, 'index'])->name('jobs.comments.index');
         Route::post('/comments/{comment}/discussed', [JobCommentController::class, 'markAsDiscussed'])->name('comments.discussed');

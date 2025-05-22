@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Freelancer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\Job; // Added for Job context
 use App\Models\JobAssignment;
 use App\Models\Message;
+use App\Models\Admin; // Added for Admin context
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Events\FreelancerMessageCreated; // Moved to bottom to avoid conflict if needed later
+use App\Events\FreelancerMessageCreated; 
+use Illuminate\View\View; // Added for type hinting
+use Illuminate\Http\RedirectResponse; // Added for type hinting
 
 class MessageController extends Controller
 {
@@ -103,7 +107,7 @@ class MessageController extends Controller
     /**
      * Store a newly created message in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'conversation_id' => 'nullable|exists:conversations,id',
@@ -164,16 +168,14 @@ class MessageController extends Controller
                     }
                     $subject .= ")";
                 }
-            }
-
-            $conversation = Conversation::firstOrCreate([
+            }            $conversation = Conversation::firstOrCreate([
                 'participant1_id' => $user->id,
                 'participant1_type' => get_class($user),
                 'participant2_id' => $adminUser->id,
                 'participant2_type' => get_class($adminUser),
-                 // Keep job_id and job_assignment_id null for direct admin messages, context is in subject/content
-                'job_id' => null, 
-                'job_assignment_id' => null, 
+                // Link to job if assignment is provided, otherwise null for general messages
+                'job_id' => isset($validated['job_assignment_id']) && $relatedAssignment ? $relatedAssignment->job_id : null,
+                'job_assignment_id' => $validated['job_assignment_id'] ?? null,
             ],[
                 'subject' => $subject, // Use potentially modified subject
                 'last_message_at' => now(),
@@ -241,5 +243,87 @@ class MessageController extends Controller
             return redirect()->route('freelancer.messages.index')
                          ->with('success', 'Your message has been sent and is pending admin approval.');
         }
+    }
+
+    /**
+     * Show the form for creating a new message to an admin regarding a specific job.
+     */
+    public function createAdminMessageForJob(Job $job): View
+    {
+        // Pass the job to the view. The view will handle selecting an admin (or it's predefined).
+        return view('freelancer.messages.create-admin-for-job', compact('job'));
+    }
+
+    /**
+     * Store a newly created message to an admin regarding a specific job.
+     */
+    public function storeAdminMessageForJob(Request $request, Job $job): RedirectResponse
+    {
+        $validated = $request->validate([
+            'content' => 'required|string|max:1000',
+            'attachments.*' => 'nullable|file|max:5120', // 5MB max per file
+        ]);
+
+        $freelancer = Auth::user();
+        
+        // For simplicity, let's assume messages about a job go to the first admin.
+        // A more robust system might have a dedicated support admin or allow selection.
+        $adminRecipient = Admin::first();
+
+        if (!$adminRecipient) {
+            return redirect()->route('freelancer.jobs.show', $job)->with('error', 'No admin available to send the message to.');
+        }
+
+        $subject = "Question regarding Job: \"{$job->title}\" (ID: {$job->id})";
+
+        // Find or create a conversation between the freelancer and the admin, specific to this job query
+        $conversation = Conversation::firstOrCreate(
+            [
+                'participant1_id' => $freelancer->id,
+                'participant1_type' => get_class($freelancer),
+                'participant2_id' => $adminRecipient->id,
+                'participant2_type' => get_class($adminRecipient),
+                'job_id' => $job->id, // Link conversation to the job
+                'subject' => $subject, // Use a specific subject for job queries
+            ],
+            [
+                'last_message_at' => now(),
+            ]
+        );
+         // Update subject if conversation already existed but subject was different (e.g. if job_id was null before)
+         if($conversation->subject !== $subject || $conversation->job_id !== $job->id){
+            $conversation->subject = $subject;
+            $conversation->job_id = $job->id; // Ensure job_id is set
+            $conversation->save();
+         }
+
+
+        $message = new Message([
+            'conversation_id' => $conversation->id,
+            'user_id' => $freelancer->id, // Message is from the freelancer
+            'content' => $validated['content'],
+            'status' => 'pending', // Messages to admin might also need review or just go through
+        ]);
+        $message->save();
+
+        // Handle file attachments if any
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('message_attachments', 'public'); // Ensure 'public' disk is configured
+                $message->attachments()->create([
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'file_type' => $file->getMimeType(),
+                ]);
+            }
+        }
+
+        $conversation->update(['last_message_at' => now()]);
+
+        // Dispatch event for admin notification
+        event(new FreelancerMessageCreated($message)); // Assuming this event is generic enough
+
+        return redirect()->route('freelancer.jobs.show', $job)->with('success', 'Your message regarding the job has been sent to the admin.');
     }
 }

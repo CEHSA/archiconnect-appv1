@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use App\Events\JobAssigned;
 use App\Listeners\SendFreelancerAssignmentNotification;
-use App\Events\MessageApprovedByAdmin; // Added
-use App\Listeners\NotifyClientOfApprovedMessage; // Added
+use App\Events\MessageApprovedByAdmin;
+use App\Listeners\NotifyParticipantsOfApprovedMessage; // Changed from NotifyClientOfApprovedMessage
 use App\Events\AdminJobPosted; // New
 use App\Listeners\NotifyFreelancersAboutNewJob; // New
 use App\Listeners\LogAdminJobCreation; // Added new listener
@@ -42,6 +42,21 @@ use App\Listeners\NotifyFreelancerOfTimeLogReview;
 use App\Events\ClientNotificationForApprovedTimeLog;
 use App\Listeners\NotifyClientOfApprovedTimeLog;
 
+// Added for Job Acceptance Flow
+use App\Events\JobAcceptanceRequested;
+use App\Listeners\NotifyAdminOfJobAcceptanceRequest;
+use App\Events\JobPostedToFreelancers; // Added for new event
+use App\Listeners\NotifyFreelancersOfPostedJob; // Added for new listener
+use App\Events\MessageReviewedByAdmin; // Added for new event
+use App\Events\MessageRejectedByAdmin; // Added for rejected message event
+use App\Listeners\NotifySenderOfRejectedMessage; // Added for rejected message listener
+
+// Added for Job Application Flow
+use App\Events\JobApplicationSubmitted;
+use App\Listeners\NotifyAdminOfJobApplication;
+use App\Events\JobApplicationStatusUpdated; // Added
+use App\Listeners\NotifyFreelancerOfApplicationStatusUpdate; // Added
+
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 
@@ -75,9 +90,9 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\FreelancerMessageCreated::class => [
             \App\Listeners\NotifyAdminsOfPendingMessage::class,
         ],
-        MessageApprovedByAdmin::class => [ // Added
-            NotifyClientOfApprovedMessage::class, // Added
-        ], // Added
+        MessageApprovedByAdmin::class => [
+            NotifyParticipantsOfApprovedMessage::class, // Changed from NotifyClientOfApprovedMessage
+        ],
         AdminJobPosted::class => [
             NotifyFreelancersAboutNewJob::class,
             LogAdminJobCreation::class, // Changed to new dedicated listener
@@ -108,7 +123,7 @@ class EventServiceProvider extends ServiceProvider
         ], // Add this line
         \App\Events\PaymentProcessed::class => [ // Add this line
             \App\Listeners\NotifyFreelancerOfPayment::class, // Add this line
-        ], // Add this line
+        ], // New
 
         DisputeCreated::class => [
             NotifyAdminOfNewDispute::class,
@@ -129,6 +144,24 @@ class EventServiceProvider extends ServiceProvider
         ],
         ClientNotificationForApprovedTimeLog::class => [
             NotifyClientOfApprovedTimeLog::class,
+        ],
+        JobAcceptanceRequested::class => [ // Added for Job Acceptance Flow
+            NotifyAdminOfJobAcceptanceRequest::class,
+        ],
+        JobPostedToFreelancers::class => [ // Added for posting jobs to freelancers
+            NotifyFreelancersOfPostedJob::class,
+        ],
+        MessageReviewedByAdmin::class => [ // Added for logging message reviews
+            LogAdminActivity::class,
+        ],
+        MessageRejectedByAdmin::class => [ // Added for notifying sender of rejection
+            NotifySenderOfRejectedMessage::class,
+        ],
+        JobApplicationSubmitted::class => [ // Added for new job applications
+            NotifyAdminOfJobApplication::class,
+        ],
+        JobApplicationStatusUpdated::class => [ // Added for status updates
+            NotifyFreelancerOfApplicationStatusUpdate::class,
         ],
     ];
 

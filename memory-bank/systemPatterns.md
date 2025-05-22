@@ -87,6 +87,31 @@
   * **Client Reviews:** Client views submission (`Client\WorkSubmissionController@show`) -> Client adds comment (optional screenshot) via `JobCommentController@store` (linked to `WorkSubmission`) -> `JobCommentCreated` Event -> Listener (`NotifyAdminAndFreelancerOfClientComment`). Client updates submission status via `Client\WorkSubmissionController@update`:
     * If "Approve": Status -> `approved_by_client` -> `ClientWorkSubmissionReviewed` Event -> Listener (Notify Admin/Freelancer).
     * If "Request Revisions": Status -> `client_revision_requested` -> `ClientWorkSubmissionReviewed` Event -> Listener (Notify Admin/Freelancer).
+* **Job Acceptance Flow (Phase 1):**
+  * Freelancer clicks "Accept Job" on `freelancer.jobs.show` for an 'open' job.
+  * POST request to `Freelancer\JobController@acceptJob`.
+  * Controller:
+    * Verifies job status.
+    * Creates `JobAssignment` (status: `pending_admin_approval`, `freelancer_id`: current user, `client_id`: job owner).
+    * Updates `Job` status to `pending_admin_approval`.
+    * Dispatches `JobAcceptanceRequested` event (with `Job`, `JobAssignment`, `User` (freelancer)).
+  * `NotifyAdminOfJobAcceptanceRequest` listener (queued):
+    * Fetches admins.
+    * (TODO: Sends `AdminJobAcceptanceRequestedNotification` to admins).
+  * View (`freelancer.jobs.show`) updates to show "Awaiting admin approval".
+* **Freelancer-Admin Job Specific Messaging Flow ("Have Questions?"):**
+  * Freelancer clicks "Have Questions?" on `freelancer.jobs.show`.
+  * GET request to `Freelancer\MessageController@createAdminMessageForJob` (passes `Job` model).
+  * View `freelancer.messages.create-admin-for-job` is rendered with a form.
+  * Freelancer submits form (POST to `Freelancer\MessageController@storeAdminMessageForJob`).
+  * Controller:
+    * Validates input.
+    * Finds/creates `Conversation` (linked to freelancer, an admin, and the `Job`).
+    * Creates `Message` (status: `pending`).
+    * Dispatches `FreelancerMessageCreated` event.
+  * `NotifyAdminsOfPendingMessage` listener (existing):
+    * (Handles notifying admin of the new message).
+  * Redirects freelancer back to `freelancer.jobs.show` with success message.
 
 ## 5. Data Flow & Management
 
@@ -99,5 +124,9 @@
 
 * **Error Handling:** Laravel's built-in exception handler. Custom exception handlers can be created.
 * **Logging:** (`storage/logs/laravel.log`) Laravel's Monolog integration for logging application events and errors.
+* **Defensive Eager Loading & Data Validation in Controllers:** To prevent "Attempt to read property on null" errors (often leading to 500 errors), controllers should:
+  * Ensure that necessary related models and their nested relationships are correctly loaded (e.g., `Job::with(['user.clientProfile'])`).
+  * For index/browse pages, use `whereHas` clauses to filter out records that don't have essential related data (e.g., `Job::whereHas('user.clientProfile')`).
+  * For `show` pages (where the model is route-model bound), explicitly check for the existence of critical related data after loading and `abort(404)` or handle gracefully if not found (e.g., `if (!$job->user || !$job->user->clientProfile) { abort(404); }`). This pattern was applied to `JobController@browse` and `FreelancerJobController@show` to resolve issues with missing `clientProfile` data.
 
 *This document should be updated as the system evolves and new patterns are adopted or existing ones are refined. It builds upon `projectbrief.md`.*

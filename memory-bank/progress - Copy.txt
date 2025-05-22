@@ -1,0 +1,102 @@
+# Project Progress
+
+## 1. Current Status Summary
+
+* **I. Overall Project Health:** Green - Significant progress on UI standardization and key bug fixes. Core functionalities for multi-stage work submission largely in place. Application-wide "Standard Light Theme" has been extensively applied. Critical 500 errors for freelancer job views resolved. File modification tools stable.
+* **Current Phase:** Documentation Update; Awaiting next set of tasks or further testing/refinement of existing features.
+* **Percentage Completion (Estimate):** 25% (Factoring in submission flow, extensive UI theming, critical bug fixes, and documentation updates).
+
+## 2. What Works (Implemented Features)
+
+* **As of 5/22/2025 (End of Current Task - Theme & Bug Fixes):**
+  * **Application-Wide Theme Consistency:**
+    * Successfully applied the "Standard Light Theme" (white cards, green borders, cyan accents) across a comprehensive list of views in Admin, Client, Freelancer, Auth, and Profile sections. This includes layouts, components, buttons, forms, tables, and text styling. Dark mode classes (`dark:...`) have been systematically removed from these re-themed areas.
+  * **Freelancer 500 Error Resolution:**
+    * **Job Browsing Page (`freelancer.jobs.browse`):** Resolved 500 errors by updating `JobController@browse` to include `->whereHas('user.clientProfile')` in the job query. This ensures jobs are only displayed if the associated client user has a client profile, preventing errors when accessing profile information in the view.
+    * **Job Details Page (`freelancer.jobs.show`):** Resolved 500 errors by updating `FreelancerJobController@show` to eager load `user.clientProfile` and `proposals`, and to explicitly check for the existence of `$job->user` and `$job->user->clientProfile`, aborting with a 404 if this critical data is missing.
+  * **Previous (This Session):**
+    * **Freelancer Browse Jobs UI & Navigation Update:**
+        * `resources/views/freelancer/jobs/browse.blade.php` updated to use `x-layouts.freelancer` for consistent layout.
+        * Job description rendering in `browse.blade.php` changed to `{!! ... !!}` and `prose max-w-none` class added to correctly display HTML content and apply typography.
+        * Added a "Browse Jobs" link to the sidebar in `resources/views/components/freelancer-layout.blade.php`, pointing to the `freelancer.jobs.browse` route and ensuring the active state highlights correctly for `freelancer.jobs.browse` and `freelancer.jobs.show`.
+    * **Freelancer Messages UI Update:**
+        * `resources/views/freelancer/messages/index.blade.php` updated to use a table layout similar to the admin's message view, improving UI consistency. Applied standard light theme styling.
+    * **Admin Dashboard "Recent Jobs" Update:**
+        * `AdminDashboardController.php` updated to fetch jobs based on actual statuses found in the database (`'open', 'approved', 'submitted', 'in_progress', 'completed'`).
+        * `resources/views/admin/dashboard.blade.php` updated to display these jobs in a single, scrollable list.
+        * 'Active Projects' summary count updated to use relevant statuses.
+    * **MCP Server for MySQL Querying:**
+        * Successfully created and configured a new MCP server (`mysql-query-server`).
+        * The server provides an `execute_mysql_query` tool.
+        * Used the new tool to identify actual job statuses in the database.
+    * **Route Fix:** Resolved `RouteNotFoundException` for `admin.job-assignments.tasks.edit`.
+    * **Multi-Stage Work Submission & Review Flow:** Core logic and UI structure implemented.
+    * **Branding Consistency Update:** Ensured "Architex Axis" is used consistently.
+* **Previous Features (Verified or Addressed in Prior Sessions):**
+  * Bug Fixes on Admin Task Edit Page.
+  * UI Updates on Admin Job Details Page.
+  * Backend for general Admin Comments on Jobs.
+  * Database schema update for `budget` column precision.
+  * Admin Activity Logging (initial).
+  * Queue Configuration.
+
+## 3. What's Left to Build (Key Pending Features)
+
+* **Immediate (Blocked by Tool Issues / Needs Implementation - if applicable):**
+  * **Listener Implementation:**
+    * Successfully write the full logic for `app/Listeners/NotifyAdminAndFreelancerOfClientComment.php`.
+    * Register this listener in `app/Providers/EventServiceProvider.php` for the `JobCommentCreated` event.
+  * **Notification Classes:**
+    * Create `ClientCommentNotificationToAdmin` and `ClientCommentNotificationToFreelancer` (and any other required notification classes for the review flow).
+    * Define content and channels (email, database) for these notifications.
+* **Further Implementation & Verification for Current Feature:**
+  * **Client File Download:** Implement or verify a secure, client-accessible route for downloading work submission files from `resources/views/client/work-submissions/show.blade.php`.
+  * **Testing:** Conduct thorough end-to-end testing of the entire submission and review workflow across Freelancer, Admin, and Client roles.
+  * **Linter/Runtime Errors:** Investigate and resolve any persistent linter errors (e.g., `Storage::download`, `auth()->id()`) if they cause runtime issues.
+* **Broader Pending Tasks (from `projectbrief.md` / `productContext.md` / previous sessions):**
+  * User Registration (Client, Freelancer)
+  * User Login & Authentication
+  * User Profiles (Client, Freelancer)
+  * Job Posting (Client) & Browsing (Freelancer) - Core functionality for browsing now more robust.
+  * Proposal System (beyond what's integrated into admin job show)
+  * Full Messaging System
+  * Expand Admin Activity Logging
+  * Payment Integration, Advanced Search, Ratings & Reviews.
+* **User Verification Pending (from previous work):**
+  * Numerous UI theming changes and bug fixes from before the current task.
+
+## 4. Known Issues & Bugs
+
+* **Tooling:** File modification tools have been stable. MCP server creation process was successful.
+* **Linter Warnings (from previous work, may still be relevant):**
+  * `AdminWorkSubmissionController.php`: `Undefined method 'download'` for `Storage::disk('private')->download(...)`.
+  * `ClientWorkSubmissionController.php`: `Undefined method 'id'` for `auth()->id()`.
+* **Placeholder Route (from previous work):** Client work submission download link in `client/work-submissions/show.blade.php`.
+* **Status Badge Styling (from previous work):** `x-status-badge` component may need adjustments.
+* **RESOLVED (This Session):** 500 errors on freelancer job browsing (`freelancer.jobs.browse`) and job detail (`freelancer.jobs.show`) pages due to missing `clientProfile` data. Fixed by adding `whereHas` in `JobController@browse` and explicit checks in `FreelancerJobController@show`.
+* **RESOLVED (This Session):** `RelationNotFoundException` for `conversations` on `JobAssignment` model.
+* **RESOLVED (This Session):** Admin dashboard not showing all relevant jobs / using incorrect statuses.
+* **Branding Investigation (This Session):** The string "Archi-TimeX Keeper" (with hyphen) seen on the live login page was not found in the local codebase. All local configurations and primary views correctly use "Architex Axis". Fallback names "ArchiTimeX Keeper" (no hyphen) were corrected to "Architex Axis" in several layout/component files. The live issue is attributed to potential server-side file or cache staleness.
+* **Potentially Still Active (from previous sessions):**
+  * 500 Error on Admin Add User (`User::ROLES` issue) - needs re-testing.
+
+## 5. Evolution of Project Decisions & Scope
+
+* **5/22/2025 (Current Task - Theme & Bug Fixes):**
+    * **Decision:** Systematically applied the "Standard Light Theme" across all major views and components. Resolved 500 errors on freelancer job pages by ensuring robust handling of `clientProfile` data in controllers.
+    * **Impact:** Greatly improved UI consistency across the application. Enhanced stability for the freelancer user group when interacting with job listings and details.
+* **5/22/2025 (Previous - Freelancer Browse Jobs UI & Navigation Update):**
+    * **Decision:** Updated `resources/views/freelancer/jobs/browse.blade.php` to use `x-layouts.freelancer` and correct HTML rendering. Added "Browse Jobs" link to `freelancer-layout.blade.php` sidebar.
+    * **Impact:** Consistent UI for freelancer job browsing, functional navigation.
+* **5/22/2025 (Previous - Branding Consistency and Login Screen Investigation):**
+    * **Decision:** Corrected local branding to "Architex Axis".
+    * **Impact:** Local codebase consistency. Live login screen issue likely server-side.
+* **5/22/2025 (Previous - Admin Dashboard Job Display & MCP Server for MySQL):**
+  * **Decision:** Created MCP server for DB introspection to refine admin dashboard job status display.
+  * **Impact:** More accurate job listing on admin dashboard. New MCP tool available.
+* **5/21/2025 (Previous - Multi-Stage Work Submission & Review Flow):**
+  * **Decision:** Implemented a comprehensive review cycle.
+  * **Impact:** Database, Model, Controller, View, and Event changes as detailed in `activeContext.md`.
+* **Previous decisions documented in `activeContext.md` remain relevant for prior work.**
+
+*This document provides a snapshot of the project's progress and should be updated regularly. It links back to `activeContext.md` for current work and `projectbrief.md` / `productContext.md` for overall goals.*

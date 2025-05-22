@@ -1,4 +1,4 @@
-<x-freelancer-layout>
+<x-layouts.freelancer>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Add New Task to Assignment: ') }} {{ $assignment->job->title }}
@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <form method="POST" action="{{ route('freelancer.assignments.tasks.store', $assignment) }}">
                         @csrf
@@ -22,7 +22,7 @@
                         <!-- Description -->
                         <div class="mt-4">
                             <x-input-label for="description" :value="__('Description (Optional)')" />
-                            <textarea id="description" name="description" rows="4" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('description') }}</textarea>
+                            <textarea id="description" name="description" rows="4" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">{{ old('description') }}</textarea>
                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                         </div>
 
@@ -36,7 +36,7 @@
                         <!-- Status -->
                         <div class="mt-4">
                             <x-input-label for="status" :value="__('Status')" />
-                            <select id="status" name="status" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <select id="status" name="status" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
                                 <option value="pending" {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="in_progress" {{ old('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
                                 <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>Completed</option>
@@ -56,7 +56,7 @@
                             <a href="{{ route('freelancer.assignments.show', $assignment) }}" class="text-sm text-gray-600 hover:text-gray-900 underline mr-4">
                                 {{ __('Cancel') }}
                             </a>
-                            <x-primary-button>
+                            <x-primary-button class="bg-cyan-700 hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:ring-cyan-500">
                                 {{ __('Create Task') }}
                             </x-primary-button>
                         </div>

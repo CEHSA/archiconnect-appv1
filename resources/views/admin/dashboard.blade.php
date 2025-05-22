@@ -14,7 +14,7 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Projects Card -->
-        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4 border border-green-300">
             <div class="p-3 bg-blue-500 bg-opacity-20 rounded-full">
                 {{-- Heroicon: collection --}}
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
@@ -25,7 +25,7 @@
             </div>
         </div>
         <!-- Active Projects Card -->
-        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4 border border-green-300">
             <div class="p-3 bg-yellow-500 bg-opacity-20 rounded-full">
                 {{-- Heroicon: clock --}}
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -36,7 +36,7 @@
             </div>
         </div>
         <!-- Completed Projects Card -->
-        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4 border border-green-300">
              <div class="p-3 bg-green-500 bg-opacity-20 rounded-full">
                 {{-- Heroicon: check-circle --}}
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -47,7 +47,7 @@
             </div>
         </div>
         <!-- Total Hours Logged Card -->
-         <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+         <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4 border border-green-300">
             <div class="p-3 bg-indigo-500 bg-opacity-20 rounded-full">
                 {{-- Heroicon: chart-bar --}}
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
@@ -62,7 +62,7 @@
     <!-- Recent Jobs and Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Jobs -->
-        <div class="bg-white p-6 rounded-xl shadow-lg">
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-green-300">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Jobs</h3>
             <div class="space-y-3 overflow-y-auto" style="max-height: 400px;"> {{-- Added max-height and overflow-y-auto for scrolling --}}
                 @forelse ($recentJobs as $job)
@@ -83,7 +83,7 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="bg-white p-6 rounded-xl shadow-lg">
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-green-300">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
              <div class="space-y-4">
                 @forelse ($recentActivity as $activity_log)

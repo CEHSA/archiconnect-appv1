@@ -1,6 +1,6 @@
 <x-admin-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Assignment Details for Job:') }} {{ $assignment->job?->title ?? __('Job Not Found') }}
         </h2>
     </x-slot>
@@ -12,11 +12,11 @@
 
                     <div class="mb-6">
                         @if($assignment->job_id)
-                            <a href="{{ route('admin.jobs.show', $assignment->job_id) }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-800 uppercase tracking-widest hover:bg-gray-400 active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 mr-2">
+                            <a href="{{ route('admin.jobs.show', $assignment->job_id) }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-800 uppercase tracking-widest hover:bg-gray-400 active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150 mr-2">
                                 {{ __('Back to Job Details') }}
                             </a>
                         @else
-                            <span class="text-sm text-gray-500 dark:text-gray-400 mr-2">{{ __('Job reference missing') }}</span>
+                            <span class="text-sm text-gray-500 mr-2">{{ __('Job reference missing') }}</span>
                         @endif
                         {{-- General Edit button for the assignment itself, might be moved into a specific tab or kept general --}}
                          <!-- The general Edit Assignment button is now part of the Assignment Information tab -->
@@ -24,7 +24,7 @@
 
                     <!-- Tab Navigation -->
                     <div x-data="{ activeTab: 'info' }" class="mb-6">
-                        <div class="border-b border-gray-200 dark:border-gray-700">
+                        <div class="border-b border-gray-200">
                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                                 <button @click="activeTab = 'info'"
                                         :class="{ 'border-teal-500 text-teal-600': activeTab === 'info', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'info' }"
@@ -296,31 +296,31 @@
                             <!-- Admin Notes Tab -->
                             <div x-show="activeTab === 'notes'">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ __('Admin Notes') }}</h3>
+                                    <h3 class="text-xl font-semibold text-gray-900">{{ __('Admin Notes') }}</h3>
                                     {{-- No specific button here, form is below --}}
                                 </div>
 
                                 @if ($assignment->assignmentNotes && $assignment->assignmentNotes->isNotEmpty())
                                     <div class="space-y-4 mb-6">
                                         @foreach($assignment->assignmentNotes as $note) {{-- Already ordered by desc in controller --}}
-                                            <div class="border p-3 rounded-md dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                                            <div class="border p-3 rounded-md bg-gray-50">
                                                 <div class="flex justify-between items-center mb-1">
-                                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $note->admin->name ?? 'Admin' }}</p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $note->created_at->format('M d, Y H:i A') }}</p>
+                                                    <p class="text-sm font-medium text-gray-700">{{ $note->admin->name ?? 'Admin' }}</p>
+                                                    <p class="text-xs text-gray-500">{{ $note->created_at->format('M d, Y H:i A') }}</p>
                                                 </div>
-                                                <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{{ $note->content }}</p>
+                                                <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ $note->content }}</p>
                                             </div>
                                         @endforeach
                                     </div>
                                 @else
-                                    <p class="text-gray-600 dark:text-gray-400 mb-6">No notes for this assignment yet.</p>
+                                    <p class="text-gray-600 mb-6">No notes for this assignment yet.</p>
                                 @endif
 
-                                <form method="POST" action="{{ route('admin.job-assignments.notes.store', $assignment) }}" class="mt-6 border-t dark:border-gray-700 pt-6">
+                                <form method="POST" action="{{ route('admin.job-assignments.notes.store', $assignment) }}" class="mt-6 border-t pt-6">
                                     @csrf
                                     <div>
-                                        <x-input-label for="note_content" :value="__('Add New Note')" class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2" />
-                                        <textarea id="note_content" name="content" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300" required>{{ old('content') }}</textarea>
+                                        <x-input-label for="note_content" :value="__('Add New Note')" class="text-lg font-medium text-gray-700 mb-2" />
+                                        <textarea id="note_content" name="content" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>{{ old('content') }}</textarea>
                                         <x-input-error :messages="$errors->get('content')" class="mt-2" />
                                     </div>
                                     <div class="mt-4">

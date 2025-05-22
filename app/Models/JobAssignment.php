@@ -22,7 +22,33 @@ class JobAssignment extends Model
         'status',
         'freelancer_remarks',
         'admin_remarks',
+        'progress_override_percentage', // Added
     ];
+
+    /**
+     * Get the effective progress percentage for this assignment.
+     * Considers admin override first, then calculates based on task completion.
+     */
+    public function getEffectiveProgressAttribute(): int
+    {
+        if (!is_null($this->progress_override_percentage)) {
+            return (int) $this->progress_override_percentage;
+        }
+
+        // Ensure tasks relationship is loaded if not already, to avoid N+1 in loops
+        if (!$this->relationLoaded('tasks')) {
+            $this->load('tasks');
+        }
+
+        $totalTasks = $this->tasks->count();
+        if ($totalTasks === 0) {
+            return 0; 
+        }
+
+        $completedTasks = $this->tasks->where('status', 'completed')->count();
+        
+        return (int) round(($completedTasks / $totalTasks) * 100);
+    }
 
     /**
      * Get the job that this assignment belongs to.

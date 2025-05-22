@@ -38,7 +38,7 @@
                             </thead>
                             <tbody class="bg-white">
                                 @foreach ($pendingMessages as $message)
-                                    <tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='{{ route('admin.messages.show', $message) }}';">
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                             <div class="flex items-center">
                                                 <div class="ml-4">
@@ -49,14 +49,14 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                             <div class="text-sm leading-5 text-gray-900">
-                                                {{ $message->conversation->job->title ?? 'N/A' }}
+                                                {{ $message->conversation->job->title ?? ($message->conversation->subject ?? 'N/A') }}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 border-b border-gray-200">
                                             <div class="text-sm leading-5 text-gray-900">{{ \Illuminate\Support\Str::limit($message->content, 100) }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
-                                            {{ $message->created_at }}
+                                            {{ $message->created_at->diffForHumans() }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-200 text-sm leading-5 font-medium">
                                             <a href="{{ route('admin.messages.show', $message) }}" class="text-architimex-primary hover:text-architimex-primary-darker">{{ __('Review') }}</a>
@@ -102,60 +102,71 @@
                                 @forelse ($conversations as $conversation)
                                     @php
                                         $hasUnreadForAdmin = false;
-                                        if (auth()->check()) {
-                                            $adminUser = auth()->user();
-                                            // Check if conversation has unread messages for the admin
-                                            // The unreadCount method in Conversation model counts messages
-                                            // not sent by the admin and where read_at is null.
+                                        if (auth('admin')->check()) { // Ensure admin guard is checked
+                                            $adminUser = auth('admin')->user();
                                             if (method_exists($conversation, 'unreadCount') && $conversation->unreadCount($adminUser) > 0) {
                                                 $hasUnreadForAdmin = true;
                                             }
                                         }
                                     @endphp
-                                    <tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='{{ route('admin.messages.showConversation', $conversation) }}';">
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center">
                                             @if ($hasUnreadForAdmin)
-                                                {{-- Icon for unread messages (e.g., solid envelope or a colored dot) --}}
                                                 <svg class="w-5 h-5 text-blue-500 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
                                                 <span class="sr-only">Unread</span>
                                             @else
-                                                {{-- Icon for read messages (e.g., open envelope or a muted dot) --}}
                                                 <svg class="w-5 h-5 text-gray-400 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M12 12l6.75 4.5M12 12l-6.75 4.5"></path></svg>
                                                 <span class="sr-only">Read</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                             <div class="flex flex-col">
+                                                @if($conversation->participant1)
                                                 <div class="text-sm leading-5 font-medium text-gray-900">
                                                     {{ $conversation->participant1->name }}
+                                                    @if($conversation->participant1_type === 'App\\Models\\User')
                                                     <span class="ml-1 px-2 py-1 text-xs rounded-full {{ $conversation->participant1->role === 'client' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                                         {{ ucfirst($conversation->participant1->role) }}
                                                     </span>
+                                                    @elseif($conversation->participant1_type === 'App\\Models\\Admin')
+                                                    <span class="ml-1 px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                                        Admin
+                                                    </span>
+                                                    @endif
                                                 </div>
+                                                @endif
+                                                @if($conversation->participant2)
                                                 <div class="text-sm leading-5 font-medium text-gray-900 mt-1">
                                                     {{ $conversation->participant2->name }}
+                                                    @if($conversation->participant2_type === 'App\\Models\\User')
                                                     <span class="ml-1 px-2 py-1 text-xs rounded-full {{ $conversation->participant2->role === 'client' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                                         {{ ucfirst($conversation->participant2->role) }}
                                                     </span>
+                                                    @elseif($conversation->participant2_type === 'App\\Models\\Admin')
+                                                    <span class="ml-1 px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                                        Admin
+                                                    </span>
+                                                    @endif
                                                 </div>
+                                                @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                                             <div class="text-sm leading-5 text-gray-900">
-                                                {{ $conversation->job->title ?? 'N/A' }}
+                                                {{ $conversation->job->title ?? ($conversation->subject ?? 'N/A') }}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 border-b border-gray-200">
                                             <div class="text-sm leading-5 text-gray-900">
-                                                @if($conversation->messages->isNotEmpty())
-                                                    {{ \Illuminate\Support\Str::limit($conversation->messages->sortByDesc('created_at')->first()->content, 100) }}
+                                                @if($conversation->latestMessage)
+                                                    {{ \Illuminate\Support\Str::limit($conversation->latestMessage->content, 100) }}
                                                 @else
                                                     {{ __('No messages yet') }}
                                                 @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
-                                            {{ $conversation->last_message_at }}
+                                            {{ $conversation->last_message_at ? \Carbon\Carbon::parse($conversation->last_message_at)->diffForHumans() : 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-200 text-sm leading-5 font-medium">
                                             <a href="{{ route('admin.messages.showConversation', $conversation) }}" class="text-architimex-primary hover:text-architimex-primary-darker">{{ __('View') }}</a>

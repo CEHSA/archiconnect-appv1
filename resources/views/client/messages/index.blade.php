@@ -1,14 +1,14 @@
 <x-client-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Messages') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
+                <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-4">{{ __('Your Conversations') }}</h3>
 
         @if($conversations->count())
@@ -34,7 +34,7 @@
                                         {{ $conversation->last_message_at ? $conversation->last_message_at->diffForHumans() : 'No messages yet' }}
                                     </p>
                                     @if($conversation->unreadCount(Auth::user()) > 0)
-                                        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-architimex-primary rounded-full">
+                                        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-cyan-700 rounded-full">
                                             {{ $conversation->unreadCount(Auth::user()) }}
                                         </span>
                                     @endif

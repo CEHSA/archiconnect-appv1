@@ -98,7 +98,9 @@ class JobController extends Controller
     public function browse(): View
     {
         // Get all open jobs, ordered by most recent first
+        // Ensure that the user associated with the job has a clientProfile to prevent errors
         $jobs = Job::where('status', 'open')
+            ->whereHas('user.clientProfile') // Ensures that user relation exists and has a clientProfile
             ->with(['user.clientProfile']) // Eager load client info
             ->latest()
             ->paginate(10);

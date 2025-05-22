@@ -1,17 +1,17 @@
-<x-app-layout>
+<x-layouts.freelancer>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Submit Budget Appeal') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
+                <div class="p-6 text-gray-900">
 
                     <div class="mb-6">
-                        <a href="{{ route('freelancer.assignments.show', $assignment) }}" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-400 active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                        <a href="{{ route('freelancer.assignments.show', $assignment) }}" class="inline-flex items-center px-4 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             {{ __('Back to Assignment') }}
                         </a>
                     </div>
@@ -35,24 +35,24 @@
 
                         <div class="mb-4">
                             <x-input-label for="reason" :value="__('Reason for Appeal')" />
-                            <textarea id="reason" name="reason" rows="6" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>{{ old('reason') }}</textarea>
+                            <textarea id="reason" name="reason" rows="6" class="block mt-1 w-full border-gray-300 focus:border-cyan-500 focus:ring-cyan-500 rounded-md shadow-sm" required>{{ old('reason') }}</textarea>
                             <x-input-error :messages="$errors->get('reason')" class="mt-2" />
                         </div>
 
                         <div class="mb-4">
                             <x-input-label for="evidence" :value="__('Evidence (Optional)')" />
-                            <input id="evidence" class="block mt-1 w-full text-gray-900 dark:text-gray-100
+                            <input id="evidence" class="block mt-1 w-full text-gray-900 border-gray-300 rounded-md shadow-sm focus:border-cyan-500 focus:ring-cyan-500
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded-md file:border-0
                                 file:text-sm file:font-semibold
-                                file:bg-indigo-50 file:text-indigo-700
-                                hover:file:bg-indigo-100"
+                                file:bg-gray-100 file:text-gray-700
+                                hover:file:bg-gray-200"
                                 type="file" name="evidence" />
                             <x-input-error :messages="$errors->get('evidence')" class="mt-2" />
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
-                            <x-primary-button class="ms-4">
+                            <x-primary-button class="ms-4 bg-cyan-700 hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:ring-cyan-500">
                                 {{ __('Submit Appeal') }}
                             </x-primary-button>
                         </div>
@@ -62,4 +62,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-layouts.freelancer>

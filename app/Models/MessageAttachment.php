@@ -13,13 +13,13 @@ class MessageAttachment extends Model
     protected $fillable = [
         'message_id',
         'file_path',
-        'original_file_name',
-        'file_size',
+        'original_file_name', // Changed from file_name to original_file_name
         'file_type',
+        'file_size',
     ];
 
     /**
-     * Get the message that this attachment belongs to.
+     * The message this attachment belongs to.
      */
     public function message(): BelongsTo
     {

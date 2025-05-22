@@ -20,7 +20,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
-                        <x-text-input id="name" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Enter your full name" />
+                        <x-text-input id="name" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Enter your full name" />
                     </div>
                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 </div>
@@ -34,7 +34,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <x-text-input id="email" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="Enter your email" />
+                        <x-text-input id="email" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="Enter your email" />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
@@ -48,7 +48,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <select id="role" name="role" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md shadow-sm focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300 appearance-none">
+                        <select id="role" name="role" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md shadow-sm focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300 appearance-none">
                             <option value="client" {{ old('role') == 'client' ? 'selected' : '' }}>{{ __('Client') }}</option>
                             <option value="freelancer" {{ old('role') == 'freelancer' ? 'selected' : '' }}>{{ __('Freelancer') }}</option>
                         </select>
@@ -70,7 +70,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <x-text-input id="password" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300" type="password" name="password" required autocomplete="new-password" placeholder="Create a password" />
+                        <x-text-input id="password" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300" type="password" name="password" required autocomplete="new-password" placeholder="Create a password" />
                     </div>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
@@ -84,20 +84,20 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <x-text-input id="password_confirmation" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Confirm your password" />
+                        <x-text-input id="password_confirmation" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Confirm your password" />
                     </div>
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                 </div>
 
                 <div class="flex flex-col items-center pt-4">
-                    <button type="submit" class="w-full px-4 py-3 text-sm font-medium text-white uppercase bg-architimex-primary rounded-md hover:bg-architimex-primary-darker focus:outline-none focus:ring-2 focus:ring-architimex-primary focus:ring-offset-2 transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-0">
+                    <button type="submit" class="w-full px-4 py-3 text-sm font-medium text-white uppercase bg-cyan-700 rounded-md hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-300 transform hover:translate-y-[-2px] active:bg-cyan-800 active:translate-y-0">
                         {{ __('Register') }}
                     </button>
                 </div>
 
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">
-                        Already have an account? <a href="{{ route('login') }}" class="font-medium text-architimex-primary hover:text-architimex-primary-darker transition-colors duration-300 underline">Log in</a>
+                        Already have an account? <a href="{{ route('login') }}" class="font-medium text-cyan-700 hover:text-cyan-600 transition-colors duration-300 underline">Log in</a>
                     </p>
                 </div>
             </form>

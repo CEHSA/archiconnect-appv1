@@ -56,8 +56,8 @@ class JobAssignmentController extends Controller
             },
         ]);
 
-        // Get all time logs for this specific assignment, ordered by start time
-        $assignmentTimeLogs = TimeLog::where('job_assignment_id', $assignment->id)
+        // Get all time logs for this specific assignment through its tasks, ordered by start time
+        $assignmentTimeLogs = $assignment->timeLogs()
                                     ->where('freelancer_id', Auth::id())
                                     ->orderBy('start_time', 'desc')
                                     ->get();

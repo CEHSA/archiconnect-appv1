@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
                 <div class="p-6 text-gray-900">
                     <form action="{{ route('freelancer.messages.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
@@ -31,7 +31,7 @@
                                 <select name="job_assignment_id" id="job_assignment_id" 
                                         x-model="selectedAssignment"
                                         @change="tasks = allAssignments.find(a => a.id == selectedAssignment)?.tasks || []"
-                                        class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                        class="block mt-1 w-full border-gray-300 focus:border-cyan-500 focus:ring-cyan-500 rounded-md shadow-sm">
                                     <option value="">-- General Message (No Specific Assignment) --</option>
                                     @foreach($assignmentOptions as $assignment)
                                         <option value="{{ $assignment['id'] }}" {{ old('job_assignment_id') == $assignment['id'] ? 'selected' : '' }}>
@@ -46,7 +46,7 @@
                             <div class="mb-4" x-show="selectedAssignment && tasks.length > 0">
                                 <x-input-label for="assignment_task_id" :value="__('Relating to Task (Optional)')" />
                                 <select name="assignment_task_id" id="assignment_task_id"
-                                        class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                        class="block mt-1 w-full border-gray-300 focus:border-cyan-500 focus:ring-cyan-500 rounded-md shadow-sm">
                                     <option value="">-- General to Assignment (No Specific Task) --</option>
                                     <template x-for="task in tasks" :key="task.id">
                                         <option :value="task.id" x-text="task.title"></option>
@@ -80,7 +80,7 @@
                             <a href="{{ route('freelancer.messages.index') }}" class="text-sm text-gray-600 hover:text-gray-900 mr-4">
                                 {{ __('Cancel') }}
                             </a>
-                            <x-primary-button>
+                            <x-primary-button class="bg-cyan-700 hover:bg-cyan-600 focus:bg-cyan-600 active:bg-cyan-800 focus:ring-cyan-500">
                                 {{ __('Send Message') }}
                             </x-primary-button>
                         </div>

@@ -23,6 +23,11 @@ class ClientProfile extends Model
         'profile_picture',
         'company_website',
         'industry',
+        'receive_application_notifications', // Added
+    ];
+
+    protected $casts = [
+        'receive_application_notifications' => 'boolean', // Added
     ];
 
     /**

@@ -2,101 +2,61 @@
 
 ## 1. Current Status Summary
 
-* **I. Overall Project Health:** Yellow - Core functionalities for multi-stage work submission largely in place. Significant progress made on standardizing the application's UI with a new light theme (Admin, Client, Freelancer views). Some listener implementations were previously hindered by tool issues, but file modification tools are currently stable.
-* **Current Phase:** Application-Wide UI Theming & Documentation; Feature Development (Work Submission & Review Flow - final touches and testing).
-* **Percentage Completion (Estimate):** 20% (Factoring in submission flow, UI theming of key admin pages (initial application), and documentation updates).
+* **I. Overall Project Health:** Green - Core functionality for freelancer job application submission, admin viewing, and status update notifications for freelancers are in place.
+* **Current Phase:** Phase 1 of Admin Job Application Management (Listing, Viewing, Status Update & Notification) completed.
+* **Percentage Completion (Estimate):** 36% (Adjusted for completed Job Application Status Update Notification items).
 
 ## 2. What Works (Implemented Features)
 
-* **As of 5/22/2025 (Current Session - Latest Updates):**
-  * **Freelancer Messages UI Update:**
-    * `resources/views/freelancer/messages/index.blade.php` updated to use a table layout similar to the admin's message view, improving UI consistency. Applied standard light theme styling.
-  * **Admin Dashboard "Recent Jobs" Update:**
-    * `AdminDashboardController.php` updated to fetch jobs based on actual statuses found in the database (`'open', 'approved', 'submitted', 'in_progress', 'completed'`).
-    * `resources/views/admin/dashboard.blade.php` updated to display these jobs in a single, scrollable list.
-    * 'Active Projects' summary count updated to use relevant statuses.
-  * **MCP Server for MySQL Querying:**
-    * Successfully created and configured a new MCP server (`mysql-query-server`) located at `C:\Users\Raidmax i5\Documents\Cline\MCP\mysql-query-server`.
-    * The server provides an `execute_mysql_query` tool.
-    * Configuration added to `c:\Users\Raidmax i5\AppData\Roaming\Code - Insiders\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json` with necessary DB credentials.
-    * Used the new tool to identify actual job statuses in the database.
-  * **Route Fix (Earlier this session):** Resolved `RouteNotFoundException` for `admin.job-assignments.tasks.edit`.
-  * **Standard UI Theming (Earlier this session & Current):**
-    * Applied to `admin/jobs/assignments/show.blade.php` and `admin/jobs/index.blade.php`.
-    * Applied to `freelancer/jobs/show.blade.php` (updated to use `x-layouts.freelancer`, fixed description HTML rendering).
-    * Applied to `layouts/app.blade.php` and `layouts/navigation.blade.php` (removed dark theme classes).
-  * **Multi-Stage Work Submission & Review Flow (Earlier this session):** Core logic and UI structure implemented.
-  * **Branding Consistency Update (Current Task):**
-    * Updated fallback application name from 'ArchiTimeX Keeper' to 'Architex Axis' in `resources/views/layouts/admin-guest.blade.php`, `resources/views/components/freelancer-layout.blade.php`, and `resources/views/components/admin-layout.blade.php`.
-    * Confirmed primary login views and configurations correctly use "Architex Axis".
-    * Noted that the live issue of "Archi-TimeX Keeper" (with hyphen) on `axis.architex.co.za/login` is likely due to server-side outdated files or caching, as the string is not present in the local codebase.
-* **Previous Features (Verified or Addressed in Prior Sessions):**
-  * Bug Fixes on Admin Task Edit Page (before current theming).
-  * Initial (dark) Theming Consistency in Admin Assignments & Tasks.
-  * UI Updates on Admin Job Details Page (Proposals tab merged, comment form added).
-  * Backend for general Admin Comments on Jobs.
-  * Database schema update for `budget` column precision.
-  * General Admin Job Section Theming.
-  * Admin Activity Logging (initial).
-  * Queue Configuration.
+* **As of 5/23/2025 (Completed This Session - Job Application Status Update Notifications):**
+    * **Event:** Created `app/Events/JobApplicationStatusUpdated.php` event, which accepts the `JobApplication` and the `oldStatus`.
+    * **Notification Class:** Created `app/Notifications/JobApplicationStatusUpdatedNotification.php` for database and mail channels, to inform freelancers about changes to their application status.
+    * **Listener:** Created `app/Listeners/NotifyFreelancerOfApplicationStatusUpdate.php` to handle the `JobApplicationStatusUpdated` event and send the notification to the relevant freelancer.
+    * **Controller Update:** Modified `app/Http/Controllers/Admin/JobApplicationController.php`'s `updateStatus` method to dispatch the `JobApplicationStatusUpdated` event after saving the status change.
+    * **Service Provider:** Registered the new event and listener in `app/Providers/EventServiceProvider.php`.
+    * **Outcome:** When an admin updates the status of a job application, the freelancer who submitted the application will receive a notification about this change.
+* **As of 5/23/2025 (Completed This Session - Admin Job Application Management - Phase 1: Listing & Viewing):**
+    * (Details in previous `progress.md` version - Admin routes, controller, views, sidebar link for job applications).
+    * **Outcome:** Admins can list, view, and update status for job applications.
+* **As of 5/23/2025 (Completed This Session - Freelancer Job Application System - Phase 1: Submission):**
+    * (Details in previous `progress.md` version - Database, Model, Controller, Form Request, Event, Listener, Notification, Routes, Views for freelancer submission).
+    * **Outcome:** Freelancers can submit applications for jobs posted to them. Admins are notified.
+* **As of 5/23/2025 (Completed This Session - Notification Logic for `JobPostedToFreelancers`):**
+    * (Details in previous `progress.md` version - Notification class, Listener update, Layout update).
+    * **Outcome:** Freelancers receive notifications for jobs posted to them; UI shows unread counts.
+* **As of 5/23/2025 (Completed Earlier This Session - Admin Job Management & Current Jobs Page):**
+    * (Details in previous `progress.md` version).
 
 ## 3. What's Left to Build (Key Pending Features)
 
-* **Immediate (Blocked by Tool Issues / Needs Implementation):**
-  * **Listener Implementation:**
-    * Successfully write the full logic for `app/Listeners/NotifyAdminAndFreelancerOfClientComment.php`.
-    * Register this listener in `app/Providers/EventServiceProvider.php` for the `JobCommentCreated` event.
-  * **Notification Classes:**
-    * Create `ClientCommentNotificationToAdmin` and `ClientCommentNotificationToFreelancer` (and any other required notification classes for the review flow).
-    * Define content and channels (email, database) for these notifications.
-* **Further Implementation & Verification for Current Feature:**
-  * **Client File Download:** Implement or verify a secure, client-accessible route for downloading work submission files from `resources/views/client/work-submissions/show.blade.php`.
-  * **Testing:** Conduct thorough end-to-end testing of the entire submission and review workflow across Freelancer, Admin, and Client roles.
-  * **Linter/Runtime Errors:** Investigate and resolve any persistent linter errors (e.g., `Storage::download`, `auth()->id()`) if they cause runtime issues.
-  * **Bug Fix (Current):** Resolved `RelationNotFoundException` for `conversations` on `JobAssignment` model by adding the relationship method in `app/Models/JobAssignment.php`. This was affecting the freelancer's assignment detail view.
-* **Application UI Theming (Site-Wide):**
-  * Apply the new standard light theme to remaining Admin, Client, and Freelancer pages (e.g., user management, reports, settings, client dashboard, freelancer job browse, etc.) for consistency.
-  * Review and potentially adjust the `x-status-badge` component to better match the solid-background badge style shown in some reference images, or implement custom badge styling where needed.
-* **Broader Pending Tasks (from `projectbrief.md` / `productContext.md` / previous sessions):**
-  * User Registration (Client, Freelancer)
-  * User Login & Authentication
-  * User Profiles (Client, Freelancer)
-  * Job Posting (Client) & Browsing (Freelancer)
-  * Proposal System (beyond what's integrated into admin job show)
-  * Full Messaging System
-  * Expand Admin Activity Logging
-  * Payment Integration, Advanced Search, Ratings & Reviews.
-* **User Verification Pending (from previous work):**
-  * Numerous UI theming changes and bug fixes from before the current task.
+* **Immediate (For Job Application System - Phase 2 & Admin Management Refinement):**
+    * Develop UI for Clients (job posters) to view applications if the workflow requires their involvement in selection.
+    * Implement filters on the admin job applications index page (`resources/views/admin/job-applications/index.blade.php`).
+    * Implement the TODO for notifying the client in `app/Listeners/NotifyAdminOfJobApplication.php`.
+    * Update action URLs in `app/Notifications/NewJobApplicationNotification.php` and `app/Notifications/JobApplicationStatusUpdatedNotification.php` once relevant admin/client/freelancer views for applications/assignments are finalized.
+* **For Admin Job Assignment & Posting Feature (Remaining from previous):**
+    * Integrate the "Job Application" system with "Job Assignment". If an application status is set to 'accepted_for_assignment', this should likely trigger the creation or update of a `JobAssignment`.
+    * Clarify/merge "Proposals" vs. "Applications".
+* **Broader Pending Tasks:** (As listed in previous `progress.md`)
 
 ## 4. Known Issues & Bugs
 
-* **Tooling:** File modification tools have been stable. MCP server creation process was successful.
-* **Linter Warnings (from previous work, may still be relevant):**
-  * `AdminWorkSubmissionController.php`: `Undefined method 'download'` for `Storage::disk('private')->download(...)`.
-  * `ClientWorkSubmissionController.php`: `Undefined method 'id'` for `auth()->id()`.
-* **Placeholder Route (from previous work):** Client work submission download link in `client/work-submissions/show.blade.php`.
-* **Status Badge Styling (from previous work):** `x-status-badge` component may need adjustments.
-* **RESOLVED (This Session):** `RelationNotFoundException` for `conversations` on `JobAssignment` model.
-* **RESOLVED (This Session):** Admin dashboard not showing all relevant jobs / using incorrect statuses.
-* **Branding Investigation (Current Task):** The string "Archi-TimeX Keeper" (with hyphen) seen on the live login page was not found in the local codebase. All local configurations and primary views correctly use "Architex Axis". Fallback names "ArchiTimeX Keeper" (no hyphen) were corrected to "Architex Axis" in several layout/component files. The live issue is attributed to potential server-side file or cache staleness.
-* **Potentially Still Active (from previous sessions):**
-  * 500 Error on Admin Add User (`User::ROLES` issue) - needs re-testing.
+* **Notifications for Client (Job Application):** The `NotifyAdminOfJobApplication` listener has a TODO to implement logic for notifying the client who posted the job.
+* **Notification Links (Job Application & Status Update):** The notification classes have TODOs for action URLs.
+* **Tooling:** `replace_in_file` and `write_to_file` tools showed instability during this session.
+* **(Refer to `activeContext.md` for a more comprehensive list of older known issues if still relevant).**
 
 ## 5. Evolution of Project Decisions & Scope
 
-* **5/22/2025 (Current Task): Branding Consistency and Login Screen Investigation**
-    * **Decision:** Corrected all identified instances of old branding ("ArchiTimeX Keeper") in fallback locations within layout and component files to "Architex Axis".
-    * **Impact:** Ensured local codebase consistency for application naming. The primary cause of the user-reported issue on the live login screen ("Archi-TimeX Keeper" with a hyphen) could not be found in the local files and is suspected to be an issue with outdated deployed files or server-side caching on `axis.architex.co.za`.
-* **5/22/2025 (Current Task): Admin Dashboard Job Display & MCP Server for MySQL**
-  * **Decision:** To accurately display jobs on the admin dashboard, a new MCP server (`mysql-query-server`) was created to allow direct introspection of the MySQL database to determine the actual job statuses in use.
-  * **Impact:** The `AdminDashboardController` now uses the precise list of statuses (`'open', 'approved', 'submitted', 'in_progress', 'completed'`) obtained from the database. The dashboard view (`resources/views/admin/dashboard.blade.php`) displays all jobs matching these statuses in a single scrollable list. The 'Active Projects' count was also updated. The new MCP server is configured and operational.
-* **5/22/2025 (Earlier This Session & Current): Application-Wide UI Theming Standardization**
-  * **Decision:** Adopted and began implementing a standardized light theme.
-  * **Impact:** Applied to Admin Job Index, Assignment Details, Freelancer Job Details (including layout update for sidebar and description fix), and general application layout/navigation. Documented in `systemPatterns.md` and `techContext.md`.
-* **5/21/2025 (Earlier This Session): Multi-Stage Work Submission & Review Flow**
-  * **Decision:** Implemented a comprehensive review cycle.
-  * **Impact:** Database, Model, Controller, View, and Event changes as detailed in `activeContext.md`.
-* **Previous decisions documented in `activeContext.md` remain relevant for prior work.**
+* **5/23/2025 (Job Application Status Update Notifications):**
+    * **Decision:** Implemented an event-driven system to notify freelancers when an admin changes the status of their job application.
+    * **Impact:** Improves communication with freelancers regarding their application progress.
+* **5/23/2025 (Admin Job Application Management - Phase 1):**
+    * (Details in previous `progress.md` version).
+* **5/23/2025 (Freelancer Job Application System - Phase 1):**
+    * (Details in previous `progress.md` version).
+* **5/23/2025 (Notification for `JobPostedToFreelancers`):**
+    * (Details in previous `progress.md` version).
+* **(Previous decisions documented in `activeContext.md` and older `progress.md` versions remain relevant).**
 
 *This document provides a snapshot of the project's progress and should be updated regularly. It links back to `activeContext.md` for current work and `projectbrief.md` / `productContext.md` for overall goals.*
