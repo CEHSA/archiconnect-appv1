@@ -3,9 +3,9 @@
         <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl">
             <div class="flex flex-col items-center mb-4">
                 {{-- Using the bird logo image --}}
-                <img src="{{ asset('images/bird_logo.png') }}" alt="Archi-TimeX Keeper Logo" class="w-24 h-auto mb-4 transform transition-all duration-500 hover:scale-105">
+                <img src="{{ asset('images/bird_logo.png') }}" alt="Architex Axis Logo" class="w-24 h-auto mb-4 transform transition-all duration-500 hover:scale-105">
                 <h1 class="text-2xl font-bold text-center text-gray-800">Create an Account</h1>
-                <p class="text-sm text-center text-gray-500 mt-1">Join Archi-TimeX Keeper today</p>
+                <p class="text-sm text-center text-gray-500 mt-1">Join Architex Axis today</p>
             </div>
 
             <form method="POST" action="{{ route('register') }}" class="space-y-5 w-full">

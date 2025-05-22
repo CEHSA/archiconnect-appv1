@@ -1,8 +1,8 @@
 {{-- resources/views/layouts/client.blade.php --}}
-{{-- Create a client layout for Archi-TimeX Keeper based on the provided image.
+{{-- Create a client layout for Architex Axis based on the provided image.
      It should have a fixed dark teal sidebar ('bg-architimex-sidebar', text-white) approx 250px wide.
      The main content area should have a light background ('bg-architimex-lightbg') and a subtle grid pattern.
-     The header bar above the main content should be white or light grey, with the app name "Archi-TimeX Keeper" (and logo) on the left,
+     The header bar above the main content should be white or light grey, with the app name "Architex Axis" (and logo) on the left,
      and user profile/logout dropdown on the right.
      Use Tailwind CSS. The sidebar should contain navigation links.
      The main content area should have a slot for page-specific headers and a main content slot.
@@ -13,7 +13,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'Archi-TimeX Keeper') }} Client</title>
+        <title>{{ config('app.name', 'Architex Axis') }} Client</title>
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -33,7 +33,7 @@
             <aside class="w-64 bg-architimex-sidebar text-white flex-shrink-0">
                 <div class="p-4 flex items-center space-x-2 border-b border-gray-700">
                     <img src="{{ asset('images/bird_logo.png') }}" alt="Logo" class="h-10 w-auto invert brightness-0"> {{-- Assuming logo is dark, invert for light on dark bg --}}
-                    <h1 class="text-xl font-semibold">{{ config('app.name', 'Archi-TimeX Keeper') }}</h1>
+                    <h1 class="text-xl font-semibold">{{ config('app.name', 'Architex Axis') }}</h1>
                 </div>                <nav class="mt-4 px-2">
                     {{-- Sidebar Navigation Slot or Hardcoded Links --}}
                     <x-client-nav-link :href="route('client.dashboard')" :active="request()->routeIs('client.dashboard')">

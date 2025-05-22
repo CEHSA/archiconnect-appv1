@@ -2,7 +2,7 @@
     <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
         <div class="flex flex-col items-center mb-6">
             <a href="/">
-                <img src="{{ asset('images/bird_logo.png') }}" alt="{{ config('app.name', 'Archi-TimeX Keeper') }} Logo" class="w-20 h-20">
+                <img src="{{ asset('images/bird_logo.png') }}" alt="{{ config('app.name', 'Architex Axis') }} Logo" class="w-20 h-20">
             </a>
             <h1 class="text-2xl font-semibold text-gray-700 mt-2">{{ __('Admin Login') }}</h1>
         </div>
