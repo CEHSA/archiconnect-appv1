@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough; // Added import
 use App\Models\Conversation; // Added import
+use App\Models\BudgetAppeal; // Added import for BudgetAppeal
 
 class JobAssignment extends Model
 {
@@ -116,5 +117,13 @@ class JobAssignment extends Model
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);
+    }
+
+    /**
+     * Get the budget appeals for this job assignment.
+     */
+    public function budgetAppeals(): HasMany
+    {
+        return $this->hasMany(BudgetAppeal::class);
     }
 }

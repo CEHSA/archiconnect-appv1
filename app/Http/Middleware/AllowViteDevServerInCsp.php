@@ -15,10 +15,16 @@ class AllowViteDevServerInCsp
      */
     public function handle(Request $request, Closure $next): Response
     {
+        \Illuminate\Support\Facades\Log::info('AllowViteDevServerInCsp middleware executing.');
+        \Illuminate\Support\Facades\Log::info('Current APP_ENV: ' . app()->environment());
+        \Illuminate\Support\Facades\Log::info('Is local? ' . (app()->environment('local') ? 'Yes' : 'No'));
+        \Illuminate\Support\Facades\Log::info('Is production? ' . (app()->environment('production') ? 'Yes' : 'No'));
+
         $response = $next($request);
 
         // Only modify CSP if we're in local development - be very strict about this check
         if (app()->environment('local') && !app()->environment('production')) {
+            \Illuminate\Support\Facades\Log::info('AllowViteDevServerInCsp: Modifying CSP for local environment.');
             $currentCsp = $response->headers->get('Content-Security-Policy');
             // Add all variations of the Vite dev server URL
             $viteDevUrls = [

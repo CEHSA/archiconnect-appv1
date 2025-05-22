@@ -2,7 +2,7 @@
 
 ## 1. Project Name
 
-*   **Name:** Archiconnect App
+*   **Name:** Architex Axis
 *   **Version:** (Specify initial version or leave blank if not yet defined)
 
 ## 2. Project Goals

@@ -10,6 +10,9 @@ deployment:
     # Copy all project files to deployment path
     - /bin/cp -R app bootstrap config database public resources routes vendor composer.json composer.lock artisan .htaccess $DEPLOYPATH
 
+    # Ensure Vite HMR hot file is not present on production
+    - /bin/rm -f $DEPLOYPATH/public/hot
+
     # Copy environment file
     - /bin/cp .env.production $DEPLOYPATH/.env
 
