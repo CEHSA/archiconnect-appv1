@@ -2,7 +2,7 @@
 deployment:
   tasks:
     # Define deployment path
-    - export DEPLOYPATH=/home/architex/public_html/login
+    - export DEPLOYPATH=/home/architex/public_html/axis
 
     # Prepare the deployment directory
     - /bin/mkdir -p $DEPLOYPATH
@@ -29,6 +29,10 @@ deployment:
 
     # Install composer dependencies
     - cd $DEPLOYPATH && php -d memory_limit=512M /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+
+    # Install NPM dependencies and build assets
+    - cd $DEPLOYPATH && npm install
+    - cd $DEPLOYPATH && npm run build && ([ $? -eq 0 ] && /bin/mkdir -p $DEPLOYPATH/public/build && /bin/cp -R dist/. $DEPLOYPATH/public/build/ || ([ -d "build" ] && [ -f "build/manifest.json" ] && /bin/mkdir -p $DEPLOYPATH/public/build && /bin/cp -R build/. $DEPLOYPATH/public/build/ || (echo "Vite build failed or output directory not found, deployment halted." && exit 1)))
 
     # Run Laravel commands
     - cd $DEPLOYPATH && php artisan key:generate --force

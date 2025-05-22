@@ -66,41 +66,15 @@ mkdir -p deployment/storage/app/public
 
 # Create a zip file for deployment
 echo "Creating deployment zip file..."
-
-# Clean up any existing deployment zip
-if [ -f "$DEPLOYMENT_ZIP" ]; then
-    echo "Removing existing deployment zip..."
-    rm -f "$DEPLOYMENT_ZIP"
-fi
-
-# Try using 7-Zip if available
-if command -v 7z &> /dev/null; then
-    echo "Using 7-Zip to create archive..."
-    7z a -r "$DEPLOYMENT_ZIP" "./deployment/*"
-# Try using zip if available
-elif command -v zip &> /dev/null; then
-    echo "Using zip command to create archive..."
+if command -v zip &> /dev/null; then
+    # Use zip if available
     cd deployment
     zip -r ../$DEPLOYMENT_ZIP .
     cd ..
-# If all else fails, instruct the user to manually zip
 else
-    echo "Neither 7z nor zip commands are available."
-    echo "Please manually compress the 'deployment' folder into a zip archive."
-    echo "You can use Windows Explorer to do this:"
-    echo "1. Navigate to the project folder"
-    echo "2. Right-click on the 'deployment' folder"
-    echo "3. Select 'Send to' > 'Compressed (zipped) folder'"
-    echo "4. Rename the resulting zip file to '$DEPLOYMENT_ZIP'"
-fi
-
-# Verify the zip file was created
-if [ -f "$DEPLOYMENT_ZIP" ]; then
-    echo "Deployment zip file created successfully: $DEPLOYMENT_ZIP"
-    echo "Size: $(du -h "$DEPLOYMENT_ZIP" | cut -f1)"
-else
-    echo "Warning: Deployment zip file was not created."
-    echo "Please manually compress the 'deployment' folder."
+    # Fallback to PowerShell if zip is not available
+    echo "zip command not found, using PowerShell instead..."
+    powershell -Command "Compress-Archive -Path deployment/* -DestinationPath $DEPLOYMENT_ZIP -Force"
 fi
 
 echo "Deployment preparation completed!"
