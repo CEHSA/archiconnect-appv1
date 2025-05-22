@@ -38,6 +38,28 @@
             *   I can send and receive text messages.
             *   I can (optionally) attach files.
             *   I receive notifications for new messages.
+    *   **As a Freelancer, I want to submit my completed work for an assignment so that an Admin can review it.**
+        *   *Acceptance Criteria:*
+            *   I can access a submission form for an active assignment.
+            *   I can provide a title, description, and upload a work file.
+            *   I can click a "Submit for Review" button.
+            *   The submission status is updated (e.g., to 'submitted_for_admin_review').
+    *   **As an Admin, I want to review a freelancer's work submission so that I can provide feedback or forward it to the client.**
+        *   *Acceptance Criteria:*
+            *   I can view the details of a submitted work, including the file.
+            *   I can add comments to the submission, optionally attaching a screenshot.
+            *   I can choose to "Request Revisions" from the freelancer, updating the submission status.
+            *   I can choose to "Submit to Client for Review," updating the submission status.
+    *   **As a Client, I want to review a work submission forwarded by an Admin so that I can approve it or request changes.**
+        *   *Acceptance Criteria:*
+            *   I can view the details of the work submission and any admin comments.
+            *   I can add my own comments to the submission, optionally attaching a screenshot.
+            *   I can choose to "Approve Submission," updating its status.
+            *   I can choose to "Request Revisions," updating its status and providing remarks.
+    *   **As a User (Freelancer, Admin), I want to receive notifications when a client comments on or reviews a work submission so that I am informed of the progress.**
+        *   *Acceptance Criteria:*
+            *   Freelancer and Admin are notified of new client comments on a submission they are involved with.
+            *   Freelancer and Admin are notified when a client approves or requests revisions for a submission.
 
 ## 4. User Experience (UX) Goals
 

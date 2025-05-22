@@ -34,6 +34,7 @@ module.exports = {
             'config/**',
             'database/**',
             'public/**',
+            'public/build/**', // Explicitly include the Vite build directory
             'resources/**',
             'routes/**',
             'storage/**',

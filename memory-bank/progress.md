@@ -2,119 +2,93 @@
 
 ## 1. Current Status Summary
 
-* **Overall Project Health:** Yellow - A significant "Internal Server Error" related to the database queue has been addressed by reconfiguring the queue table and providing a new migration. The fix requires user action (running `php artisan migrate`). The previous admin user creation 500 error (related to `User::ROLES`) is still a concern and needs re-testing after this queue issue is confirmed resolved.
-* **Current Phase:** Early Development - Core feature implementation and ongoing debugging.
-* **Percentage Completion (Estimate):** 8% (Queue table issue addressed, pending migration by user).
+* **I. Overall Project Health:** Yellow - Core functionalities for multi-stage work submission largely in place. Significant progress made on standardizing the application's UI with a new light theme (Admin, Client, Freelancer views). Some listener implementations were previously hindered by tool issues, but file modification tools are currently stable.
+* **Current Phase:** Application-Wide UI Theming & Documentation; Feature Development (Work Submission & Review Flow - final touches and testing).
+* **Percentage Completion (Estimate):** 20% (Factoring in submission flow, UI theming of key admin pages (initial application), and documentation updates).
 
 ## 2. What Works (Implemented Features)
 
-* **As of 5/20/2025 (Evening):**
-  * Memory Bank: Structure established and actively maintained.
-  * Basic Laravel Setup:
-    * Routing structure in place.
-    * MVC architecture implemented.
-    * Authentication system partially implemented.
-    * Admin, Client, and Freelancer roles defined.
-  * Code Structure:
-    * `User::ROLES` constant correctly defined in `app/Models/User.php`.
-    * Admin user creation code (Controller, Routes, View) appears logically sound.
-  * **Admin Activity Logging (Initial Implementation):**
-    * `admin_activity_logs` table and `AdminActivityLog` model created.
-    * `UserCreatedByAdmin` event and `LogAdminActivity` listener implemented.
-    * Admin dashboard updated to display recent admin activities.
-  * **Queue Configuration:**
-    * `config/queue.php` updated to use `queue_jobs` as the default table name for the database queue driver, resolving a conflict with the application's `jobs` table.
-    * New migration `2025_05_20_200000_create_queue_jobs_table.php` created with the correct schema for Laravel's database queue.
+* **As of 5/22/2025 (Current Session - Latest Updates):**
+  * **Freelancer Messages UI Update:**
+    * `resources/views/freelancer/messages/index.blade.php` updated to use a table layout similar to the admin's message view, improving UI consistency. Applied standard light theme styling.
+  * **Admin Dashboard "Recent Jobs" Update:**
+    * `AdminDashboardController.php` updated to fetch jobs based on actual statuses found in the database (`'open', 'approved', 'submitted', 'in_progress', 'completed'`).
+    * `resources/views/admin/dashboard.blade.php` updated to display these jobs in a single, scrollable list.
+    * 'Active Projects' summary count updated to use relevant statuses.
+  * **MCP Server for MySQL Querying:**
+    * Successfully created and configured a new MCP server (`mysql-query-server`) located at `C:\Users\Raidmax i5\Documents\Cline\MCP\mysql-query-server`.
+    * The server provides an `execute_mysql_query` tool.
+    * Configuration added to `c:\Users\Raidmax i5\AppData\Roaming\Code - Insiders\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json` with necessary DB credentials.
+    * Used the new tool to identify actual job statuses in the database.
+  * **Route Fix (Earlier this session):** Resolved `RouteNotFoundException` for `admin.job-assignments.tasks.edit`.
+  * **Standard UI Theming (Earlier this session & Current):**
+    * Applied to `admin/jobs/assignments/show.blade.php` and `admin/jobs/index.blade.php`.
+    * Applied to `freelancer/jobs/show.blade.php` (updated to use `x-layouts.freelancer`, fixed description HTML rendering).
+    * Applied to `layouts/app.blade.php` and `layouts/navigation.blade.php` (removed dark theme classes).
+  * **Multi-Stage Work Submission & Review Flow (Earlier this session):** Core logic and UI structure implemented.
+* **Previous Features (Verified or Addressed in Prior Sessions):**
+  * Bug Fixes on Admin Task Edit Page (before current theming).
+  * Initial (dark) Theming Consistency in Admin Assignments & Tasks.
+  * UI Updates on Admin Job Details Page (Proposals tab merged, comment form added).
+  * Backend for general Admin Comments on Jobs.
+  * Database schema update for `budget` column precision.
+  * General Admin Job Section Theming.
+  * Admin Activity Logging (initial).
+  * Queue Configuration.
 
 ## 3. What's Left to Build (Key Pending Features)
 
-* **Immediate User Action:**
-  * Admin job creation and freelancer assignment workflow, including initial freelancer notification logic, has been successfully debugged and verified.
-* **Critical Fixes Needed (Post-Testing):**
-  * Re-test admin user creation to see if the `User::ROLES` 500 error (previously encountered) persists or was indirectly related to other issues.
-  * Investigate potential autoloading or file system issues if errors continue.
-* **Core Platform Features:**
+* **Immediate (Blocked by Tool Issues / Needs Implementation):**
+  * **Listener Implementation:**
+    * Successfully write the full logic for `app/Listeners/NotifyAdminAndFreelancerOfClientComment.php`.
+    * Register this listener in `app/Providers/EventServiceProvider.php` for the `JobCommentCreated` event.
+  * **Notification Classes:**
+    * Create `ClientCommentNotificationToAdmin` and `ClientCommentNotificationToFreelancer` (and any other required notification classes for the review flow).
+    * Define content and channels (email, database) for these notifications.
+* **Further Implementation & Verification for Current Feature:**
+  * **Client File Download:** Implement or verify a secure, client-accessible route for downloading work submission files from `resources/views/client/work-submissions/show.blade.php`.
+  * **Testing:** Conduct thorough end-to-end testing of the entire submission and review workflow across Freelancer, Admin, and Client roles.
+  * **Linter/Runtime Errors:** Investigate and resolve any persistent linter errors (e.g., `Storage::download`, `auth()->id()`) if they cause runtime issues.
+  * **Bug Fix (Current):** Resolved `RelationNotFoundException` for `conversations` on `JobAssignment` model by adding the relationship method in `app/Models/JobAssignment.php`. This was affecting the freelancer's assignment detail view.
+* **Application UI Theming (Site-Wide):**
+  * Apply the new standard light theme to remaining Admin, Client, and Freelancer pages (e.g., user management, reports, settings, client dashboard, freelancer job browse, etc.) for consistency.
+  * Review and potentially adjust the `x-status-badge` component to better match the solid-background badge style shown in some reference images, or implement custom badge styling where needed.
+* **Broader Pending Tasks (from `projectbrief.md` / `productContext.md` / previous sessions):**
   * User Registration (Client, Freelancer)
   * User Login & Authentication
-    * Admin login functionality
-    * Client/Freelancer login flows
   * User Profiles (Client, Freelancer)
-  * Job Posting (Client)
-  * Job Browsing/Searching (Freelancer)
-  * Proposal Submission (Freelancer)
-  * Proposal Review & Awarding (Client)
-  * Basic Messaging System
-  * Admin Dashboard (Partially implemented)
-  * Expand admin activity logging.
-* **Future Phases:**
-  * Payment Integration, Advanced Search, Notifications, Dispute Resolution, Ratings & Reviews.
+  * Job Posting (Client) & Browsing (Freelancer)
+  * Proposal System (beyond what's integrated into admin job show)
+  * Full Messaging System
+  * Expand Admin Activity Logging
+  * Payment Integration, Advanced Search, Ratings & Reviews.
+* **User Verification Pending (from previous work):**
+  * Numerous UI theming changes and bug fixes from before the current task.
 
 ## 4. Known Issues & Bugs
 
-* **As of 5/21/2025 (Early Morning):**
-  * **Currency Display:** Updated admin jobs list to use `CurrencyHelper::formatZAR()`. (Pending user verification)
-  * **Admin Job Creation Logging:** Configured `AdminJobPosted` event and `LogAdminActivity` listener to log when an admin creates a job. (Pending user verification)
-  * **Admin Job Creation & Assignment Flow:** Successfully debugged and verified. This involved fixing:
-    * Queue table configuration (`queue_jobs`).
-    * `createdByAdmin` relationship on `Job` model.
-    * `comments` relationship on `Job` model.
-    * `timeLogs` relationship on `JobAssignment` model (changed to `HasManyThrough`).
-    * `admin.jobs.destroy` route definition.
-    * Routes and controller logic for job assignment creation and redirects (including `JobAssignmentController@show` and `edit` methods, and Blade views for assignment show/edit).
-  * **Freelancer Notification:** Logic for notifying freelancers upon assignment (email and DB) is in place and correctly configured.
-  * **500 Error on Admin Add User (Potentially Still Active):**
-    * Error message indicated `User::ROLES` constant is undefined. This needs re-testing now that other major issues are resolved.
-    * Verified constant exists in `User.php`.
-    * Issue may be related to autoloading or file system.
-  * **Development Environment Limitations:**
-    * cPanel Terminal not available for direct Artisan command execution by Cline.
-  * **Previous Issues (Resolved):**
-    * ~~Duplicate `use` statement in `routes/web.php`~~
-    * ~~"Unknown column 'queue' in 'INSERT INTO' for jobs table"~~
-    * ~~`RelationNotFoundException` for `createdByAdmin` on `Job` model~~
-    * ~~`RelationNotFoundException` for `comments` on `Job` model~~
-    * ~~`RouteNotFoundException` for `admin.jobs.destroy`~~
-    * ~~`RouteNotFoundException` for `admin.jobs.assignments.store` (Blade view)~~
-    * ~~`UrlGenerationException` (Missing $job parameter) for `admin.jobs.show` in `JobAssignmentController@create` view.~~
-    * ~~`RouteNotFoundException` for `admin.jobs.assignments.index` (Controller redirect)~~
-    * ~~TODO comments in `JobAssignmentController`~~
-    * ~~`UrlGenerationException` for `admin.jobs.show` in `assignments/show.blade.php` (Back to Job Details link)~~
-    * ~~`UrlGenerationException` for `admin.job-assignments.edit` in `assignments/show.blade.php` (Edit Assignment link)~~
-    * ~~`UrlGenerationException` for `admin.jobs.show` in `JobAssignmentController@update` redirect~~
+* **Tooling:** File modification tools have been stable. MCP server creation process was successful.
+* **Linter Warnings (from previous work, may still be relevant):**
+  * `AdminWorkSubmissionController.php`: `Undefined method 'download'` for `Storage::disk('private')->download(...)`.
+  * `ClientWorkSubmissionController.php`: `Undefined method 'id'` for `auth()->id()`.
+* **Placeholder Route (from previous work):** Client work submission download link in `client/work-submissions/show.blade.php`.
+* **Status Badge Styling (from previous work):** `x-status-badge` component may need adjustments.
+* **RESOLVED (This Session):** `RelationNotFoundException` for `conversations` on `JobAssignment` model.
+* **RESOLVED (This Session):** Admin dashboard not showing all relevant jobs / using incorrect statuses.
+* **Potentially Still Active (from previous sessions):**
+  * 500 Error on Admin Add User (`User::ROLES` issue) - needs re-testing.
 
 ## 5. Evolution of Project Decisions & Scope
 
-* **5/21/2025 (Early Morning) - Currency and Activity Log Fixes:**
-  * Updated `admin/jobs/index.blade.php` to use `CurrencyHelper` for ZAR formatting.
-  * Modified `AdminJobPosted` event and `EventServiceProvider` to enable logging of admin job creation via `LogAdminActivity`.
-* **5/21/2025 (Early Morning) - Job Assignment Flow & Notification Verification (Continued):**
-  * Corrected `timeLogs` relationship in `JobAssignment` model to `HasManyThrough`.
-  * Made `JobAssignmentController@show` and `edit` methods explicitly fetch `JobAssignment` to resolve issues with route model binding and subsequent relationship loading.
-  * Updated `assignments/show.blade.php` and `assignments/edit.blade.php` to handle potentially null job relationships more gracefully and correct route names.
-  * Confirmed the entire admin job creation and freelancer assignment process is working.
-  * Verified that the `JobAssigned` event correctly triggers the `SendFreelancerAssignmentNotification` listener.
-  * Removed TODO comments from `JobAssignmentController`.
-  * Corrected redirects in `JobAssignmentController` to point to `admin.jobs.show`.
-  * Adjusted `JobAssignmentController@create` to fetch `Job` via `job_id` query parameter.
-  * Fixed `admin.jobs.assignments.create` blade view.
-  * Added `comments` relationship to `Job` model.
-  * Added `destroy` action to `admin.jobs` resource route.
-* **5/20/2025 (Very Late Evening) - Addressing `RelationNotFoundException` for `createdByAdmin`:**
-  * Added `createdByAdmin` relationship and `created_by_admin_id` to `fillable` in `app/Models/Job.php`.
-* **5/20/2025 (Late Evening) - Queue Table Conflict Resolution Steps:**
-  * User ensured `.env` file was correct regarding `DB_QUEUE_TABLE`.
-  * User executed `php artisan config:clear`.
-  * User executed `php artisan migrate` (reported "Nothing to migrate").
-* **5/20/2025 - Queue Table Conflict Resolution (Initial Fix by Cline):**
-  * **Problem:** The application's `jobs` table (for job listings) conflicted with the default table name (`jobs`) used by Laravel's database queue driver. The original migration for the queue's `jobs` table had been repurposed.
-  * **Solution (by Cline):**
-        1. Modified `config/queue.php` to change the default table name for the database queue to `queue_jobs`.
-        2. Created a new migration file (`2025_05_20_200000_create_queue_jobs_table.php`) with the standard Laravel schema for this `queue_jobs` table.
-  * **Decision Rationale:** Reconfiguring the queue table name was chosen over renaming the application's main `jobs` table and model to minimize disruption.
-* **5/20/2025 - Admin Activity Logging Implementation:**
-  * Feature added to log admin activities, starting with user creation.
-* **Previous (5/20/2025 - Cache and `User::ROLES` issue):**
-  * Extensive cache clearing did not resolve the `User::ROLES` error.
-  * Route file cleanup performed.
+* **5/22/2025 (Current Task): Admin Dashboard Job Display & MCP Server for MySQL**
+  * **Decision:** To accurately display jobs on the admin dashboard, a new MCP server (`mysql-query-server`) was created to allow direct introspection of the MySQL database to determine the actual job statuses in use.
+  * **Impact:** The `AdminDashboardController` now uses the precise list of statuses (`'open', 'approved', 'submitted', 'in_progress', 'completed'`) obtained from the database. The dashboard view (`resources/views/admin/dashboard.blade.php`) displays all jobs matching these statuses in a single scrollable list. The 'Active Projects' count was also updated. The new MCP server is configured and operational.
+* **5/22/2025 (Earlier This Session & Current): Application-Wide UI Theming Standardization**
+  * **Decision:** Adopted and began implementing a standardized light theme.
+  * **Impact:** Applied to Admin Job Index, Assignment Details, Freelancer Job Details (including layout update for sidebar and description fix), and general application layout/navigation. Documented in `systemPatterns.md` and `techContext.md`.
+* **5/21/2025 (Earlier This Session): Multi-Stage Work Submission & Review Flow**
+  * **Decision:** Implemented a comprehensive review cycle.
+  * **Impact:** Database, Model, Controller, View, and Event changes as detailed in `activeContext.md`.
+* **Previous decisions documented in `activeContext.md` remain relevant for prior work.**
 
 *This document provides a snapshot of the project's progress and should be updated regularly. It links back to `activeContext.md` for current work and `projectbrief.md` / `productContext.md` for overall goals.*

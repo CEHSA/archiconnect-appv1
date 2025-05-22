@@ -47,6 +47,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Verify the build was successful
+if [ ! -f "public/build/manifest.json" ]; then
+    echo_color "red" "Error: Vite manifest file not found. The build may have failed."
+    exit 1
+fi
+
 echo_color "green" "Frontend assets built successfully!"
 
 # Run the deployment script
