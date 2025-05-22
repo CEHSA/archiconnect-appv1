@@ -26,6 +26,10 @@
     * Applied to `freelancer/jobs/show.blade.php` (updated to use `x-layouts.freelancer`, fixed description HTML rendering).
     * Applied to `layouts/app.blade.php` and `layouts/navigation.blade.php` (removed dark theme classes).
   * **Multi-Stage Work Submission & Review Flow (Earlier this session):** Core logic and UI structure implemented.
+  * **Branding Consistency Update (Current Task):**
+    * Updated fallback application name from 'ArchiTimeX Keeper' to 'Architex Axis' in `resources/views/layouts/admin-guest.blade.php`, `resources/views/components/freelancer-layout.blade.php`, and `resources/views/components/admin-layout.blade.php`.
+    * Confirmed primary login views and configurations correctly use "Architex Axis".
+    * Noted that the live issue of "Archi-TimeX Keeper" (with hyphen) on `axis.architex.co.za/login` is likely due to server-side outdated files or caching, as the string is not present in the local codebase.
 * **Previous Features (Verified or Addressed in Prior Sessions):**
   * Bug Fixes on Admin Task Edit Page (before current theming).
   * Initial (dark) Theming Consistency in Admin Assignments & Tasks.
@@ -75,11 +79,15 @@
 * **Status Badge Styling (from previous work):** `x-status-badge` component may need adjustments.
 * **RESOLVED (This Session):** `RelationNotFoundException` for `conversations` on `JobAssignment` model.
 * **RESOLVED (This Session):** Admin dashboard not showing all relevant jobs / using incorrect statuses.
+* **Branding Investigation (Current Task):** The string "Archi-TimeX Keeper" (with hyphen) seen on the live login page was not found in the local codebase. All local configurations and primary views correctly use "Architex Axis". Fallback names "ArchiTimeX Keeper" (no hyphen) were corrected to "Architex Axis" in several layout/component files. The live issue is attributed to potential server-side file or cache staleness.
 * **Potentially Still Active (from previous sessions):**
   * 500 Error on Admin Add User (`User::ROLES` issue) - needs re-testing.
 
 ## 5. Evolution of Project Decisions & Scope
 
+* **5/22/2025 (Current Task): Branding Consistency and Login Screen Investigation**
+    * **Decision:** Corrected all identified instances of old branding ("ArchiTimeX Keeper") in fallback locations within layout and component files to "Architex Axis".
+    * **Impact:** Ensured local codebase consistency for application naming. The primary cause of the user-reported issue on the live login screen ("Archi-TimeX Keeper" with a hyphen) could not be found in the local files and is suspected to be an issue with outdated deployed files or server-side caching on `axis.architex.co.za`.
 * **5/22/2025 (Current Task): Admin Dashboard Job Display & MCP Server for MySQL**
   * **Decision:** To accurately display jobs on the admin dashboard, a new MCP server (`mysql-query-server`) was created to allow direct introspection of the MySQL database to determine the actual job statuses in use.
   * **Impact:** The `AdminDashboardController` now uses the precise list of statuses (`'open', 'approved', 'submitted', 'in_progress', 'completed'`) obtained from the database. The dashboard view (`resources/views/admin/dashboard.blade.php`) displays all jobs matching these statuses in a single scrollable list. The 'Active Projects' count was also updated. The new MCP server is configured and operational.

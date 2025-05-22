@@ -88,6 +88,14 @@
         *   Re-themed `resources/views/admin/jobs/assignments/show.blade.php` and `resources/views/admin/jobs/index.blade.php`.
         *   Re-themed `resources/views/freelancer/jobs/show.blade.php`, changed its layout to `x-layouts.freelancer`, and fixed HTML rendering for the job description.
         *   Re-themed `resources/views/layouts/app.blade.php` and `resources/views/layouts/navigation.blade.php` by removing dark theme classes.
+    *   **Branding Consistency Update (Current Task):**
+        *   Updated fallback application name from 'ArchiTimeX Keeper' to 'Architex Axis' in:
+            *   `resources/views/layouts/admin-guest.blade.php` (title tag)
+            *   `resources/views/components/freelancer-layout.blade.php` (title tag and h1 tag)
+            *   `resources/views/components/admin-layout.blade.php` (title tag and h1 tag)
+        *   Investigation confirmed that `resources/views/auth/login.blade.php` and `deployment/resources/views/auth/login.blade.php` correctly display "Welcome to Architex Axis".
+        *   All `.env` files and `config/app.php` correctly specify "Architex Axis".
+        *   The issue of "Archi-TimeX Keeper" (with hyphen) appearing on the live login screen (`axis.architex.co.za/login`) is likely due to outdated files or server-side caching on the live server, as this string was not found in the local codebase.
 *   **Key decisions made during this session:**
     *   **Freelancer Messages View:** Updated `resources/views/freelancer/messages/index.blade.php` to use a table layout for conversations, mirroring the admin section's style for better UI consistency.
     *   **Freelancer Job View Layout & Content:** Updated `resources/views/freelancer/jobs/show.blade.php` to use `x-layouts.freelancer` for consistency with the freelancer dashboard (including sidebar) and corrected job description rendering to display HTML instead of raw tags.

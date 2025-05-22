@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'ArchiTimeX Keeper') }} Admin</title>
+        <title>{{ config('app.name', 'Architex Axis') }} Admin</title>
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -25,7 +25,7 @@
             <aside class="w-64 bg-architimex-sidebar text-white flex-shrink-0">
                 <div class="p-4 flex items-center space-x-2 border-b border-gray-700">
                     <img src="{{ asset('images/bird_logo.png') }}" alt="Logo" class="h-10 w-auto invert brightness-0"> {{-- Assuming logo is dark, invert for light on dark bg --}}
-                    <h1 class="text-xl font-semibold">{{ config('app.name', 'ArchiTimeX Keeper') }}</h1>
+                    <h1 class="text-xl font-semibold">{{ config('app.name', 'Architex Axis') }}</h1>
                 </div>
                 <nav class="mt-4 px-2">
                     {{-- Sidebar Navigation Slot or Hardcoded Links --}}

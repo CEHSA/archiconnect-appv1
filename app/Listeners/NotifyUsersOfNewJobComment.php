@@ -26,56 +26,79 @@ class NotifyUsersOfNewJobComment implements ShouldQueue
      */
     public function handle(JobCommentCreated $event): void
     {
-        $comment = $event->jobComment->loadMissing(['user', 'jobAssignment.job.client.user', 'jobAssignment.assignedByAdmin', 'jobAssignment.freelancer.user']);
-        
-        $jobAssignment = $comment->jobAssignment;
+        try {
+            $comment = $event->jobComment->loadMissing([
+                'user',
+                'job.jobAssignment.assignedByAdmin',
+                'job.client.user',
+                'job.jobAssignment.freelancer.user'
+            ]);
+            
+            if (!$comment->job) {
+                \Illuminate\Support\Facades\Log::warning('JobCommentCreated event for comment ID ' . $comment->id . ' has no associated job. Skipping notifications.');
+                return;
+            }
 
-        // If the comment is not associated with a specific job assignment,
-        // we might not need to send these assignment-specific notifications.
-        // Or, handle general job comments differently if that's a feature.
-        if (!$jobAssignment) {
-            // Log this situation or handle as per business logic for general comments.
-            // For now, we'll simply return to prevent errors.
-            \Illuminate\Support\Facades\Log::info('JobCommentCreated event for comment ID ' . $comment->id . ' has no associated jobAssignment. Skipping notifications.');
+            $jobAssignment = $comment->job->jobAssignment;
+            
+            if (!$jobAssignment) {
+                \Illuminate\Support\Facades\Log::warning('Job ID ' . $comment->job_id . ' has no associated job assignment. Skipping notifications.');
+                return;
+            }
+
+            // Notify the admin who assigned the job
+            $assigningAdmin = $jobAssignment->assignedByAdmin;
+            if ($assigningAdmin && $assigningAdmin->id !== $comment->user_id) {
+                try {
+                    $assigningAdmin->notify(new NewJobCommentDbNotification($comment));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to notify assigning admin: ' . $e->getMessage());
+                }
+            }
+
+            // Notify the client
+            $clientUser = $comment->job->client->user ?? null;
+            if ($clientUser && $clientUser->id !== $comment->user_id) {
+                try {
+                    $clientUser->notify(new NewJobCommentDbNotification($comment));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to notify client: ' . $e->getMessage());
+                }
+            }
+
+            // Notify the freelancer
+            $freelancerUser = $jobAssignment->freelancer->user ?? null;
+            if ($freelancerUser && $freelancerUser->id !== $comment->user_id) {
+                try {
+                    $freelancerUser->notify(new NewJobCommentDbNotification($comment));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to notify freelancer: ' . $e->getMessage());
+                }
+            }
+
+            // Notify other admins
+            try {
+                $admins = User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    // Skip if this admin is the commenter or assigning admin
+                    if ($admin->id === $comment->user_id || 
+                        ($assigningAdmin && $admin->id === $assigningAdmin->id)) {
+                        continue;
+                    }
+                    
+                    try {
+                        $admin->notify(new NewJobCommentDbNotification($comment));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Failed to notify admin ' . $admin->id . ': ' . $e->getMessage());
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to fetch or process admin notifications: ' . $e->getMessage());
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error processing JobCommentCreated event: ' . $e->getMessage());
             return;
         }
-
-        $job = $jobAssignment->job;
-
-        if (!$job) {
-            // This case should ideally not happen if a jobAssignment exists, but as a safeguard:
-            \Illuminate\Support\Facades\Log::warning('JobCommentCreated event for comment ID ' . $comment->id . ' has a jobAssignment (ID ' . $jobAssignment->id . ') but no associated job. Skipping notifications.');
-            return;
-        }
-
-        // Notify the admin who assigned the job
-        $assigningAdmin = $jobAssignment->assignedByAdmin;
-        if ($assigningAdmin && $assigningAdmin->id !== $comment->user_id) {
-            $assigningAdmin->notify(new NewJobCommentDbNotification($comment));
-        }
-
-        // Notify the client
-        if ($job->client && $job->client->user && $job->client->user->id !== $comment->user_id) { 
-             $job->client->user->notify(new NewJobCommentDbNotification($comment));
-        }
-
-        // Notify the freelancer
-        if ($jobAssignment->freelancer && $jobAssignment->freelancer->user && $jobAssignment->freelancer->user->id !== $comment->user_id) { 
-            $jobAssignment->freelancer->user->notify(new NewJobCommentDbNotification($comment));
-        }
-
-        // Notify any other admins
-        $admins = User::where('role', 'admin')->get();
-         foreach ($admins as $admin) {
-             // Skip if this admin is the one who made the comment
-             if ($admin->id === $comment->user_id) {
-                 continue;
-             }
-             // Skip if this admin is the assigning admin and was already notified (or would have been)
-             if ($assigningAdmin && $admin->id === $assigningAdmin->id) {
-                 continue; 
-             }
-             $admin->notify(new NewJobCommentDbNotification($comment));
-         }
     }
 }
