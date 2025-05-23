@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
 use App\Models\Job;
+use App\Models\JobApplication; // Added
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -106,5 +107,21 @@ class JobController extends Controller
             ->paginate(10);
 
         return view('freelancer.jobs.browse', compact('jobs'));
+    }
+
+    /**
+     * Display a listing of applications for a specific job (client view).
+     */
+    public function jobApplications(Job $job): View
+    {
+        $this->authorize('view', $job); // Ensure client owns the job
+
+        // Fetch applications related to this job through JobPostings
+        // This assumes applications are made to JobPostings, which are linked to the Job.
+        $applications = JobApplication::whereHas('jobPosting', function ($query) use ($job) {
+            $query->where('job_id', $job->id);
+        })->with(['freelancer.freelancerProfile', 'jobPosting'])->latest('submitted_at')->get();
+
+        return view('client.jobs.applications', compact('job', 'applications'));
     }
 }

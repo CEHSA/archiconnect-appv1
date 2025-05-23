@@ -282,6 +282,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('work-submissions', WorkSubmissionController::class)->only(['index', 'show', 'update']); // Added 'update' as it exists
         Route::resource('jobs', JobController::class);
         Route::get('/jobs/{job}/proposals', [ProposalController::class, 'jobProposals'])->name('jobs.proposals');
+        Route::get('/jobs/{job}/applications', [JobController::class, 'jobApplications'])->name('jobs.applications'); // New route for client to view applications
         Route::patch('/proposals/{proposal}/status', [ProposalController::class, 'updateStatus'])->name('proposals.update-status');
         Route::get('/jobs/{job}/comments', [JobCommentController::class, 'index'])->name('jobs.comments.index');
         Route::post('/jobs/{job}/comments', [JobCommentController::class, 'store'])->name('jobs.comments.store');

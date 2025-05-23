@@ -56,6 +56,10 @@ use App\Events\JobApplicationSubmitted;
 use App\Listeners\NotifyAdminOfJobApplication;
 use App\Events\JobApplicationStatusUpdated; // Added
 use App\Listeners\NotifyFreelancerOfApplicationStatusUpdate; // Added
+use App\Events\ClientMessageSent; // Added
+use App\Listeners\NotifyParticipantsOfClientMessage; // Added
+use App\Events\AdminMessageSent; // Added
+use App\Listeners\NotifyParticipantsOfAdminMessage; // Added
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
@@ -162,6 +166,12 @@ class EventServiceProvider extends ServiceProvider
         ],
         JobApplicationStatusUpdated::class => [ // Added for status updates
             NotifyFreelancerOfApplicationStatusUpdate::class,
+        ],
+        ClientMessageSent::class => [ // Added for client messages
+            NotifyParticipantsOfClientMessage::class,
+        ],
+        AdminMessageSent::class => [ // Added for admin messages
+            NotifyParticipantsOfAdminMessage::class,
         ],
     ];
 

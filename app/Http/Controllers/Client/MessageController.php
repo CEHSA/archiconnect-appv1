@@ -7,7 +7,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Events\ClientMessageCreated; // Moved to bottom to avoid conflict if needed later
+use App\Events\ClientMessageSent; // Changed from ClientMessageCreated
 
 class MessageController extends Controller
 {
@@ -33,18 +33,15 @@ class MessageController extends Controller
     public function show(Conversation $conversation)
     {
         // Ensure the authenticated client is part of the conversation
-        if ($conversation->participant1_id !== Auth::id() && $conversation->participant2_id !== Auth::id()) {
+        if (!$conversation->isParticipant(Auth::user())) {
             abort(403, 'Unauthorized action.');
         }
 
         // Load the conversation with its messages and participants
-        $conversation->load(['messages.user', 'messages.attachments', 'participant1', 'participant2', 'job']);
+        $conversation->load(['messages.user', 'messages.attachments', 'participants', 'job']); // Load 'participants' instead of participant1/2
 
-        // Mark unread messages as read
-        $conversation->messages()
-            ->whereNull('read_at')
-            ->where('user_id', '!=', Auth::id())
-            ->update(['read_at' => now()]);
+        // Mark messages as read for the current user
+        $conversation->markAsReadForUser(Auth::user());
 
         return view('client.messages.show', compact('conversation'));
     }
@@ -62,32 +59,36 @@ class MessageController extends Controller
 
         // Ensure the authenticated client is part of the conversation
         $conversation = Conversation::findOrFail($request->conversation_id);
-        if ($conversation->participant1_id !== Auth::id() && $conversation->participant2_id !== Auth::id()) {
+        if (!$conversation->isParticipant(Auth::user())) {
             abort(403, 'Unauthorized action.');
         }
 
-        $message = Message::create([
-            'conversation_id' => $request->conversation_id,
+        $message = $conversation->messages()->create([ // Create message via relationship
             'user_id' => Auth::id(),
-            'content' => $request->content,
-            'status' => 'approved', // Client messages don't need approval
+            'body' => $request->content, // Assuming 'body' is the field in 'messages' table, was 'content'
+            'admin_review_status' => 'approved', // Client messages are pre-approved
         ]);
 
         // Handle file attachments if any
         if ($request->hasFile('attachments')) {
+            $jobId = $conversation->job_id ?? 'general'; // Fallback if no job_id
+            $storagePath = "ArchiAxis/Job_{$jobId}/chat_thread";
+
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('message_attachments', 'public');
+                $path = $file->store($storagePath, 'public');
                 $message->attachments()->create([
                     'file_path' => $path,
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'file_type' => $file->getMimeType(),
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(), 
+                    'mime_type' => $file->getMimeType(),
                 ]);
             }
         }
 
         // Update the conversation's last_message_at timestamp
-        $conversation->update(['last_message_at' => now()]);
+        $conversation->update(['last_message_at' => $message->created_at]); // Use message's creation time
+
+        event(new ClientMessageSent($message)); // Dispatch the event
 
         return redirect()->route('client.messages.show', $conversation)
             ->with('success', 'Message sent successfully.');

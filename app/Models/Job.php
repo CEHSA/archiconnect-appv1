@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Admin; // Added import for Admin model
 use App\Models\JobComment; // Added import for JobComment model
+use App\Models\JobApplication; // Added
 
 class Job extends Model
 {
@@ -107,5 +108,17 @@ class Job extends Model
     public function assignedFreelancer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_freelancer_id');
+    }
+
+    /**
+     * Get all job applications for the job (potentially through job postings).
+     */
+    public function jobApplications(): HasMany
+    {
+        // This assumes applications are directly linked to job_id.
+        // If applications are linked via job_postings, a HasManyThrough relationship might be needed
+        // or querying via job_postings as done in the controller.
+        // For direct access from Job model, if JobApplication has job_id:
+        return $this->hasMany(JobApplication::class);
     }
 }

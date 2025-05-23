@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Events\JobApplicationStatusUpdated;
 use App\Models\JobAssignment; // Added
 use App\Events\JobAssigned; // Added
+use App\Models\Conversation; // Added
 // Removed duplicate: use App\Models\Job; 
 
 class JobApplicationController extends Controller
@@ -94,9 +95,27 @@ class JobApplicationController extends Controller
 
             // Dispatch JobAssigned event
             event(new JobAssigned($jobAssignment));
+
+            // Find or create a conversation for this assignment and sync participants
+            $conversation = Conversation::firstOrCreate(
+                ['job_assignment_id' => $jobAssignment->id],
+                [
+                    'job_id' => $jobAssignment->job_id,
+                    'created_by_user_id' => auth()->guard('admin')->id(), // Admin initiated this context
+                    'subject' => 'Conversation for Assignment: ' . $jobAssignment->job->title,
+                    'last_message_at' => now(),
+                ]
+            );
+            $participantIds = [
+                $jobAssignment->client_id, // Client
+                $jobAssignment->freelancer_id, // Freelancer
+            ];
+            $adminUsers = User::where('role', User::ROLE_ADMIN)->pluck('id')->toArray();
+            $participantIds = array_unique(array_merge($participantIds, $adminUsers));
+            $conversation->participants()->syncWithoutDetaching($participantIds);
             
             return redirect()->route('admin.job-applications.show', $application)
-                             ->with('success', 'Application accepted and job assigned. Other applications for this job have been updated.');
+                             ->with('success', 'Application accepted, job assigned, conversation updated, and other applications updated.');
         }
 
         return redirect()->route('admin.job-applications.show', $application)

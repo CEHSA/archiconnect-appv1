@@ -6,11 +6,12 @@ use App\Events\MessageApprovedByAdmin;
 use App\Events\MessageRejectedByAdmin; // Import the new event for rejection
 use App\Events\MessageReviewedByAdmin; // Import the new event
 use App\Http\Controllers\Controller;
-use App\Models\Admin; // Import Admin model
+// use App\Models\Admin; // Removed Admin model import, assuming admins are Users
 use App\Models\Message;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Models\AdminActivityLog; // Import AdminActivityLog
+use App\Events\AdminMessageSent; // Added
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,10 +22,13 @@ class MessageController extends Controller
      */
     public function index()
     {
-        // Get all conversations
-        $conversations = Conversation::with(['participant1', 'participant2', 'job'])
+        // Get all conversations, eager load participants and job
+        // Admins can see all conversations
+        $conversations = Conversation::with(['participants', 'job', 'messages' => function ($query) {
+                $query->latest()->limit(1); // For displaying latest message snippet
+            }])
             ->latest('last_message_at')
-            ->paginate(10);
+            ->paginate(15);
 
         // Get pending messages for review
         $pendingMessages = Message::where('status', 'pending')
@@ -50,18 +54,12 @@ class MessageController extends Controller
     public function showConversation(Conversation $conversation)
     {
         // Load the conversation with its messages and participants
-        $conversation->load(['messages.user', 'participant1', 'participant2', 'job']);
+        $conversation->load(['messages.user', 'messages.attachments', 'participants', 'job']);
 
         // Mark messages as read for the current admin user
-        /** @var \App\Models\User|null $adminUser */
-        $adminUser = Auth::user();
-        if ($adminUser) {
-            foreach ($conversation->messages as $message) {
-                // Check if the message was not sent by the current admin and is unread
-                if ($message->user_id !== $adminUser->id && $message->isUnread()) {
-                    $message->markAsRead();
-                }
-            }
+        $adminUser = Auth::user(); // Auth::user() should return the authenticated Admin (User model instance)
+        if ($adminUser && $adminUser->role === User::ROLE_ADMIN) {
+            $conversation->markAsReadForUser($adminUser);
         }
 
         return view('admin.messages.conversation', compact('conversation'));
@@ -79,13 +77,14 @@ class MessageController extends Controller
         
         // If no conversation specified (even after checking request), allow creating a new conversation
         if (!$conversation) {
-            $users = User::where('role', '!=', User::ROLE_ADMIN)->get();
-            $jobs = Job::with('user')->orderBy('created_at', 'desc')->get(); // Get jobs for linking
+            // Users excluding other admins, or specific roles like client/freelancer
+            $users = User::where('role', '!=', User::ROLE_ADMIN)->orderBy('name')->get(); 
+            $jobs = Job::orderBy('title')->get(); // Get jobs for linking
             return view('admin.messages.create', compact('users', 'jobs'));
         }
 
         // Otherwise, show the form to add a message to an existing conversation
-        $conversation->load(['participant1', 'participant2', 'job']);
+        $conversation->load(['participants', 'job']);
         return view('admin.messages.create', compact('conversation'));
     }
 
@@ -102,48 +101,53 @@ class MessageController extends Controller
             'attachments.*' => 'nullable|file|max:5120', // 5MB max per file
         ]);
 
+        $adminUser = Auth::user(); // Authenticated Admin (User model)
+
         // If no conversation ID is provided, create a new conversation
         if (!isset($validated['conversation_id'])) {
             $recipient = User::findOrFail($validated['recipient_id']);
 
-            // Create a new conversation
             $conversation = Conversation::create([
-                'participant1_id' => Auth::id(),
-                'participant1_type' => get_class(Auth::user()),
-                'participant2_id' => $recipient->id,
-                'participant2_type' => get_class($recipient),
-                'job_id' => $validated['job_id'] ?? null, // Link to job if provided
+                'created_by_user_id' => $adminUser->id,
+                'job_id' => $validated['job_id'] ?? null,
+                'subject' => $request->input('subject', 'Conversation with ' . $recipient->name), // Add subject if provided
                 'last_message_at' => now(),
             ]);
+            // Add admin and recipient as participants
+            $conversation->participants()->attach([$adminUser->id, $recipient->id]);
         } else {
             $conversation = Conversation::findOrFail($validated['conversation_id']);
+            // Admin can reply to any conversation, or check if they are a participant if stricter rules apply.
+            // For now, if an admin is accessing this, they can reply.
+            // if (!$conversation->isParticipant($adminUser) && !$adminUser->isSuperAdmin()) { // More specific check
+            //     abort(403, 'Unauthorized to send message in this conversation.');
+            // }
         }
 
-        // Create the new message
-        $message = new Message([
-            'conversation_id' => $conversation->id,
-            'user_id' => Auth::id(),
-            'content' => $validated['content'],
-            'status' => 'approved', // Admin messages are auto-approved
+        $message = $conversation->messages()->create([
+            'user_id' => $adminUser->id,
+            'body' => $validated['content'],
+            'admin_review_status' => 'approved', 
         ]);
-
-        $message->save();
 
         // Handle file attachments if any
         if ($request->hasFile('attachments')) {
+            $jobId = $conversation->job_id ?? 'general'; // Fallback if no job_id
+            $storagePath = "ArchiAxis/Job_{$jobId}/chat_thread";
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('message_attachments', 'public');
+                $path = $file->store($storagePath, 'public');
                 $message->attachments()->create([
                     'file_path' => $path,
-                    'original_file_name' => $file->getClientOriginalName(), // Reverted to original_file_name
-                    'file_size' => $file->getSize(),
-                    'file_type' => $file->getMimeType(),
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
                 ]);
             }
         }
 
-        // Update the conversation's last message time
-        $conversation->update(['last_message_at' => now()]);
+        $conversation->update(['last_message_at' => $message->created_at]);
+
+        event(new AdminMessageSent($message)); // Dispatch the event
 
         return redirect()->route('admin.messages.showConversation', $conversation)
             ->with('success', 'Your message has been sent.');
@@ -219,7 +223,7 @@ class MessageController extends Controller
     public function history(Request $request)
     {
         $usersForFilter = User::whereIn('role', [User::ROLE_CLIENT, User::ROLE_FREELANCER])->orderBy('name')->get();
-        $adminsForFilter = Admin::orderBy('name')->get();
+        $adminsForFilter = User::where('role', User::ROLE_ADMIN)->orderBy('name')->get(); // Changed Admin:: to User::
 
         $query = AdminActivityLog::where(function($q) {
                 $q->where('action_type', 'like', 'message_%')

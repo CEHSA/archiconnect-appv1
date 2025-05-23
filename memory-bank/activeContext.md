@@ -3,73 +3,68 @@
 ## 1. Current Work Focus
 
 * **What is the immediate task or feature being worked on?**
-    * **Job Application Status Update Notifications (Freelancer):**
-        * **Goal:** Notify freelancers when an admin updates the status of their job application.
-        * **Files Affected/Created:**
-            * `app/Events/JobApplicationStatusUpdated.php` (new event, accepts `JobApplication` and optional `oldStatus`).
-            * `app/Notifications/JobApplicationStatusUpdatedNotification.php` (new notification class for database and mail).
-            * `app/Listeners/NotifyFreelancerOfApplicationStatusUpdate.php` (new listener, handles the event and notifies the freelancer).
-            * `app/Http/Controllers/Admin/JobApplicationController.php` (updated `updateStatus` method to dispatch `JobApplicationStatusUpdated` event).
-            * `app/Providers/EventServiceProvider.php` (registered the new event and listener).
-        * **Outcome:** When an admin changes the status of a job application, an event is dispatched, and a listener sends a notification (database/mail) to the freelancer.
-    * **Next Task:** Develop UI for Clients to view applications (if required) and/or implement filters on the admin job applications index page.
+    * **Refactor Messaging System for Group Chat & Full Notification Flow (Phase 1 Complete):**
+        * **Goal:** Overhaul the messaging system to support group conversations linked to jobs/assignments, implement admin approval for freelancer messages, and ensure all participants are notified appropriately, including notifying senders when their messages are approved or rejected.
+        * **Files Affected/Created (Summary):**
+            * Database migration for `conversations` table (removed participant1/2_id).
+            * `app/Models/Conversation.php` (refactored for group participants via pivot table).
+            * `app/Http/Controllers/Client/MessageController.php` (refactored, dispatches `ClientMessageSent`).
+            * `app/Http/Controllers/Freelancer/MessageController.php` (refactored, sets messages to `pending_review`, attachment paths updated).
+            * `app/Http/Controllers/Admin/MessageController.php` (refactored, dispatches `AdminMessageSent`, handles message approval, attachment paths updated).
+            * `app/Http/Controllers/Admin/JobApplicationController.php` & `app/Http/Controllers/Admin/JobAssignmentController.php` (updated to sync conversation participants on assignment).
+            * Events: `ClientMessageSent`, `AdminMessageSent`. (Existing `FreelancerMessageCreated`, `MessageApprovedByAdmin`, `MessageRejectedByAdmin` also part of the flow).
+            * Listeners: `NotifyParticipantsOfClientMessage`, `NotifyParticipantsOfAdminMessage`, `NotifyParticipantsOfApprovedMessage` (refactored to notify sender and other participants separately), `NotifySenderOfRejectedMessage` (existing, verified).
+            * Notifications: `NewMessageFromClientNotification`, `NewMessageFromAdminNotification`, `NewApprovedMessageInConversationNotification`, `YourMessageWasApprovedNotification` (new).
+            * `app/Providers/EventServiceProvider.php` (updated with new events/listeners).
+        * **Outcome:** Core backend for group messaging established. Client and Admin messages notify other participants. Freelancer messages require admin approval; approval notifies sender (with `YourMessageWasApprovedNotification`) and other participants (with `NewApprovedMessageInConversationNotification`); rejection notifies sender. Attachment paths updated. Participant syncing on job assignment implemented.
+    * **Next Task:** Verify attachment storage path implementation and ensure `FileHelper` (if used for URL generation) is compatible. Then, UI enhancements for messaging or other pending tasks.
 * **Previous Work (This Session):**
-    * **Admin Job Application Management (Phase 1 - Listing & Viewing):**
-        * **Goal:** Allow admins to view submitted job applications.
-        * **Files Affected/Created:** (Details in previous `activeContext.md` version)
-        * **Outcome:** Admins can list, view, and update status for job applications.
-    * **Freelancer Job Application System (Phase 1 - Submission):**
-        * **Goal:** Allow freelancers to apply for jobs posted to them.
-        * **Files Affected/Created:** (Details in previous `activeContext.md` version)
-        * **Outcome:** Freelancers can submit applications; admins are notified.
-    * **Notification Logic for `JobPostedToFreelancers` Event:**
-        * **Goal:** Implement notification sending for jobs posted to freelancers.
-        * **Files Affected:** (Details in previous `activeContext.md` version)
-        * **Outcome:** Freelancers receive notifications; UI shows unread counts.
-* **Previous Work (Earlier This Session - Admin Job Management & Current Jobs Page):**
-    * Admin Manage Jobs Page - Delete Button Fix (Completed).
-    * Admin Manage Jobs Page - Filters (status, date, client) (Completed).
-    * Current Jobs Page with progress bar logic (Completed).
+    * Client View for Job Applications.
+    * Clarification of "Proposals" vs. "Job Applications".
+    * Client Profile Notification Preference.
+    * Job Application System (Submission, Admin Management, Notifications).
 
 ## 2. Recent Changes & Decisions
 
 * **What significant changes were made recently (This Session)?**
-    * **Job Application Status Update Notifications:**
-        * Created `JobApplicationStatusUpdated` event and `JobApplicationStatusUpdatedNotification` class.
-        * Implemented `NotifyFreelancerOfApplicationStatusUpdate` listener.
-        * Updated `AdminJobApplicationController@updateStatus` to dispatch the event.
-        * Registered event/listener in `EventServiceProvider`.
-        * **Impact:** Freelancers will now be notified when the status of their job application changes.
-    * **Admin Job Application Management (Phase 1):** (Details in previous `activeContext.md` version)
-    * **Job Application System (Phase 1 - Submission):** (Details in previous `activeContext.md` version)
-    * **Notification Logic for `JobPostedToFreelancers`:** (Details in previous `activeContext.md` version)
-    * **Tooling Issues:** Continued intermittent failures with file writing tools.
+    * **Completed Messaging System Refactor (Phase 1):**
+        * Full refactor for group chat, including DB, Model, Controllers.
+        * Comprehensive event-listener-notification system for client, admin, and freelancer messages (including approval/rejection flow).
+        * Ensured conversation participants are synced on job assignment.
+        * Updated attachment storage paths.
+        * **Impact:** Core backend for new messaging workflow established.
+    * (Previous changes detailed in prior `activeContext.md` versions)
 
 ## 3. Next Steps & Pending Tasks
 
-* **Immediate (For Job Application System - Phase 2 & Admin Management Refinement):**
-    * Develop UI for Clients (job posters) to view applications if the workflow requires their involvement in selection.
-    * Implement filters on the admin job applications index page (`resources/views/admin/job-applications/index.blade.php`).
-    * Implement the TODO for notifying the client in `app/Listeners/NotifyAdminOfJobApplication.php`.
-    * Update action URLs in `app/Notifications/NewJobApplicationNotification.php` once admin/client application views are finalized.
-* **For Admin Job Assignment & Posting Feature (Remaining from previous):**
-    * Integrate the "Job Application" system with "Job Assignment". If an application status is set to 'accepted_for_assignment', this should likely trigger the creation or update of a `JobAssignment`.
-    * Clarify/merge "Proposals" vs. "Applications".
+* **For Enhanced Messaging System (Phase 2 & Refinements):**
+    * **Attachment Storage Path Verification & URL Generation:**
+        * Confirm `store($storagePath, 'public')` correctly creates/uses `public/storage/ArchiAxis/Job_X/chat_thread/`.
+        * Verify public symlink and URL generation for attachments in views.
+    * **UI Enhancements:** WhatsApp styling, Emojis.
+    * **Participant Management Review:**
+        * Review conversation creation points (e.g., when a client posts a job, should a conversation be auto-created with admins?).
+        * Admin roles in conversations: Current logic adds *all* admins to some conversations. Refine if needed.
+* **Remaining from Job Application System:**
+    * Update action URLs in notifications if new specific views are created.
+    * Thorough testing of the 'accepted_for_assignment' flow.
 * **Broader pending tasks:** (As listed in previous `activeContext.md`)
 
 ## 4. Active Considerations & Questions
 
-* **Application Workflow & Statuses:** The implications of 'accepted_for_assignment' status need to be implemented (e.g., creating a `JobAssignment`).
-* **Client Involvement in Application Review:** Decision needed.
-* **Tool Stability:** Ongoing concern.
+* **Conversation Context:** How to handle multiple conversation threads for a single Job/Assignment if needed.
+* **Real-time Updates:** Future consideration.
 
 ## 5. Important Patterns & Preferences (Observed or Stated)
 
-* Consistent use of Laravel's features.
-* Adherence to UI theme.
+* Event-driven notifications.
+* WhatsApp-style messaging.
+* Specific folder structure for attachments.
 
 ## 6. Learnings & Insights from Current Work
 
-* Event-driven notifications provide a clean way to handle side effects of actions like status updates.
+* Refactoring core systems like messaging has wide-ranging impacts.
+* Clear definition of participant roles and notification flows is key for group chat.
+* Ensuring all user types (Client, Freelancer, Admin) have appropriate message handling logic in their respective controllers is crucial.
 
-*This document is the most dynamic and should be updated frequently. It links information from `productContext.md`, `systemPatterns.md`, and `techContext.md` to the immediate tasks at hand.*
+*This document is the most dynamic and should be updated frequently.*
