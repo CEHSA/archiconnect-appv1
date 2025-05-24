@@ -22,15 +22,18 @@
                         <div class="space-y-4 mb-6 max-h-96 overflow-y-auto p-2" id="messages-container">
                             @foreach($conversation->messages as $message)
                                 <div class="flex {{ $message->user_id == Auth::id() ? 'justify-end' : 'justify-start' }}">
-                                    <div class="max-w-3/4 {{ $message->user_id == Auth::id() ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100' }} rounded-lg p-3 shadow">
+                                    <div class="max-w-[75%] {{ $message->user_id == Auth::id() ? 'bg-green-500 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none' }} rounded-lg p-3 shadow relative">
+                                        {{-- Optional: Add a tail to the message bubble --}}
+                                        <div class="absolute bottom-0 {{ $message->user_id == Auth::id() ? 'right-0 mr-[-7px]' : 'left-0 ml-[-7px]' }} w-3 h-3 {{ $message->user_id == Auth::id() ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700' }} transform rotate-45 origin-bottom"></div>
+                                        
                                         <div class="flex justify-between items-center mb-1">
-                                            <span class="font-medium text-sm">{{ $message->user->name }}</span>
-                                            <span class="text-xs opacity-75">{{ $message->created_at->format('M d, H:i') }}</span>
+                                            <span class="font-medium text-sm {{ $message->user_id == Auth::id() ? 'text-white opacity-90' : 'text-gray-700 dark:text-gray-300' }}">{{ $message->user->name }}</span>
+                                            <span class="text-xs opacity-75 {{ $message->user_id == Auth::id() ? 'text-white' : 'text-gray-600 dark:text-gray-400' }}">{{ $message->created_at->format('M d, H:i') }}</span>
                                         </div>
-                                        <p class="text-sm">{{ $message->content }}</p>
+                                        <p class="text-sm break-words">{{ $message->body }}</p> {{-- Use message->body --}}
                                         @if($message->attachments && $message->attachments->count() > 0)
-                                            <div class="mt-2">
-                                                <div class="text-xs font-semibold">Attachments:</div>
+                                            <div class="mt-2 border-t border-opacity-25 {{ $message->user_id == Auth::id() ? 'border-white' : 'border-gray-800 dark:border-gray-200' }} pt-2">
+                                                <div class="text-xs font-semibold {{ $message->user_id == Auth::id() ? 'text-white opacity-90' : 'text-gray-700 dark:text-gray-300' }}">Attachments:</div>
                                                 <div class="flex flex-wrap mt-1 gap-2">
                                                     @foreach($message->attachments as $attachment)
                                                         @php
@@ -39,16 +42,16 @@
                                                         @endphp
                                                         <div class="flex flex-col items-center">
                                                             @if ($isImage)
-                                                                <img src="{{ $filePath }}" alt="{{ $attachment->original_filename }}" class="max-w-xs h-auto rounded-md shadow-sm mb-1">
+                                                                <img src="{{ $filePath }}" alt="{{ $attachment->original_name }}" class="max-w-[150px] h-auto rounded-md shadow-sm mb-1 cursor-pointer" onclick="window.open('{{ $filePath }}', '_blank')"> {{-- Use original_name and add click to open --}}
                                                             @endif
-                                                            <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" class="inline-flex items-center px-2 py-1 text-xs text-gray-900 dark:text-gray-100 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition">
+                                                            <a href="{{ $filePath }}" target="_blank" class="inline-flex items-center px-2 py-1 text-xs {{ $message->user_id == Auth::id() ? 'text-white bg-green-600 hover:bg-green-700' : 'text-gray-900 dark:text-gray-100 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500' }} rounded transition">
                                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                                                 </svg>
-                                                                {{ Str::limit($attachment->original_filename ?? 'Download File', 15) }}
+                                                                {{ Str::limit($attachment->original_name ?? 'Download File', 15) }} {{-- Use original_name --}}
                                                             </a>
                                                             @if (Storage::exists($attachment->file_path))
-                                                            <span class="text-xs text-gray-500 dark:text-gray-400">({{ \App\Helpers\FileHelper::formatBytes(Storage::size($attachment->file_path)) }})</span>
+                                                            <span class="text-xs {{ $message->user_id == Auth::id() ? 'text-white opacity-75' : 'text-gray-500 dark:text-gray-400' }}">({{ \App\Helpers\FileHelper::formatBytes(Storage::size($attachment->file_path)) }})</span>
                                                             @endif
                                                         </div>
                                                     @endforeach
@@ -60,7 +63,7 @@
                             @endforeach
                         </div>
 
-                        <form method="POST" action="{{ route('client.messages.store') }}" class="mt-4">
+                        <form method="POST" action="{{ route('client.messages.store') }}" class="mt-4" enctype="multipart/form-data"> {{-- Add enctype for file uploads --}}
                             @csrf
                             <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
                             
@@ -76,7 +79,11 @@
                                 <x-input-error :messages="$errors->get('content')" class="mt-2" />
                             </div>
                             
-                            <div class="flex justify-end">
+                            <div class="flex justify-end items-center gap-2"> {{-- Added items-center and gap-2 --}}
+                                {{-- Emoji button placeholder --}}
+                                <button type="button" class="inline-flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                    😊 {{-- Simple emoji icon --}}
+                                </button>
                                 <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                                     {{ __('Send Message') }}
                                 </button>

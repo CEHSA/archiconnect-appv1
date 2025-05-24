@@ -104,4 +104,65 @@ class WorkSubmissionController extends Controller
 
         return Storage::disk('private')->download($workSubmission->file_path, $workSubmission->original_filename);
     }
+
+    /**
+     * Approve a work submission.
+     */
+    public function approve(WorkSubmission $workSubmission)
+    {
+        // Ensure the authenticated client is authorized to approve this submission
+        if ($workSubmission->jobAssignment->job->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Only allow approval if the status is WorkSubmission::STATUS_PENDING_CLIENT_REVIEW
+        if ($workSubmission->status !== WorkSubmission::STATUS_PENDING_CLIENT_REVIEW) {
+            return response()->json(['message' => 'This submission is not currently awaiting your approval.'], 400);
+        }
+
+        $workSubmission->update([
+            'status' => WorkSubmission::STATUS_APPROVED_BY_CLIENT,
+            'reviewed_at' => now(),
+        ]);
+
+        // Update job status to completed
+        $workSubmission->jobAssignment->job->update(['status' => 'completed']);
+
+        event(new ClientWorkSubmissionReviewed($workSubmission));
+
+        return response()->json(['message' => 'Work submission approved successfully!'], 200);
+    }
+
+    /**
+     * Request revisions for a work submission.
+     */
+    public function requestRevisions(Request $request, WorkSubmission $workSubmission)
+    {
+        // Ensure the authenticated client is authorized to request revisions for this submission
+        if ($workSubmission->jobAssignment->job->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Only allow requesting revisions if the status is WorkSubmission::STATUS_PENDING_CLIENT_REVIEW
+        if ($workSubmission->status !== WorkSubmission::STATUS_PENDING_CLIENT_REVIEW) {
+            return response()->json(['message' => 'This submission is not currently awaiting your review for revisions.'], 400);
+        }
+
+        $validatedData = $request->validate([
+            'client_remarks' => 'required|string|max:5000',
+        ]);
+
+        $workSubmission->update([
+            'status' => WorkSubmission::STATUS_CLIENT_REVISION_REQUESTED,
+            'client_remarks' => $validatedData['client_remarks'],
+            'reviewed_at' => now(),
+        ]);
+
+        // Update job status to revisions_requested
+        $workSubmission->jobAssignment->job->update(['status' => 'revisions_requested']);
+
+        event(new ClientWorkSubmissionReviewed($workSubmission)); // Or a more specific event if needed
+
+        return response()->json(['message' => 'Revision request submitted successfully!'], 200);
+    }
 }

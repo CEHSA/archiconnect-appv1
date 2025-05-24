@@ -52,7 +52,7 @@ class ClientWorkSubmissionReviewedNotification extends Notification implements S
             $mailMessage->line("Client Remarks: \"{$reviewRemarks}\"");
         }
 
-        $mailMessage->action('View Submission Details', route('admin.submissions.show', $submission))
+        $mailMessage->action('View Submission Details', route('admin.work-submissions.show', $submission))
                     ->line('Please review the submission and take appropriate action.');
 
         return $mailMessage;
@@ -72,7 +72,7 @@ class ClientWorkSubmissionReviewedNotification extends Notification implements S
             'freelancer_name' => $this->workSubmission->jobAssignment->freelancer->name,
             'status' => $this->workSubmission->status,
             'client_remarks' => $this->workSubmission->client_remarks,
-            'url' => route('admin.submissions.show', $this->workSubmission),
+            'url' => route('admin.work-submissions.show', $this->workSubmission),
         ];
     }
 }

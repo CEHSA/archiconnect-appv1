@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Carbon\Carbon; // Added for isOnline method
 
 class User extends Authenticatable
 {
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'last_activity_at', // Added for online status
     ];
 
     /**
@@ -60,6 +62,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_activity_at' => 'datetime', // Cast to datetime
         ];
     }
 
@@ -80,6 +83,14 @@ class User extends Authenticatable
     public function clientProfile(): HasOne
     {
         return $this->hasOne(ClientProfile::class);
+    }
+
+    /**
+     * Get the admin profile associated with the user.
+     */
+    public function admin(): HasOne
+    {
+        return $this->hasOne(Admin::class);
     }
 
     /**
@@ -253,5 +264,16 @@ class User extends Authenticatable
             $totalUnread += $conversation->unreadCount($this);
         }
         return $totalUnread;
+    }
+
+    /**
+     * Check if the user is currently online based on last activity.
+     *
+     * @return bool
+     */
+    public function isOnline(): bool
+    {
+        // Consider user online if last activity was within the last 5 minutes
+        return $this->last_activity_at && $this->last_activity_at->greaterThanOrEqualTo(now()->subMinutes(5));
     }
 }

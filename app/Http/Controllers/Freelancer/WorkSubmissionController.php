@@ -18,7 +18,7 @@ class WorkSubmissionController extends Controller
     public function create(JobAssignment $assignment)
     {
         // Ensure the freelancer owns this assignment and it's in a state that allows submissions
-        if ($assignment->freelancer_id !== Auth::id() || !in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested'])) {
+        if ($assignment->freelancer_id !== Auth::id() || !in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested', 'assigned'])) {
             abort(403, 'Unauthorized action or assignment not in a submittable state.');
         }
         return view('freelancer.assignments.submissions.create', compact('assignment'));
@@ -30,7 +30,7 @@ class WorkSubmissionController extends Controller
     public function store(Request $request, JobAssignment $assignment)
     {
         // Ensure the freelancer owns this assignment and it's in a state that allows submissions
-        if ($assignment->freelancer_id !== Auth::id() || !in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested'])) {
+        if ($assignment->freelancer_id !== Auth::id() || !in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested', 'assigned'])) {
             abort(403, 'Unauthorized action or assignment not in a submittable state.');
         }
 
@@ -72,9 +72,22 @@ class WorkSubmissionController extends Controller
             $assignment->save();
         }
 
+        // Update the parent Job status
+        $job = $assignment->job; // Assumes 'job' relationship exists on JobAssignment
+        if ($job) {
+            $job->status = 'work_submitted'; // Consider using a Job model constant if available
+            $job->save();
+        }
 
         // Notify Admin of new submission
         event(new FreelancerWorkSubmitted($workSubmission));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Work submitted successfully. Admin has been notified.',
+                'data' => $workSubmission
+            ], 201);
+        }
 
         return redirect()->route('freelancer.assignments.show', $assignment->id)
                          ->with('success', 'Work submitted successfully. Admin has been notified.');

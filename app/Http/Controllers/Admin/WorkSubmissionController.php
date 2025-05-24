@@ -96,4 +96,41 @@ class WorkSubmissionController extends Controller
     public function create() { abort(404); }
     public function store(Request $request) { abort(404); }
     public function destroy(WorkSubmission $workSubmission) { abort(404); }
+
+    /**
+     * Review a work submission.
+     */
+    public function review(Request $request, WorkSubmission $workSubmission)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string', Rule::in([
+                WorkSubmission::STATUS_SUBMITTED_FOR_ADMIN_REVIEW,
+                WorkSubmission::STATUS_ADMIN_REVISION_REQUESTED,
+                WorkSubmission::STATUS_PENDING_CLIENT_REVIEW,
+                WorkSubmission::STATUS_REJECTED,
+            ])],
+            'admin_remarks' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $workSubmission->update([
+            'status' => $validated['status'],
+            'admin_remarks' => $validated['admin_remarks'],
+            'admin_id' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        // Update job status based on work submission status
+        $job = $workSubmission->jobAssignment->job;
+        if ($validated['status'] === WorkSubmission::STATUS_PENDING_CLIENT_REVIEW) {
+            $job->update(['status' => 'admin_reviewed_work']);
+            event(new \App\Events\WorkSubmissionSubmittedToClient($workSubmission));
+        } elseif ($validated['status'] === WorkSubmission::STATUS_ADMIN_REVISION_REQUESTED) {
+            $job->update(['status' => 'admin_revision_requested']);
+            event(new \App\Events\WorkSubmissionReviewedByAdmin($workSubmission));
+        } elseif ($validated['status'] === WorkSubmission::STATUS_REJECTED) {
+            $job->update(['status' => 'work_rejected_by_admin']);
+        }
+
+        return response()->json(['message' => 'Work submission reviewed successfully', 'submission' => $workSubmission], 200);
+    }
 }

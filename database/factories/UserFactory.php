@@ -29,7 +29,40 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => 'user', // Default role
+            'is_admin' => false, // Default is_admin status
         ];
+    }
+
+    /**
+     * Indicate that the user is an admin.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => \App\Models\User::ROLE_ADMIN,
+            'is_admin' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a client.
+     */
+    public function client(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => \App\Models\User::ROLE_CLIENT,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a freelancer.
+     */
+    public function freelancer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => \App\Models\User::ROLE_FREELANCER,
+        ]);
     }
 
     /**

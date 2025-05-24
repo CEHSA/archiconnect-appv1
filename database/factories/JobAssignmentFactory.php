@@ -20,14 +20,13 @@ class JobAssignmentFactory extends Factory
     {
         // Create related models first
         $job = Job::factory()->create(); // This should create a client and set job.client_id
-        $freelancer = User::factory()->create(['role' => User::ROLE_FREELANCER]);
+        $freelancer = User::factory()->freelancer()->create();
         $admin = \App\Models\Admin::factory()->create(); // Use Admin factory
 
         return [
             'job_id' => $job->id, // Use the created job's ID
-            'client_id' => $job->client_id, // Get client_id from the created Job
             'freelancer_id' => $freelancer->id,
-            'assigned_by_admin_id' => $admin->id,
+            'assigned_by_admin_id' => $admin->user_id, // Use the user_id from the Admin model
             'status' => $this->faker->randomElement(['pending', 'accepted', 'declined', 'in_progress', 'completed']),
             'freelancer_remarks' => $this->faker->optional(0.7)->paragraph(),
             'admin_remarks' => $this->faker->optional(0.5)->paragraph(),

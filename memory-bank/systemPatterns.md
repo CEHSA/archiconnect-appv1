@@ -68,6 +68,10 @@
     * Active Tab: `border-teal-500 text-teal-600`.
     * Inactive Tab: `border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300`.
   * **General Text:** Default to standard light theme text colors (e.g., `text-gray-900` for headings, `text-gray-700` or `text-gray-600` for body copy). Dark theme variants (`dark:...`) are to be removed from re-themed sections of the application.
+* **Iterative Phased Implementation with Post-Phase Testing (Adopted 5/24/2025):**
+  * A strategy to implement features in logical, manageable phases.
+  * Each phase concludes with comprehensive PHPUnit testing to ensure stability and quality before proceeding to the next phase.
+  * This pattern aims to provide a structured approach to development and iterative improvement.
 
 ## 4. Component Relationships & Critical Paths
 

@@ -3,43 +3,43 @@
 namespace App\Http\Controllers\Freelancer;
 
 use App\Http\Controllers\Controller;
-use App\Models\AssignmentTask;
-use App\Models\TimeLog;
+use App\Models\JobAssignment; // Changed from AssignmentTask
+use App\Models\FreelancerTimeLog; // Changed from TimeLog
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use App\Events\FreelancerTimeLogStarted; // Will create this event
-use App\Events\FreelancerTimeLogStopped; // Will create this event
+use App\Events\FreelancerTimeLogStarted;
+use App\Events\FreelancerTimeLogStopped;
 
 class TimeLogController extends Controller
 {
     public function index(Request $request)
     {
-        $timeLogs = TimeLog::where('freelancer_id', Auth::id())
-            ->with('assignmentTask.jobAssignment.job') // Eager load related data
+        $timeLogs = FreelancerTimeLog::where('freelancer_id', Auth::id())
+            ->with('jobAssignment.job') // Changed relationship
             ->orderBy('start_time', 'desc')
-            ->paginate(15); // Or any other number
+            ->paginate(15);
 
         return view('freelancer.time-logs.index', compact('timeLogs'));
     }
 
-    public function startTimer(Request $request, AssignmentTask $task)
+    public function startTimer(Request $request, JobAssignment $assignment) // Changed type hint
     {
-        // Check if there's an existing running timer for this task by this freelancer
-        $existingLog = TimeLog::where('assignment_task_id', $task->id)
+        // Check if there's an existing running timer for this assignment by this freelancer
+        $existingLog = FreelancerTimeLog::where('job_assignment_id', $assignment->id) // Changed field
             ->where('freelancer_id', Auth::id())
-            ->where('status', TimeLog::STATUS_RUNNING)
+            ->where('status', 'running') // Adjusted status
             ->first();
 
         if ($existingLog) {
-            return redirect()->back()->with('error', 'You already have a timer running for this task.');
+            return redirect()->back()->with('error', 'You already have a timer running for this assignment.');
         }
 
-        $timeLog = TimeLog::create([
-            'assignment_task_id' => $task->id,
+        $timeLog = FreelancerTimeLog::create([
+            'job_assignment_id' => $assignment->id, // Changed field
             'freelancer_id' => Auth::id(),
             'start_time' => Carbon::now(),
-            'status' => TimeLog::STATUS_RUNNING,
+            'status' => 'running', // Adjusted status
         ]);
 
         event(new FreelancerTimeLogStarted($timeLog)); // Notify admin
@@ -47,32 +47,32 @@ class TimeLogController extends Controller
         return redirect()->back()->with('success', 'Timer started successfully.');
     }
 
-    public function stopTimer(Request $request, TimeLog $timeLog)
+    public function stopTimer(Request $request, FreelancerTimeLog $timeLog) // Changed type hint
     {
-        if ($timeLog->freelancer_id !== Auth::id() || $timeLog->status !== TimeLog::STATUS_RUNNING) {
+        if ($timeLog->freelancer_id !== Auth::id() || $timeLog->status !== 'running') { // Adjusted status
             return redirect()->back()->with('error', 'Invalid action.');
         }
 
         $request->validate([
-            'freelancer_comments' => 'nullable|string',
-            'proof_of_work' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,zip|max:20480', // Max 20MB
+            'notes' => 'nullable|string', // Changed from freelancer_comments
+            // 'proof_of_work' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,zip|max:20480', // Removed for now
         ]);
 
         $endTime = Carbon::now();
-        $durationSeconds = $endTime->diffInSeconds($timeLog->start_time);
+        $durationMinutes = $endTime->diffInMinutes($timeLog->start_time); // Changed to minutes
 
         $timeLog->end_time = $endTime;
-        $timeLog->duration_seconds = $durationSeconds;
-        $timeLog->status = TimeLog::STATUS_PENDING_REVIEW;
-        $timeLog->freelancer_comments = $request->input('freelancer_comments');
+        $timeLog->duration_minutes = $durationMinutes; // Changed field
+        $timeLog->status = 'pending'; // Adjusted status
+        $timeLog->notes = $request->input('notes'); // Changed field
 
-        if ($request->hasFile('proof_of_work')) {
-            $file = $request->file('proof_of_work');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('proof_of_work/' . $timeLog->assignment_task_id, $filename, 'private');
-            $timeLog->proof_of_work_path = $path;
-            $timeLog->proof_of_work_filename = $filename;
-        }
+        // if ($request->hasFile('proof_of_work')) {
+        //     $file = $request->file('proof_of_work');
+        //     $filename = time() . '_' . $file->getClientOriginalName();
+        //     $path = $file->storeAs('proof_of_work/' . $timeLog->job_assignment_id, $filename, 'private'); // Adjusted path
+        //     $timeLog->proof_of_work_path = $path;
+        //     $timeLog->proof_of_work_filename = $filename;
+        // }
 
         $timeLog->save();
 
@@ -81,37 +81,34 @@ class TimeLogController extends Controller
         return redirect()->back()->with('success', 'Timer stopped. Log submitted for review.');
     }
 
-    public function updateLog(Request $request, TimeLog $timeLog)
+    public function updateLog(Request $request, FreelancerTimeLog $timeLog) // Changed type hint
     {
-        if ($timeLog->freelancer_id !== Auth::id() || $timeLog->status !== TimeLog::STATUS_PENDING_REVIEW) {
+        if ($timeLog->freelancer_id !== Auth::id() || $timeLog->status !== 'pending') { // Adjusted status
              return redirect()->back()->with('error', 'You can only update logs that are pending review.');
         }
 
         $request->validate([
-            'freelancer_comments' => 'nullable|string',
-            'proof_of_work' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,zip|max:20480',
+            'notes' => 'nullable|string', // Changed from freelancer_comments
+            // 'proof_of_work' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,zip|max:20480', // Removed for now
         ]);
 
-        $timeLog->freelancer_comments = $request->input('freelancer_comments');
+        $timeLog->notes = $request->input('notes'); // Changed field
 
-        if ($request->hasFile('proof_of_work')) {
-            // Optionally, delete old proof if it exists
-            // Storage::disk('private')->delete($timeLog->proof_of_work_path);
-
-            $file = $request->file('proof_of_work');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('proof_of_work/' . $timeLog->assignment_task_id, $filename, 'private');
-            $timeLog->proof_of_work_path = $path;
-            $timeLog->proof_of_work_filename = $filename;
-        }
+        // if ($request->hasFile('proof_of_work')) {
+        //     $file = $request->file('proof_of_work');
+        //     $filename = time() . '_' . $file->getClientOriginalName();
+        //     $path = $file->storeAs('proof_of_work/' . $timeLog->job_assignment_id, $filename, 'private'); // Adjusted path
+        //     $timeLog->proof_of_work_path = $path;
+        //     $timeLog->proof_of_work_filename = $filename;
+        // }
         $timeLog->save();
         return redirect()->back()->with('success', 'Time log updated successfully.');
     }
 
-    public function destroy(TimeLog $timeLog)
+    public function destroy(FreelancerTimeLog $timeLog) // Changed type hint
     {
-        if ($timeLog->freelancer_id !== Auth::id() || !in_array($timeLog->status, [TimeLog::STATUS_PENDING_REVIEW, TimeLog::STATUS_DECLINED])) {
-            return redirect()->back()->with('error', 'You can only delete logs that are pending review or declined.');
+        if ($timeLog->freelancer_id !== Auth::id() || !in_array($timeLog->status, ['pending', 'rejected'])) { // Adjusted statuses
+            return redirect()->back()->with('error', 'You can only delete logs that are pending review or rejected.');
         }
 
         // Optionally, delete proof of work file

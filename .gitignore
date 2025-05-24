@@ -14,3 +14,10 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+.phpunit.result.cache
+nul
+memory-bank/activeContext.md
+memory-bank/progress.md
+memory-bank/systemPatterns.md
+memory-bank/techContext.md
+memory-bank

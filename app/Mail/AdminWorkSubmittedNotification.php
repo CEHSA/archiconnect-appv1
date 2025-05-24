@@ -45,7 +45,7 @@ class AdminWorkSubmittedNotification extends Mailable implements ShouldQueue
                 'submissionTitle' => $this->workSubmission->title,
                 'jobTitle' => $this->workSubmission->jobAssignment->job->title,
                 'freelancerName' => $this->workSubmission->freelancer->name,
-                'submissionUrl' => route('admin.submissions.show', $this->workSubmission->id),
+                'submissionUrl' => route('admin.work-submissions.show', $this->workSubmission->id),
             ],
         );
     }

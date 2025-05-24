@@ -50,10 +50,10 @@ class FreelancerWorkSubmittedDbNotification extends Notification implements Shou
     {
         return [
             'work_submission_id' => $this->workSubmission->id,
-            'freelancer_name' => $this->workSubmission->freelancer->user->name,
+            'freelancer_name' => $this->workSubmission->freelancer->name,
             'job_title' => $this->workSubmission->jobAssignment->job->title,
             'url' => route('admin.work-submissions.show', $this->workSubmission->id),
-            'message' => 'New work submitted by ' . $this->workSubmission->freelancer->user->name . ' for job "' . $this->workSubmission->jobAssignment->job->title . '".',
+            'message' => 'New work submitted by ' . $this->workSubmission->freelancer->name . ' for job "' . $this->workSubmission->jobAssignment->job->title . '".',
         ];
     }
 }

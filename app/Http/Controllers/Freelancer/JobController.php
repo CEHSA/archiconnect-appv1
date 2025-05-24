@@ -10,7 +10,7 @@ use App\Http\Requests\UpdateJobRequest; // This might not be needed if not using
 use Illuminate\Support\Facades\Auth; // Added
 use Illuminate\Http\RedirectResponse; // Added
 use App\Events\JobAcceptanceRequested; // Added - Will create this event next
-// use App\Models\JobPosting; // Already present or re-added if it was missing
+use App\Models\JobPosting; // Already present or re-added if it was missing
 use Illuminate\Http\Request; // Added for Request object
 use Illuminate\View\View; // Added for View return type
 

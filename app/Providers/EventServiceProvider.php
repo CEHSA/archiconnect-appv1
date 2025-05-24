@@ -72,19 +72,25 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
+        \Illuminate\Auth\Events\Login::class => [
+            \App\Listeners\LogSuccessfulLogin::class,
+        ],
+        \Illuminate\Auth\Events\Logout::class => [
+            \App\Listeners\LogSuccessfulLogout::class,
+        ],
         UserCreatedByAdmin::class => [
             LogAdminActivity::class,
         ],
-        \App\Events\JobCommentStatusUpdated::class => [ // Add this line
-            NotifyUsersOfJobCommentStatusUpdate::class, // Add this line
-        ], // Add this line
-        \App\Events\JobCommentCreated::class => [ // Add this line
-            NotifyUsersOfNewJobComment::class, // Add this line
-            NotifyAdminAndFreelancerOfClientComment::class, // Added for client comments on submissions
-        ], // Add this line
-        \App\Events\BriefingRequestCreated::class => [ // Add this line
-            NotifyAdminsOfNewBriefingRequest::class, // Add this line
-        ], // Add this line
+        \App\Events\JobCommentStatusUpdated::class => [
+            NotifyUsersOfJobCommentStatusUpdate::class,
+        ],
+        \App\Events\JobCommentCreated::class => [
+            NotifyUsersOfNewJobComment::class,
+            NotifyAdminAndFreelancerOfClientComment::class,
+        ],
+        \App\Events\BriefingRequestCreated::class => [
+            NotifyAdminsOfNewBriefingRequest::class,
+        ],
         JobAssigned::class => [
             SendFreelancerAssignmentNotification::class,
         ],
@@ -95,40 +101,39 @@ class EventServiceProvider extends ServiceProvider
             \App\Listeners\NotifyAdminsOfPendingMessage::class,
         ],
         MessageApprovedByAdmin::class => [
-            NotifyParticipantsOfApprovedMessage::class, // Changed from NotifyClientOfApprovedMessage
+            NotifyParticipantsOfApprovedMessage::class,
         ],
         AdminJobPosted::class => [
             NotifyFreelancersAboutNewJob::class,
-            LogAdminJobCreation::class, // Changed to new dedicated listener
+            LogAdminJobCreation::class,
         ],
-        FreelancerWorkSubmitted::class => [ // New
-            NotifyAdminOfWorkSubmission::class, // New
-        ], // New
-        WorkSubmissionReviewedByAdmin::class => [ // New
-            NotifyFreelancerOfSubmissionReview::class, // New
-        ], // New
-        \App\Events\BudgetAppealForwardedToClient::class => [ // New
-            \App\Listeners\NotifyClientOfBudgetAppeal::class, // New
-        ], // New
-        \App\Events\BudgetAppealDecisionMade::class => [ // New
-            \App\Listeners\NotifyFreelancerOfBudgetAppealDecision::class, // New
-        ], // New
-        \App\Events\BudgetAppealCreated::class => [ // New
-            \App\Listeners\NotifyAdminsOfNewBudgetAppeal::class, // New
-        ], // New
-        ClientWorkSubmissionReviewed::class => [ // Add this line
-            NotifyAdminsOfClientWorkSubmissionReview::class, // Add this line
-        ], // Add this line
-        FreelancerTaskProgressSubmitted::class => [ // Add this line
-            NotifyAdminsOfFreelancerTaskProgress::class, // Add this line
-        ], // Add this line
-        JobCompleted::class => [ // Add this line
-            NotifyUsersOfJobCompletion::class, // Add this line
-        ], // Add this line
-        \App\Events\PaymentProcessed::class => [ // Add this line
-            \App\Listeners\NotifyFreelancerOfPayment::class, // Add this line
-        ], // New
-
+        FreelancerWorkSubmitted::class => [
+            NotifyAdminOfWorkSubmission::class,
+        ],
+        WorkSubmissionReviewedByAdmin::class => [
+            NotifyFreelancerOfSubmissionReview::class,
+        ],
+        \App\Events\BudgetAppealForwardedToClient::class => [
+            \App\Listeners\NotifyClientOfBudgetAppeal::class,
+        ],
+        \App\Events\BudgetAppealDecisionMade::class => [
+            \App\Listeners\NotifyFreelancerOfBudgetAppealDecision::class,
+        ],
+        \App\Events\BudgetAppealCreated::class => [
+            \App\Listeners\NotifyAdminsOfNewBudgetAppeal::class,
+        ],
+        ClientWorkSubmissionReviewed::class => [
+            NotifyAdminsOfClientWorkSubmissionReview::class,
+        ],
+        FreelancerTaskProgressSubmitted::class => [
+            NotifyAdminsOfFreelancerTaskProgress::class,
+        ],
+        JobCompleted::class => [
+            NotifyUsersOfJobCompletion::class,
+        ],
+        \App\Events\PaymentProcessed::class => [
+            \App\Listeners\NotifyFreelancerOfPayment::class,
+        ],
         DisputeCreated::class => [
             NotifyAdminOfNewDispute::class,
             NotifyReportedUserOfDispute::class,
@@ -136,7 +141,6 @@ class EventServiceProvider extends ServiceProvider
         DisputeUpdatedByAdmin::class => [
             NotifyPartiesOfDisputeUpdate::class,
         ],
-
         FreelancerTimeLogStarted::class => [
             NotifyAdminOfTimeLogStart::class,
         ],
@@ -149,28 +153,28 @@ class EventServiceProvider extends ServiceProvider
         ClientNotificationForApprovedTimeLog::class => [
             NotifyClientOfApprovedTimeLog::class,
         ],
-        JobAcceptanceRequested::class => [ // Added for Job Acceptance Flow
+        JobAcceptanceRequested::class => [
             NotifyAdminOfJobAcceptanceRequest::class,
         ],
-        JobPostedToFreelancers::class => [ // Added for posting jobs to freelancers
+        JobPostedToFreelancers::class => [
             NotifyFreelancersOfPostedJob::class,
         ],
-        MessageReviewedByAdmin::class => [ // Added for logging message reviews
+        MessageReviewedByAdmin::class => [
             LogAdminActivity::class,
         ],
-        MessageRejectedByAdmin::class => [ // Added for notifying sender of rejection
+        MessageRejectedByAdmin::class => [
             NotifySenderOfRejectedMessage::class,
         ],
-        JobApplicationSubmitted::class => [ // Added for new job applications
+        JobApplicationSubmitted::class => [
             NotifyAdminOfJobApplication::class,
         ],
-        JobApplicationStatusUpdated::class => [ // Added for status updates
+        JobApplicationStatusUpdated::class => [
             NotifyFreelancerOfApplicationStatusUpdate::class,
         ],
-        ClientMessageSent::class => [ // Added for client messages
+        ClientMessageSent::class => [
             NotifyParticipantsOfClientMessage::class,
         ],
-        AdminMessageSent::class => [ // Added for admin messages
+        AdminMessageSent::class => [
             NotifyParticipantsOfAdminMessage::class,
         ],
     ];

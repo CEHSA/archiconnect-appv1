@@ -3,152 +3,291 @@
         {{ __('Conversation Details') }}
     </x-slot>
 
-    <div class="container mx-auto px-6 py-8">
-        <div class="flex justify-between items-center">
-            <h3 class="text-gray-700 text-3xl font-medium">
-                {{ __('Conversation') }}
-                @if($conversation->job)
-                    {{ __('for Job:') }} {{ $conversation->job->title }}
-                @endif
-            </h3>
-            
-            <div>
-                <a href="{{ route('admin.messages.create', ['conversation' => $conversation->id]) }}" class="bg-architimex-primary hover:bg-architimex-primary-darker text-white font-bold py-2 px-4 rounded">
-                    {{ __('Reply') }}
-                </a>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md mt-6 p-6">
-            <div class="mb-6">
-                <p class="text-gray-600 text-sm">{{ __('Participants:') }}</p>
-                <div class="flex items-center mt-2">
-                    <div class="text-sm">
-                        <span class="font-semibold">{{ $conversation->participant1->name }}</span>
-                        ({{ $conversation->participant1->email }})
-                        <span class="ml-2 px-2 py-1 text-xs rounded-full {{ $conversation->participant1->role === 'client' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                            {{ ucfirst($conversation->participant1->role) }}
-                        </span>
+    <div class="container mx-auto px-4 py-6">
+        <div class="bg-white rounded-lg shadow-lg">
+            <!-- Chat Header -->
+            <div class="p-4 border-b flex items-center justify-between bg-gray-50">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        @if($conversation->job)
+                            {{ $conversation->job->title }}
+                        @else
+                            {{ __('Group Chat') }}
+                        @endif
+                    </h3>
+                    <div class="text-sm text-gray-500 flex items-center mt-1">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        {{ $conversation->participants->count() }} {{ __('participants') }}
                     </div>
                 </div>
-                <div class="flex items-center mt-2">
-                    <div class="text-sm">
-                        <span class="font-semibold">{{ $conversation->participant2->name }}</span>
-                        ({{ $conversation->participant2->email }})
-                        <span class="ml-2 px-2 py-1 text-xs rounded-full {{ $conversation->participant2->role === 'client' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                            {{ ucfirst($conversation->participant2->role) }}
-                        </span>
-                    </div>
-                </div>
-                @if($conversation->job)
-                <div class="mt-4">
-                    <p class="text-gray-600 text-sm">{{ __('Related Job:') }}</p>
-                    <a href="{{ route('admin.jobs.show', $conversation->job) }}" class="text-architimex-primary hover:underline">
-                        {{ $conversation->job->title }}
-                    </a>
-                </div>
-                @endif
+                <button type="button" class="text-gray-500 hover:text-gray-600" id="showParticipants">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </button>
             </div>
 
-            <div class="border-t border-gray-200 pt-6">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4">{{ __('Messages:') }}</h4>
-
-                <div class="space-y-6">
-                    @forelse($conversation->messages->sortBy('created_at') as $message)
-                        <div class="p-4 rounded-lg {{ $message->user_id === $conversation->participant1_id ? 'bg-blue-50 ml-0 mr-12' : ($message->user_id === $conversation->participant2_id ? 'bg-green-50 ml-12 mr-0' : 'bg-gray-50') }}">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-900">{{ $message->user->name }}</span>
-                                <div>
-                                    <span class="text-xs text-gray-500">{{ $message->created_at->format('M d, Y h:i A') }}</span>
-                                    <span class="ml-2 px-2 py-1 text-xs rounded-full {{ 
-                                        $message->status === 'approved' ? 'bg-green-100 text-green-800' : 
-                                        ($message->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') 
-                                    }}">
-                                        {{ ucfirst($message->status) }}
-                                    </span>
+            <!-- Participants Modal -->
+            <div class="hidden bg-white p-4 border-b" id="participantsPanel">
+                <h4 class="text-sm font-medium text-gray-700 mb-3">{{ __('Participants') }}</h4>
+                <div class="space-y-2">
+                    @foreach($conversation->participants as $participant)
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                                    {{ strtoupper(substr($participant->name, 0, 1)) }}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">{{ $participant->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $participant->email }}</p>
                                 </div>
                             </div>
-                            <div class="mt-2 text-gray-700">
-                                {{ $message->content }}
-                            </div>
-                            
-                            @if($message->status === 'pending')
-                                <div class="mt-4 flex justify-end">
-                                    <form action="{{ route('admin.messages.update', $message) }}" method="POST" class="inline-block">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="approved">
-                                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-xs py-1 px-2 rounded mr-2">
-                                            {{ __('Approve') }}
-                                        </button>
-                                    </form>
-                                    <a href="{{ route('admin.messages.show', $message) }}" class="bg-gray-500 hover:bg-gray-600 text-white text-xs py-1 px-2 rounded">
-                                        {{ __('Review') }}
-                                    </a>
+                            <span class="px-2 py-1 text-xs rounded-full {{ 
+                                $participant->role === 'client' ? 'bg-blue-100 text-blue-800' : 
+                                ($participant->role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800') 
+                            }}">
+                                {{ ucfirst($participant->role) }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            <!-- Messages Container -->
+            <div class="h-[calc(100vh-20rem)] overflow-y-auto p-4 space-y-4 bg-gray-100" id="messagesContainer">
+                @forelse($conversation->messages->sortBy('created_at') as $message)
+                    <div class="flex flex-col {{ auth()->id() === $message->user_id ? 'items-end' : 'items-start' }}">
+                        <!-- Sender Name -->
+                        <div class="text-xs text-gray-500 mb-1 {{ auth()->id() === $message->user_id ? 'text-right' : 'text-left' }}">
+                            {{ $message->user->name }}
+                        </div>
+                        
+                        <!-- Message Bubble -->
+                        <div class="max-w-[75%]">
+                            <div class="rounded-xl p-3 {{ 
+                                auth()->id() === $message->user_id 
+                                    ? 'bg-cyan-700 text-white rounded-tr-none' 
+                                    : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'
+                            }}">
+                                <div class="text-sm break-words">
+                                    {{ $message->content }}
                                 </div>
-                            @endif
                             
-                            @if($message->attachments->count() > 0)
-                                <div class="mt-3 border-t border-gray-200 pt-3">
-                                    <p class="text-xs text-gray-500 mb-1">{{ __('Attachments:') }}</p>
-                                    <div class="flex flex-wrap gap-2">
+                                @if($message->attachments->count() > 0)
+                                    <div class="mt-2 space-y-2">
                                         @foreach($message->attachments as $attachment)
-                                            <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" class="flex items-center text-xs text-architimex-primary hover:underline">
-                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd"></path>
+                                            <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" 
+                                               class="flex items-center text-xs {{ auth()->id() === $message->user_id ? 'text-cyan-100' : 'text-cyan-700' }} hover:underline">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                 </svg>
                                                 {{ $attachment->file_name }}
                                             </a>
                                         @endforeach
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+
+                                <!-- Message Status for Admin -->
+                                @if($message->status === 'pending' && auth()->user()->isAdmin())
+                                    <div class="mt-2 flex space-x-2">
+                                        <form action="{{ route('admin.messages.update', $message) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="approved">
+                                            <button type="submit" class="text-xs py-1 px-2 rounded {{ 
+                                                auth()->id() === $message->user_id 
+                                                    ? 'bg-cyan-800 text-white hover:bg-cyan-900' 
+                                                    : 'bg-cyan-700 text-white hover:bg-cyan-800'
+                                            }}">
+                                                {{ __('Approve') }}
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('admin.messages.show', $message) }}" 
+                                           class="text-xs py-1 px-2 rounded bg-gray-500 text-white hover:bg-gray-600">
+                                            {{ __('Review') }}
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Message Meta -->
+                            <div class="flex items-center mt-1 space-x-2">
+                                <span class="text-xs text-gray-400">
+                                    {{ $message->created_at->format('g:i A') }}
+                                </span>
+                                @if($message->status !== 'pending')
+                                    <span class="text-xs {{ 
+                                        $message->status === 'approved' ? 'text-green-500' : 'text-red-500' 
+                                    }}">
+                                        @if($message->status === 'approved')
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        @else
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        @endif
+                                    </span>
+                                @else
+                                    <span class="text-xs text-yellow-500">
+                                        {{ __('Pending') }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
-                    @empty
-                        <div class="py-4 text-center text-gray-500">
-                            {{ __('No messages in this conversation yet.') }}
+                    </div>
+                @empty
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        {{ __('No messages in this conversation yet.') }}
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Reply Form -->
+            <div class="border-t border-gray-200 p-4 bg-white">
+                <form action="{{ route('admin.messages.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
+                    
+                    <div class="flex items-end space-x-4">
+                        <div class="flex-grow">
+                            <textarea id="content" name="content" rows="1" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-cyan-500 focus:border-cyan-500 resize-none"
+                                placeholder="{{ __('Type a message...') }}" required>{{ old('content') }}</textarea>
                         </div>
-                    @endforelse
-                </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <label for="attachments" class="cursor-pointer text-gray-500 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                <input type="file" id="attachments" name="attachments[]" multiple class="hidden">
+                            </label>
+
+                            <button type="submit" class="bg-cyan-700 text-white rounded-full p-2 hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="attachmentPreview" class="hidden">
+                        <p class="text-xs text-gray-500 mb-2">{{ __('Selected files:') }}</p>
+                        <div id="fileList" class="text-xs text-gray-600"></div>
+                    </div>
+
+                    @error('content')
+                        <p class="text-red-500 text-xs">{{ $message }}</p>
+                    @enderror
+                    
+                    @error('attachments.*')
+                        <p class="text-red-500 text-xs">{{ $message }}</p>
+                    @enderror
+                </form>
             </div>
         </div>
 
-        <!-- Reply Form -->
-        <div class="mt-6 bg-gray-50 p-4 rounded-lg">
-            <h5 class="text-sm font-medium text-gray-700 mb-3">{{ __('Reply to Conversation') }}</h5>
-            <form action="{{ route('admin.messages.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
-                
-                <div class="mb-4">
-                    <label for="content" class="block text-sm font-medium text-gray-700">{{ __('Message') }}</label>
-                    <textarea id="content" name="content" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-architimex-primary focus:border-architimex-primary sm:text-sm" placeholder="{{ __('Type your reply here...') }}" required>{{ old('content') }}</textarea>
-                    @error('content')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
+        <!-- Load emoji picker -->
+        <link href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/emoji-mart.js"></script>
 
-                <div class="mb-4">
-                    <label for="attachments" class="block text-sm font-medium text-gray-700">{{ __('Attachments (Optional)') }}</label>
-                    <input type="file" id="attachments" name="attachments[]" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-architimex-primary file:text-white hover:file:bg-architimex-primary-darker">
-                    <p class="mt-1 text-xs text-gray-500">{{ __('Max 5MB per file.') }}</p>
-                </div>
+        <!-- JavaScript -->
+        <script>
+            // Participants panel toggle
+            const showParticipantsBtn = document.getElementById('showParticipants');
+            const participantsPanel = document.getElementById('participantsPanel');
+            
+            showParticipantsBtn.addEventListener('click', () => {
+                participantsPanel.classList.toggle('hidden');
+            });
 
-                <div class="flex items-center justify-between">
-                    <a href="{{ route('admin.messages.index') }}" class="text-gray-600 hover:text-gray-900">
-                        &larr; {{ __('Back to Messages') }}
-                    </a>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-architimex-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-architimex-primary-darker focus:bg-architimex-primary-darker active:bg-architimex-primary-darker focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        {{ __('Send Reply') }}
-                    </button>
-                </div>
-            </form>
-        </div>
+            // Auto-resize textarea
+            const textarea = document.getElementById('content');
+            textarea.addEventListener('input', function() {
+                this.style.height = '0px';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
 
-        <div class="mt-6 flex items-center justify-between">
-            <a href="{{ route('admin.messages.index') }}" class="text-gray-600 hover:text-gray-900">
-                &larr; {{ __('Back to Messages') }}
-            </a>
-        </div>
+            // Scroll messages container to bottom on load and when new messages arrive
+            const messagesContainer = document.getElementById('messagesContainer');
+            function scrollToBottom() {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            scrollToBottom();
+
+            // Add emoji picker
+            const picker = new EmojiMart.Picker({
+                onSelect: emoji => {
+                    const textarea = document.getElementById('content');
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = textarea.value;
+                    const newText = text.substring(0, start) + emoji.native + text.substring(end);
+                    textarea.value = newText;
+                    textarea.dispatchEvent(new Event('input')); // Trigger auto-resize
+                }
+            });
+            picker.style.display = 'none';
+            document.body.appendChild(picker);
+
+            // Toggle emoji picker
+            const emojiButton = document.createElement('button');
+            emojiButton.type = 'button';
+            emojiButton.className = 'text-gray-500 hover:text-gray-600';
+            emojiButton.innerHTML = `
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-3.937 6.535a1 1 0 00.79.375h.002a1 1 0 00.79-.375c.622-.885 1.79-1.535 3.355-1.535a1 1 0 100-2c-2.353 0-4.185 1.045-5.002 2.534a1 1 0 00.066 1.001z" clip-rule="evenodd"/>
+                </svg>
+            `;
+
+            const attachmentLabel = document.querySelector('label[for="attachments"]');
+            attachmentLabel.parentNode.insertBefore(emojiButton, attachmentLabel);
+
+            let emojiPickerVisible = false;
+            emojiButton.addEventListener('click', () => {
+                emojiPickerVisible = !emojiPickerVisible;
+                picker.style.display = emojiPickerVisible ? 'block' : 'none';
+                if (emojiPickerVisible) {
+                    const rect = emojiButton.getBoundingClientRect();
+                    picker.style.position = 'absolute';
+                    picker.style.bottom = window.innerHeight - rect.top + 10 + 'px';
+                    picker.style.left = rect.left + 'px';
+                }
+            });
+
+            // Close emoji picker when clicking outside
+            document.addEventListener('click', (e) => {
+                if (emojiPickerVisible && !picker.contains(e.target) && !emojiButton.contains(e.target)) {
+                    emojiPickerVisible = false;
+                    picker.style.display = 'none';
+                }
+            });
+
+            // File attachment preview
+            const attachmentInput = document.getElementById('attachments');
+            const attachmentPreview = document.getElementById('attachmentPreview');
+            const fileList = document.getElementById('fileList');
+
+            attachmentInput.addEventListener('change', () => {
+                fileList.innerHTML = '';
+                if (attachmentInput.files.length > 0) {
+                    attachmentPreview.classList.remove('hidden');
+                    Array.from(attachmentInput.files).forEach(file => {
+                        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                        fileList.innerHTML += `
+                            <div class="flex items-center justify-between py-1">
+                                <span>${file.name}</span>
+                                <span>${fileSize} MB</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    attachmentPreview.classList.add('hidden');
+                }
+            });
+        </script>
     </div>
 </x-admin-layout>

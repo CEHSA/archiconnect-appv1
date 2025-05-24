@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\BriefingRequestController as AdminBriefingRequest
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\AssignmentTaskController as AdminAssignmentTaskController; // Added
 use App\Http\Controllers\Admin\TimeLogController as AdminTimeLogController; // Added
+use App\Http\Controllers\Admin\JobApplicationController; // Corrected controller name
 use App\Http\Controllers\Freelancer\JobController as FreelancerJobController;
 use App\Http\Controllers\Freelancer\JobAssignmentController as FreelancerJobAssignmentController;
 use App\Http\Controllers\Admin\MessageController as AdminMessageController;
@@ -175,6 +176,7 @@ use App\Http\Controllers\Admin\Auth\AuthenticatedSessionController as AdminAuthe
 use App\Http\Controllers\Admin\Auth\PasswordResetLinkController as AdminPasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\NewPasswordController as AdminNewPasswordController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\UserActivityController; // Added for User Activity
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Guest admin routes
@@ -201,15 +203,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Admin job management
         Route::get('jobs/{job}/post-to-freelancers', [AdminJobController::class, 'postToFreelancers'])->name('jobs.post-to-freelancers');
         Route::post('jobs/{job}/send-postings', [AdminJobController::class, 'sendPostings'])->name('jobs.send-postings');
+        Route::get('jobs/current', [AdminJobController::class, 'currentJobs'])->name('jobs.current'); // New route for current jobs
+        Route::post('jobs/{job}/assign', [AdminJobAssignmentController::class, 'assignJob'])->name('jobs.assign'); // Custom route for assigning job
         Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']); // Added 'destroy'
         Route::post('jobs/{job}/comments', [JobCommentController::class, 'store'])->name('jobs.comments.store'); // Added for admin job comments
         Route::post('job-assignments/{jobAssignment}/notes', [AdminJobAssignmentController::class, 'storeNote'])->name('job-assignments.notes.store'); // Added for assignment notes
         Route::resource('job-assignments', AdminJobAssignmentController::class);
         Route::resource('job-assignments.tasks', AdminAssignmentTaskController::class)->shallow();
-        Route::get('jobs/current', [AdminJobController::class, 'currentJobs'])->name('jobs.current'); // New route for current jobs
+
+        // Admin Work Submission Review
+        Route::post('work-submissions/{workSubmission}/review', [AdminWorkSubmissionController::class, 'review'])->name('work-submissions.review');
 
         // Admin user management
         Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+
+        // Admin User Activity
+        Route::get('users/activity', [UserActivityController::class, 'index'])->name('users.activity.index');
+        Route::get('users/activity/export-csv', [UserActivityController::class, 'exportCsv'])->name('users.activity.export-csv');
 
         // Admin Reports Routes
         Route::prefix('reports')->name('reports.')->group(function () {
@@ -231,7 +241,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Admin Work Submissions
         Route::get('work-submissions/{submission}/download', [AdminWorkSubmissionController::class, 'download'])->name('work-submissions.download');
-        Route::resource('work-submissions', AdminWorkSubmissionController::class);
+        Route::resource('work-submissions', AdminWorkSubmissionController::class); // Keep this for other resource actions
 
         // Admin Budget Appeals
         Route::resource('budget-appeals', AdminBudgetAppealController::class)->except(['create', 'store']);
@@ -252,9 +262,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('time-logs/{timeLog}/download-proof', [AdminTimeLogController::class, 'downloadProof'])->name('time-logs.download-proof');
 
         // Admin Job Applications Management
-        Route::get('job-applications', [AdminJobApplicationController::class, 'index'])->name('job-applications.index'); // Assuming a new AdminJobApplicationController
-        Route::get('job-applications/{application}', [AdminJobApplicationController::class, 'show'])->name('job-applications.show');
-        Route::patch('job-applications/{application}/status', [AdminJobApplicationController::class, 'updateStatus'])->name('job-applications.updateStatus');
+        Route::get('job-applications', [JobApplicationController::class, 'index'])->name('job-applications.index'); // Corrected controller name
+        Route::get('job-applications/{application}', [JobApplicationController::class, 'show'])->name('job-applications.show');
+        Route::patch('job-applications/{application}/status', [JobApplicationController::class, 'updateStatus'])->name('job-applications.updateStatus');
     });
 });
 
@@ -280,6 +290,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('briefing-requests', BriefingRequestController::class);
         Route::get('work-submissions/{workSubmission}/download', [WorkSubmissionController::class, 'download'])->name('work-submissions.download'); // Added
         Route::resource('work-submissions', WorkSubmissionController::class)->only(['index', 'show', 'update']); // Added 'update' as it exists
+
+        // Client Work Submission Approval/Revision
+        Route::post('work-submissions/{workSubmission}/approve', [WorkSubmissionController::class, 'approve'])->name('work-submissions.approve');
+        Route::post('work-submissions/{workSubmission}/request-revisions', [WorkSubmissionController::class, 'requestRevisions'])->name('work-submissions.request-revisions');
         Route::resource('jobs', JobController::class);
         Route::get('/jobs/{job}/proposals', [ProposalController::class, 'jobProposals'])->name('jobs.proposals');
         Route::get('/jobs/{job}/applications', [JobController::class, 'jobApplications'])->name('jobs.applications'); // New route for client to view applications
@@ -302,7 +316,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/jobs/{job}/accept', [FreelancerJobController::class, 'acceptJob'])->name('jobs.accept'); // New route for accepting a job
         Route::get('/jobs/{job}/message-admin/create', [FreelancerMessageController::class, 'createAdminMessageForJob'])->name('jobs.message-admin.create'); // Message admin about job
         Route::post('/jobs/{job}/message-admin', [FreelancerMessageController::class, 'storeAdminMessageForJob'])->name('jobs.message-admin.store'); // Send message to admin about job
-        
+
         // Freelancer Job Applications
         Route::get('/job-applications/create/{job_posting_id}', [FreelancerJobApplicationController::class, 'create'])->name('job-applications.create');
         Route::post('/job-applications', [FreelancerJobApplicationController::class, 'store'])->name('job-applications.store');

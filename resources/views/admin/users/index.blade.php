@@ -66,6 +66,9 @@
                                         Name
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                                         Email
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
@@ -78,9 +81,26 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($users as $user)
-                                    <tr>
+                                    <tr x-data="{ userOnlineStatus: {} }" x-init="
+                                        fetch('/api/users/online-status')
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                userOnlineStatus = data.find(u => u.id === {{ $user->id }});
+                                            });
+                                        setInterval(() => {
+                                            fetch('/api/users/online-status')
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    userOnlineStatus = data.find(u => u.id === {{ $user->id }});
+                                                });
+                                        }, 30000); // Refresh every 30 seconds
+                                    ">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {{ $user->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <span :class="{ 'bg-green-500': userOnlineStatus.is_online, 'bg-gray-400': !userOnlineStatus.is_online }" class="inline-block h-2 w-2 rounded-full mr-2"></span>
+                                            <span x-text="userOnlineStatus.is_online ? 'Online' : 'Offline'"></span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $user->email }}
@@ -100,7 +120,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                             No users found.
                                         </td>
                                     </tr>

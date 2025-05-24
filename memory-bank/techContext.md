@@ -39,6 +39,7 @@
   * PHPUnit (`phpunit.xml` is present) - For backend testing.
   * Pest (`tests/Pest.php` is present) - Often used alongside or as an alternative to PHPUnit in Laravel.
   * (Frontend testing tools TBD - e.g., Jest, Cypress).
+  * **Testing Strategy (Adopted 5/24/2025):** An iterative phased implementation approach is followed. Comprehensive PHPUnit tests are executed after the completion of each development phase to ensure stability and quality before proceeding.
 
 ## 3. Key Dependencies & Libraries
 

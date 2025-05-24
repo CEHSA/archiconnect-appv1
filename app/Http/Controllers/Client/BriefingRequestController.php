@@ -32,14 +32,19 @@ class BriefingRequestController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'preferred_date' => 'required|date',
-            'preferred_time' => 'required', // Consider adding a time format validation if needed
-            'project_overview' => 'required|string',
+            'project_type' => 'required|string|max:255',
+            'description' => 'required|string',
+            'preferred_datetime' => 'required|date',
         ]);
 
-        auth()->user()->briefingRequests()->create($validatedData);
+        $briefingRequest = auth()->user()->briefingRequests()->create([
+            'project_type' => $validatedData['project_type'],
+            'description' => $validatedData['description'],
+            'preferred_datetime' => $validatedData['preferred_datetime'],
+            'status' => 'pending', // Default status
+        ]);
 
-        return redirect()->route('client.briefing-requests.index')->with('success', 'Briefing request submitted successfully!');
+        return response()->json(['message' => 'Briefing request submitted successfully!', 'briefing_request' => $briefingRequest], 201);
     }
 
     /**

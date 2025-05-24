@@ -2,57 +2,83 @@
 
 ## 1. Current Status Summary
 
-* **I. Overall Project Health:** Yellow - Significant refactoring of the messaging system (Phase 1) is complete. Core backend logic for group chat, participant management, admin approval flows, and notifications is in place. Attachment storage paths updated. Requires thorough testing and Phase 2 (UI, further refinements).
-* **Current Phase:** Completion of Messaging System Refactor (Phase 1).
-* **Percentage Completion (Estimate):** 42% (Adjusted for messaging system refactor Phase 1 completion).
+* **I. Overall Project Health:** Yellow - Phase 1 of the implementation plan is underway. Initial PHPUnit test failures in `UserRoleInteractionsTest.php` have been resolved. Focus is now shifting to Messaging UI enhancements and Notification URL review.
+* **Current Phase:** Phase 1: Messaging UI Enhancements and Notification URL Review. (PHPUnit test resolution for `UserRoleInteractionsTest.php` completed).
+* **Percentage Completion (Estimate):** 42% (Adjusted for completion of initial test fixes in Phase 1).
 
 ## 2. What Works (Implemented Features)
 
-* **As of 5/23/2025 (Completed This Session - Messaging System Refactor - Phase 1):**
-    * **Database:** Migration created and run to remove `participant1_id`, `participant2_id` from `conversations` table, shifting reliance to `conversation_user` pivot table for group chat.
-    * **Models:** `app/Models/Conversation.php` refactored to use `participants()` relationship; methods like `scopeForUser`, `unreadCount`, `isParticipant` updated. `markAsReadForUser` added.
-    * **Controllers:**
-        * `app/Http/Controllers/Client/MessageController.php`: Updated for group chat logic (authorization, participant loading, message creation). Dispatches `ClientMessageSent` event. Attachment storage path updated to `ArchiAxis/Job_X/chat_thread/`.
-        * `app/Http/Controllers/Freelancer/MessageController.php`: Updated for group chat logic. Freelancer messages set to `pending_review`. Attachment storage path updated. Participant syncing in `create()` method.
-        * `app/Http/Controllers/Admin/MessageController.php`: Updated for group chat logic. Admin messages auto-approved. Dispatches `AdminMessageSent` event. Attachment storage path updated.
-    * **Events, Listeners, Notifications:**
-        * `ClientMessageSent` event &rarr; `NotifyParticipantsOfClientMessage` listener &rarr; `NewMessageFromClientNotification`.
-        * `AdminMessageSent` event &rarr; `NotifyParticipantsOfAdminMessage` listener &rarr; `NewMessageFromAdminNotification`.
-        * `MessageApprovedByAdmin` event (existing) &rarr; `NotifyParticipantsOfApprovedMessage` listener (refactored) &rarr; `NewApprovedMessageInConversationNotification` (for other participants) AND `YourMessageWasApprovedNotification` (for original sender).
-        * All relevant events/listeners registered in `EventServiceProvider`.
-    * **Participant Syncing on Assignment:**
-        * `app/Http/Controllers/Admin/JobApplicationController.php` (`updateStatus`): When application accepted, syncs client, freelancer, and all admins to the assignment's conversation.
-        * `app/Http/Controllers/Admin/JobAssignmentController.php` (`store`): When new assignment created, syncs client, freelancer, and all admins to the assignment's conversation.
-    * **Outcome:** Backend foundation for group messaging is established. Notifications for client, admin, and approved freelancer messages are implemented. Attachment paths in controllers have been updated.
+* **As of 5/23/2025 (Completed This Session - Messaging System Refactor - Phase 1 Verification & UI):**
+  * **Messaging System Refactor (Phase 1):** Core backend logic for group chat, participant management, admin approval flows, and notifications is implemented.
+  * **Attachment Storage:** Paths updated in controllers (`ArchiAxis/Job_X/chat_thread/`).
+  * **Attachment URL Generation:** Verified that `Storage::url()` works correctly with the `public` disk and the existing `storage:link` symlink.
+  * **Client Message View UI:** Basic WhatsApp-like styling applied, including message bubble colors, rounded corners, and an emoji button placeholder.
+  * **Participant Syncing:** Logic in `JobApplicationController` and `JobAssignmentController` correctly syncs client, assigned freelancer, and all admin users to the conversation upon assignment creation/acceptance.
+* **As of 5/24/2025 (PHPUnit Test Fixes for UserRoleInteractionsTest.php):**
+  * All tests in `tests/Feature/UserRoleInteractionsTest.php` now pass.
+    * Fixed foreign key issues by using correct Admin Profile IDs.
+    * Resolved notification errors by correcting eager loading and property access.
+    * Added missing `client_remarks` column to `work_submissions` table.
+    * Ensured `Job` status is updated on work submission.
+    * Corrected controller response codes for JSON requests.
 * **(Previous features listed in older `progress.md` versions remain relevant).**
 
-## 3. What's Left to Build (Key Pending Features)
+## 3. What's Left to Build (Key Pending Features - Phased Plan)
 
-* **For Enhanced Messaging System (Phase 2 & Refinements):**
-    * **Attachment Storage Path Verification & URL Generation:**
-        * Confirm `store($storagePath, 'public')` correctly creates/uses `public/storage/ArchiAxis/Job_X/chat_thread/` directory structure.
-        * Ensure public symlink (`php artisan storage:link`) is effective for these paths.
-        * Verify/update `FileHelper` or other mechanisms for generating accessible URLs for these attachments in views.
-    * **UI Enhancements:** WhatsApp styling, Emojis.
-    * **Participant Management Review:**
-        * Review conversation creation points (e.g., when a client posts a job, should a conversation be auto-created with admins?).
-        * Admin roles in conversations: Current logic adds *all* admins to some conversations. Refine if needed.
-* **Remaining from Job Application System:**
-    * Update action URLs in notifications if new specific views are created.
-    * Thorough testing of the 'accepted_for_assignment' flow.
-* **Broader Pending Tasks:** (As listed in previous `progress.md`)
+* **Phase 1 (Stabilization & Core UI Completion):**
+  * **PHPUnit Test Resolution (UserRoleInteractionsTest.php - COMPLETED 5/24/2025):**
+    * ~~Address `SQLSTATE[23000]: Integrity constraint violation: 19 FOREIGN KEY constraint failed` in `test_client_can_approve_or_request_revisions`.~~ (Resolved)
+    * ~~Address `Attempt to read property "name" on null` in `app\Notifications\FreelancerWorkSubmittedDbNotification.php` during `test_freelancer_can_submit_work`.~~ (Resolved)
+  * **Messaging System UI Enhancements (All Roles):**
+    * Implement emoji picker functionality.
+    * Apply further styling refinements (e.g., message tails, read receipts if planned).
+    * Review and implement UI for Admin message approval/rejection within the Admin's message view.
+    * Ensure consistent UI across Client, Freelancer, and Admin message views.
+  * **Notification Action URL Review (System-Wide):**
+    * Review all existing notifications and update action URLs.
+  * ***Post-Phase 1 Milestone: Execute all PHPUnit tests.***
+
+* **Phase 2 (Core Workflow Components):**
+  * Freelancer Time Tracking System.
+  * Budget Management & Appeal System.
+  * ***Post-Phase 2 Milestone: Execute all PHPUnit tests.***
+
+* **Phase 3 (Remaining Workflow Steps & User Management):**
+  * Client Account Registration & Profile Enhancements.
+  * Admin Project Setup Enhancements.
+  * Freelancer Availability Indication System.
+  * Admin: Functionality to Mark Project as "Completed".
+  * ***Post-Phase 3 Milestone: Execute all PHPUnit tests.***
+
+* **Phase 4 (Payment Processing):**
+  * Payment System Implementation.
+  * ***Post-Phase 4 Milestone: Execute all PHPUnit tests.***
+
+* **(Detailed tasks for Phase 2-4 are outlined in `activeContext.md`).**
 
 ## 4. Known Issues & Bugs
 
-* **Notification Links:** TODOs remain for some action URLs in notifications.
-* **Tooling:** `replace_in_file` and `write_to_file` tools showed instability during this session.
+* **PHPUnit Test Failures (UserRoleInteractionsTest.php - RESOLVED 5/24/2025):**
+  * ~~`SQLSTATE[23000]: Integrity constraint violation: 19 FOREIGN KEY constraint failed` in `test_client_can_approve_or_request_revisions`.~~
+  * ~~`Attempt to read property "name" on null` in `app\Notifications\FreelancerWorkSubmittedDbNotification.php` during `test_freelancer_can_submit_work` (and subsequent related errors).~~
+* **Notification Links:** TODOs remain for some action URLs in notifications (to be addressed in Phase 1).
+* **Tooling:** `replace_in_file` and `write_to_file` tools showed instability in previous sessions (monitoring).
 * **(Refer to `activeContext.md` for a more comprehensive list of older known issues if still relevant).**
 
 ## 5. Evolution of Project Decisions & Scope
 
-* **5/23/2025 (Messaging System Refactor - Phase 1):**
-    * **Decision:** Overhauled the conversation system for group chat capabilities, including comprehensive notification flows for different message types and admin moderation for freelancer messages. Updated attachment storage paths.
-    * **Impact:** Enables the new messaging workflow as per user requirements. This was a substantial backend refactor.
-* **(Previous decisions documented in `activeContext.md` and older `progress.md` versions remain relevant).**
+* **5/23/2025 (Messaging System Refactor - Phase 1 Completion & Verification):**
+  * **Decision:** Completed the backend refactor for group chat, notifications, and admin moderation. Verified attachment handling and applied initial UI styling. Confirmed adding all admins to assignment conversations is the current desired behavior.
+  * **Impact:** Establishes the foundation for the new messaging workflow and allows progression to UI completion and further refinements.
+* **5/24/2025 (PHPUnit Test Debugging - Initial Identification):**
+  * **Decision:** Identified and documented specific PHPUnit test failures related to foreign key constraints and null property access in notifications. These were prioritized for Phase 1.
+  * **Impact:** Resolving these was critical for application stability.
+* **5/24/2025 (Adoption of Phased Implementation Plan):**
+  * **Decision:** Adopted a structured four-phase implementation plan to address all pending features identified from the workflow and memory bank review. Each phase will conclude with comprehensive PHPUnit testing.
+  * **Impact:** Provides a clear roadmap for development, prioritizes stabilization, and aims to ensure quality at each stage.
+* **5/24/2025 (PHPUnit Test Resolution - UserRoleInteractionsTest.php):**
+  * **Decision:** Successfully debugged and resolved all failing tests within `tests/Feature/UserRoleInteractionsTest.php`.
+  * **Impact:** Increased stability of core user interaction flows (job assignment, work submission, reviews). Allows Phase 1 to proceed to UI enhancements.
+* **(Previous decisions documented in `activeContext.md` and older `progress.md` versions remain relevant and form the baseline for the current plan).**
 
 *This document provides a snapshot of the project's progress and should be updated regularly.*

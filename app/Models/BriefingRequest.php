@@ -17,9 +17,9 @@ class BriefingRequest extends Model
      */
     protected $fillable = [
         'client_id',
-        'preferred_date',
-        'preferred_time',
-        'project_overview',
+        'project_type',
+        'description',
+        'preferred_datetime',
         'status',
     ];
 

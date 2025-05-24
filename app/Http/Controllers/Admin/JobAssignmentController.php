@@ -220,4 +220,44 @@ class JobAssignmentController extends Controller
         return redirect()->route('admin.job-assignments.show', $jobAssignment)
                          ->with('success', 'Note added successfully.');
     }
+
+    /**
+     * Assign a job to a freelancer.
+     */
+    public function assignJob(Request $request, Job $job)
+    {
+        $validated = $request->validate([
+            'freelancer_id' => [
+                'required',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $user = User::find($value);
+                    if (!$user || !$user->hasRole(User::ROLE_FREELANCER)) {
+                        $fail('The selected user is not a freelancer.');
+                    }
+                },
+            ],
+            'assigned_by_admin_id' => ['required', 'exists:users,id'],
+            'status' => ['required', 'string', 'in:assigned,pending_freelancer_acceptance'],
+        ]);
+
+        // Create the job assignment
+        $assignment = JobAssignment::create([
+            'job_id' => $job->id,
+            'freelancer_id' => $validated['freelancer_id'],
+            'assigned_by_admin_id' => $validated['assigned_by_admin_id'],
+            'status' => $validated['status'],
+        ]);
+
+        // Update the job status and assigned freelancer
+        $job->update([
+            'assigned_freelancer_id' => $validated['freelancer_id'],
+            'status' => $validated['status'],
+        ]);
+
+        // Dispatch event (if needed, based on your application's event system)
+        // event(new JobAssigned($assignment));
+
+        return response()->json(['message' => 'Job assigned successfully', 'assignment' => $assignment], 200);
+    }
 }

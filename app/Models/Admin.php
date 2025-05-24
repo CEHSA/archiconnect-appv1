@@ -30,7 +30,16 @@ class Admin extends Authenticatable
         'name',
         'email',
         'password',
+        'user_id',
     ];
+
+    /**
+     * Get the user associated with the admin.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -66,26 +75,27 @@ class Admin extends Authenticatable
     }
 
     /**
-     * Get the total number of unread messages for the admin.
-     * This assumes Admins can be participants in conversations.
+     * Define the relationship for conversations this admin is part of
+     */
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user', 'user_id', 'conversation_id')
+                    ->withPivot('last_read_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the total number of unread messages for the admin across all conversations.
      */
     public function totalUnreadMessagesCount(): int
     {
-        $totalUnread = 0;
-        // Fetch all conversations the admin is part of
-        // Uses getMorphClass() to correctly identify the Admin model in polymorphic relations
-        $conversations = Conversation::where(function ($query) {
-            $query->where('participant1_id', $this->id)
-                  ->where('participant1_type', $this->getMorphClass());
-        })->orWhere(function ($query) {
-            $query->where('participant2_id', $this->id)
-                  ->where('participant2_type', $this->getMorphClass());
-        })->with('messages')->get(); // Eager load messages for efficiency
-
-        foreach ($conversations as $conversation) {
-            // The unreadCount method in Conversation model now accepts User or Admin
-            $totalUnread += $conversation->unreadCount($this);
-        }
-        return $totalUnread;
+        return $this->conversations()
+            ->join('messages', 'conversations.id', '=', 'messages.conversation_id')
+            ->where(function ($query) {
+                $query->whereNull('conversation_user.last_read_at')
+                    ->orWhere('messages.created_at', '>', 'conversation_user.last_read_at');
+            })
+            ->where('messages.user_id', '!=', $this->id) // Don't count own messages
+            ->count();
     }
 }

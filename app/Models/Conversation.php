@@ -7,30 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-// use App\Models\Admin; // Removed unused import
+use App\Models\Admin;
 
 class Conversation extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        // 'participant1_id', // Removed
-        // 'participant1_type', // Removed
-        // 'participant2_id', // Removed
-        // 'participant2_type', // Removed
         'job_id',
         'job_assignment_id',
-        'created_by_user_id', // Added: who initiated the conversation
+        'created_by_user_id',
         'subject',
-        'status', // e.g., open, closed, archived
+        'status',
         'last_message_at',
     ];
 
     protected $casts = [
         'last_message_at' => 'datetime',
     ];
-
-    // Removed participant1() and participant2() MorphTo relationships
 
     /**
      * The job this conversation is associated with (optional).
@@ -51,9 +45,29 @@ class Conversation extends Model
     /**
      * The users participating in this conversation.
      */
-    public function participants(): BelongsToMany
+    public function userParticipants(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'conversation_user')->withTimestamps()->withPivot('last_read_at');
+        return $this->belongsToMany(User::class, 'conversation_user', 'conversation_id', 'user_id')
+                    ->withTimestamps()
+                    ->withPivot('last_read_at');
+    }
+
+    /**
+     * The admins participating in this conversation.
+     */
+    public function adminParticipants(): BelongsToMany
+    {
+        return $this->belongsToMany(Admin::class, 'conversation_user', 'conversation_id', 'user_id')
+                    ->withTimestamps()
+                    ->withPivot('last_read_at');
+    }
+
+    /**
+     * Get all participants (both users and admins).
+     */
+    public function participants()
+    {
+        return $this->userParticipants->merge($this->adminParticipants);
     }
 
     /**
@@ -65,51 +79,53 @@ class Conversation extends Model
     }
 
     /**
-     * Get conversations for a specific user or admin.
+     * Get conversations for a specific participant (user or admin).
      */
-    public function scopeForUser($query, User $user) // Type hint to User, assuming Admins are also Users with a role
+    public function scopeForParticipant($query, $participant)
     {
-        // Use the participants relationship (many-to-many)
-        return $query->whereHas('participants', function ($q) use ($user) {
-            $q->where('users.id', $user->id); // Ensure you are querying the users table correctly
+        return $query->whereHas('userParticipants', function ($q) use ($participant) {
+            $q->where('conversation_user.user_id', $participant->id);
+        })->orWhereHas('adminParticipants', function ($q) use ($participant) {
+            $q->where('conversation_user.user_id', $participant->id);
         });
     }
 
     /**
-     * Get unread messages count for a user.
+     * Get unread messages count for a participant (user or admin).
      */
-    public function unreadCount(User $user): int
+    public function unreadCount($participant): int
     {
-        // Get the last_read_at timestamp for the user in this conversation from the pivot table
-        $lastReadAt = $this->participants()->where('users.id', $user->id)->first()?->pivot->last_read_at;
+        // Get the last_read_at timestamp for the participant from the pivot table
+        $relationship = $participant instanceof Admin ? 'adminParticipants' : 'userParticipants';
+        $lastReadAt = $this->{$relationship}()
+            ->where('conversation_user.user_id', $participant->id)
+            ->first()?->pivot->last_read_at;
 
         return $this->messages()
-                    ->where('user_id', '!=', $user->id) // Messages not sent by the current user
-                    ->when($lastReadAt, function ($query) use ($lastReadAt) {
-                        return $query->where('created_at', '>', $lastReadAt);
-                    }, function ($query) {
-                        // If never read, all messages (not by user) are unread
-                        return $query;
-                    })
-                    ->count();
+            ->where('user_id', '!=', $participant->id)
+            ->when($lastReadAt, function ($query) use ($lastReadAt) {
+                return $query->where('created_at', '>', $lastReadAt);
+            })
+            ->count();
     }
     
     /**
-     * Mark messages as read for a user up to a certain point (e.g., now).
+     * Mark messages as read for a participant up to a certain point (e.g., now).
      */
-    public function markAsReadForUser(User $user, ?\Carbon\Carbon $timestamp = null): void
+    public function markAsRead($participant, ?\Carbon\Carbon $timestamp = null): void
     {
         $timestamp = $timestamp ?? now();
-        $this->participants()->updateExistingPivot($user->id, ['last_read_at' => $timestamp]);
+        $relationship = $participant instanceof Admin ? 'adminParticipants' : 'userParticipants';
+        $this->{$relationship}()->updateExistingPivot($participant->id, ['last_read_at' => $timestamp]);
     }
 
-
     /**
-     * Check if a user is a participant in this conversation.
+     * Check if a user or admin is a participant in this conversation.
      */
-    public function isParticipant(User $user): bool
+    public function isParticipant($participant): bool
     {
-        return $this->participants()->where('users.id', $user->id)->exists();
+        $relationship = $participant instanceof Admin ? 'adminParticipants' : 'userParticipants';
+        return $this->{$relationship}()->where('conversation_user.user_id', $participant->id)->exists();
     }
 
     /**
