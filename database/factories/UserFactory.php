@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,13 +9,13 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
+            'name'              => $this->faker->name(),
+            'email'             => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => bcrypt('password'),
-            'remember_token' => Str::random(10),
-            'role' => 'user',
-            'is_admin' => false,
+            'password'          => bcrypt('password'),
+            'remember_token'    => Str::random(10),
+            'role'              => 'user',
+            'is_admin'          => false,
         ];
     }
 
@@ -24,7 +23,7 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'role' => 'admin',
+                'role'     => \App\Models\User::ROLE_ADMIN,
                 'is_admin' => true,
             ];
         });
@@ -34,7 +33,7 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'role' => 'client',
+                'role' => \App\Models\User::ROLE_CLIENT,
             ];
         });
     }
@@ -43,7 +42,7 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'role' => 'freelancer',
+                'role' => \App\Models\User::ROLE_FREELANCER,
             ];
         });
     }

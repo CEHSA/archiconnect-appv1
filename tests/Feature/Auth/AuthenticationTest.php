@@ -11,7 +11,7 @@ test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
     $response = $this->post('/login', [
-        'email' => $user->email,
+        'email'    => $user->email,
         'password' => 'password',
     ]);
 
@@ -23,7 +23,7 @@ test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
     $this->post('/login', [
-        'email' => $user->email,
+        'email'    => $user->email,
         'password' => 'wrong-password',
     ]);
 
@@ -31,5 +31,11 @@ test('users can not authenticate with invalid password', function () {
 });
 
 test('users can logout', function () {
-    $this->markTestSkipped('Skipped due to route issues.');
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->post('/logout');
+
+    $response->assertRedirect('/login');
+    $this->assertGuest();
 });
