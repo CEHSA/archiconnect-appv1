@@ -7,6 +7,7 @@ use App\Models\FreelancerProfile;
 use App\Models\Job;
 use App\Models\JobAssignment;
 use App\Models\User;
+use App\Models\Admin;
 use App\Notifications\BudgetAppealCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -20,9 +21,11 @@ class BudgetAppealNotificationTest extends TestCase
     {
         Notification::fake();
 
-        // Create admin users
-        $admin1 = User::factory()->admin()->create();
-        $admin2 = User::factory()->admin()->create();
+        // Create admin users and their corresponding admin records
+        $userAdmin1 = User::factory()->admin()->create();
+        $admin1 = Admin::factory()->create(['user_id' => $userAdmin1->id]);
+        $userAdmin2 = User::factory()->admin()->create();
+        $admin2 = Admin::factory()->create(['user_id' => $userAdmin2->id]);
 
         // Create required relationships
         $client     = User::factory()->client()->create();
@@ -53,12 +56,12 @@ class BudgetAppealNotificationTest extends TestCase
 
         // Send notification to admins
         $notification = new BudgetAppealCreatedNotification($budgetAppeal, $jobAssignment);
-        $admin1->notify($notification);
-        $admin2->notify($notification);
+        $userAdmin1->notify($notification); // Notify the User model instance
+        $userAdmin2->notify($notification); // Notify the User model instance
 
         // Assert notifications were sent to all admins
         Notification::assertSentTo(
-            [$admin1, $admin2],
+            [$userAdmin1, $userAdmin2], // Notify User models
             BudgetAppealCreatedNotification::class,
             function ($notification) use ($budgetAppeal, $jobAssignment) {
                 return $notification->appeal->id === $budgetAppeal->id &&
@@ -72,7 +75,8 @@ class BudgetAppealNotificationTest extends TestCase
         Notification::fake();
 
         // Create required relationships
-        $admin      = User::factory()->admin()->create();
+        $userAdmin = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $userAdmin->id]);
         $client     = User::factory()->client()->create();
         $freelancer = User::factory()->freelancer()->create();
         FreelancerProfile::factory()->create(['user_id' => $freelancer->id]);
@@ -87,7 +91,7 @@ class BudgetAppealNotificationTest extends TestCase
             'job_id'               => $job->id,
             'client_id'            => $client->id,
             'freelancer_id'        => $freelancer->id,
-            'assigned_by_admin_id' => $admin->id,
+            'assigned_by_admin_id' => $admin->id, // Use Admin model's ID
             'status'               => 'active',
         ]);
 
@@ -102,7 +106,7 @@ class BudgetAppealNotificationTest extends TestCase
         event(new BudgetAppealCreated($budgetAppeal));
 
         Notification::assertSentTo(
-            $admin,
+            $userAdmin, // Notify User model
             BudgetAppealCreatedNotification::class,
             function ($notification) use ($jobAssignment) {
                 return $notification->jobAssignment->id === $jobAssignment->id;

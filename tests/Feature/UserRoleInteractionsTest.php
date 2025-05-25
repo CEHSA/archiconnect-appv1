@@ -44,6 +44,7 @@ class UserRoleInteractionsTest extends TestCase
         ]);
 
         $response = $this->actingAs($adminUser, 'admin')->postJson(route('admin.jobs.assign', $job->id), [
+            'client_id' => $clientUser->id,
             'freelancer_id' => $freelancerUser->id,
             'assigned_by_admin_id' => $adminProfile->id,
             'status' => 'assigned',
@@ -52,6 +53,7 @@ class UserRoleInteractionsTest extends TestCase
         $response->assertStatus(200); // Or 201 if it's a creation endpoint
         $this->assertDatabaseHas('job_assignments', [
             'job_id' => $job->id,
+            'client_id' => $clientUser->id,
             'freelancer_id' => $freelancerUser->id,
             'assigned_by_admin_id' => $adminProfile->id,
             'status' => 'assigned',
@@ -116,6 +118,7 @@ class UserRoleInteractionsTest extends TestCase
 
         $jobAssignment = JobAssignment::factory()->create([
             'job_id' => $job->id,
+            'client_id' => $clientUser->id,
             'freelancer_id' => $freelancerUser->id,
             'assigned_by_admin_id' => $adminProfile->id,
             'status' => 'assigned',
@@ -169,6 +172,7 @@ class UserRoleInteractionsTest extends TestCase
 
         $jobAssignment = JobAssignment::factory()->create([
             'job_id' => $job->id,
+            'client_id' => $clientUser->id,
             'freelancer_id' => $freelancerUser->id,
             'assigned_by_admin_id' => $adminProfile->id,
             'status' => 'assigned',
@@ -224,6 +228,7 @@ class UserRoleInteractionsTest extends TestCase
 
         $jobAssignment = JobAssignment::factory()->create([
             'job_id' => $job->id,
+            'client_id' => $clientUser->id,
             'freelancer_id' => $freelancerUser->id,
             'assigned_by_admin_id' => $adminProfile->id,
             'status' => 'assigned',
@@ -274,6 +279,7 @@ class UserRoleInteractionsTest extends TestCase
 
         $jobAssignment_rev = JobAssignment::factory()->create([
             'job_id' => $job_rev->id,
+            'client_id' => $clientUser_rev->id,
             'freelancer_id' => $freelancerUser_rev->id,
             'assigned_by_admin_id' => $adminProfile_rev->id, // Use adminProfile_rev
             'status' => 'assigned',

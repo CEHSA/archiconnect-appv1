@@ -1,85 +1,111 @@
 <?php
+/**
+ * Production Environment Check Script
+ * Delete this file after successful deployment verification
+ */
 
-// Environment diagnosis script
-// Save this as public/env-check.php on your production server
-
-// Disable error reporting for security
-error_reporting(0);
-ini_set('display_errors', 0);
-
-// Define safe output
-function safe_output($key, $value) {
-    if (in_array(strtolower($key), ['password', 'key', 'secret', 'token'])) {
-        return '[REDACTED]';
-    }
-    
-    if (is_array($value)) {
-        return '[Array]';
-    }
-    
-    return htmlspecialchars($value);
+// Basic security check
+if (!isset($_SERVER['HTTP_X_DEPLOYMENT_CHECK']) || $_SERVER['HTTP_X_DEPLOYMENT_CHECK'] !== 'secure_check_token') {
+    header('HTTP/1.0 403 Forbidden');
+    exit('Access Denied');
 }
 
-// Get environment information
-$environment = [
-    'APP_ENV' => getenv('APP_ENV') ?: 'Not set',
-    'APP_DEBUG' => getenv('APP_DEBUG') ?: 'Not set',
-    'PHP Version' => phpversion(),
-    'Server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
-    'Document Root' => $_SERVER['DOCUMENT_ROOT'] ?? 'Unknown',
-    'Script Path' => $_SERVER['SCRIPT_FILENAME'] ?? 'Unknown',
-    'Now' => date('Y-m-d H:i:s'),
+$checks = [];
+
+// Check PHP Version
+$checks['php_version'] = [
+    'status' => version_compare(PHP_VERSION, '8.1.0', '>='),
+    'message' => 'PHP Version: ' . PHP_VERSION,
+    'required' => 'PHP >= 8.1.0'
 ];
 
-// Check for built assets
-$environment['Vite Manifest'] = file_exists(__DIR__ . '/build/manifest.json') ? 'Present' : 'Missing';
-$environment['Manifest Contents'] = file_exists(__DIR__ . '/build/manifest.json') ? 
-    substr(file_get_contents(__DIR__ . '/build/manifest.json'), 0, 100) . '...' : 'N/A';
-
-// Check if Laravel is loaded
-$environment['Laravel Loaded'] = class_exists('Illuminate\Foundation\Application') ? 'Yes' : 'No';
-
-// Output as HTML
-echo "<!DOCTYPE html><html><head><title>Environment Check</title>";
-echo "<style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;text-align:left;border-bottom:1px solid #ddd}
-th{background-color:#f2f2f2}
-.error{color:red}
-.success{color:green}
-</style></head><body>";
-echo "<h1>Environment Diagnosis</h1>";
-echo "<p>This page shows the current environment configuration. For security reasons, please delete this file after use.</p>";
-
-echo "<h2>Environment Variables</h2>";
-echo "<table><tr><th>Variable</th><th>Value</th></tr>";
-foreach ($environment as $key => $value) {
-    $class = '';
-    if ($key === 'APP_ENV' && $value !== 'production') {
-        $class = 'error';
-    } elseif ($key === 'APP_DEBUG' && $value === 'true') {
-        $class = 'error';
-    } elseif ($key === 'Vite Manifest' && $value === 'Missing') {
-        $class = 'error';
+// Check Required Extensions
+$required_extensions = ['pdo', 'mysql', 'openssl', 'mbstring', 'tokenizer', 'xml', 'ctype', 'json', 'curl', 'fileinfo', 'zip'];
+$missing_extensions = [];
+foreach ($required_extensions as $ext) {
+    if (!extension_loaded($ext)) {
+        $missing_extensions[] = $ext;
     }
-    
-    echo "<tr class=\"{$class}\"><td>" . htmlspecialchars($key) . "</td><td>" . safe_output($key, $value) . "</td></tr>";
 }
-echo "</table>";
+$checks['extensions'] = [
+    'status' => empty($missing_extensions),
+    'message' => empty($missing_extensions) ? 'All required extensions installed' : 'Missing: ' . implode(', ', $missing_extensions),
+    'required' => 'Required extensions: ' . implode(', ', $required_extensions)
+];
 
-// Only show file listing when not in production
-if (getenv('APP_ENV') !== 'production') {
-    echo "<h2>Public Directory Files</h2>";
-    echo "<pre>";
-    $files = scandir(__DIR__);
-    foreach ($files as $file) {
-        if ($file != '.' && $file != '..') {
-            $isDir = is_dir(__DIR__ . '/' . $file);
-            echo htmlspecialchars($file) . ($isDir ? '/' : '') . "\n";
-        }
+// Check Storage Directory Permissions
+$storage_path = __DIR__ . '/../storage';
+$storage_writable = is_writable($storage_path);
+$checks['storage_permissions'] = [
+    'status' => $storage_writable,
+    'message' => $storage_writable ? 'Storage directory is writable' : 'Storage directory is not writable',
+    'required' => 'Storage directory must be writable'
+];
+
+// Check Environment File
+$env_exists = file_exists(__DIR__ . '/../.env');
+$checks['env_file'] = [
+    'status' => $env_exists,
+    'message' => $env_exists ? '.env file exists' : '.env file missing',
+    'required' => '.env file must exist'
+];
+
+// Check Database Connection
+try {
+    if (file_exists(__DIR__ . '/../.env')) {
+        require_once __DIR__ . '/../vendor/autoload.php';
+        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+        $dotenv->load();
+        
+        $host = $_ENV['DB_HOST'] ?? 'localhost';
+        $dbname = $_ENV['DB_DATABASE'];
+        $username = $_ENV['DB_USERNAME'];
+        $password = $_ENV['DB_PASSWORD'];
+        
+        $db = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $checks['database'] = [
+            'status' => true,
+            'message' => 'Database connection successful',
+            'required' => 'Must connect to database'
+        ];
+    } else {
+        $checks['database'] = [
+            'status' => false,
+            'message' => 'Could not test database connection - no .env file',
+            'required' => 'Must connect to database'
+        ];
     }
-    echo "</pre>";
+} catch (Exception $e) {
+    $checks['database'] = [
+        'status' => false,
+        'message' => 'Database connection failed: ' . $e->getMessage(),
+        'required' => 'Must connect to database'
+    ];
 }
 
-echo "<p>Generated at: " . date('Y-m-d H:i:s') . "</p>";
-echo "</body></html>";
+// Check if public/storage symlink exists
+$public_storage = __DIR__ . '/storage';
+$checks['storage_link'] = [
+    'status' => file_exists($public_storage),
+    'message' => file_exists($public_storage) ? 'Storage symlink exists' : 'Storage symlink missing',
+    'required' => 'Storage symlink must exist in public directory'
+];
+
+// Check Vite Build
+$manifest_path = __DIR__ . '/build/manifest.json';
+$checks['vite_build'] = [
+    'status' => file_exists($manifest_path),
+    'message' => file_exists($manifest_path) ? 'Vite build exists' : 'Vite build missing',
+    'required' => 'Vite build files must exist'
+];
+
+// Output Results
+header('Content-Type: application/json');
+echo json_encode([
+    'timestamp' => date('Y-m-d H:i:s'),
+    'checks' => $checks,
+    'all_passed' => array_reduce($checks, function($carry, $item) {
+        return $carry && $item['status'];
+    }, true)
+], JSON_PRETTY_PRINT);

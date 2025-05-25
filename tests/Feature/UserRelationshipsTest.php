@@ -107,14 +107,14 @@ class UserRelationshipsTest extends TestCase
         ]);
 
         $proposal1 = Proposal::create([
-            'user_id' => $freelancer->id,
+            'freelancer_id' => $freelancer->id,
             'job_id' => $job1->id,
             'proposed_budget' => 900,
             'cover_letter' => 'Cover letter for proposal 1'
         ]);
 
         $proposal2 = Proposal::create([
-            'user_id' => $freelancer->id,
+            'freelancer_id' => $freelancer->id,
             'job_id' => $job2->id,
             'proposed_budget' => 950,
             'cover_letter' => 'Cover letter for proposal 2'

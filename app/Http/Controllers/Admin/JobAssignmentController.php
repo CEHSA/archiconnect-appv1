@@ -78,11 +78,12 @@ class JobAssignmentController extends Controller
 
         $job = Job::findOrFail($validated['job_id']); // Fetch the job
 
-        $assignment = new JobAssignment();
-        $assignment->job_id = $job->id;
-        $assignment->freelancer_id = $validated['freelancer_id'];
-        $assignment->assigned_by_admin_id = Auth::id();
-        $assignment->admin_remarks = $validated['admin_remarks'];
+$assignment = new JobAssignment();
+ $assignment->job_id = $job->id;
+$assignment->client_id = $job->client_id;
+ $assignment->freelancer_id = $validated['freelancer_id'];
+ $assignment->assigned_by_admin_id = Auth::id();
+ $assignment->admin_remarks = $validated['admin_remarks'];
         // Status defaults to 'pending_freelancer_acceptance' via migration
 
         $assignment->save();
@@ -244,6 +245,7 @@ class JobAssignmentController extends Controller
         // Create the job assignment
         $assignment = JobAssignment::create([
             'job_id' => $job->id,
+            'client_id' => $job->client_id, // Add client_id from the job
             'freelancer_id' => $validated['freelancer_id'],
             'assigned_by_admin_id' => $validated['assigned_by_admin_id'],
             'status' => $validated['status'],

@@ -14,7 +14,7 @@ class JobAssignmentFactory extends Factory
             'job_id'               => Job::factory(),
             'client_id'            => User::factory()->client(),
             'freelancer_id'        => User::factory()->freelancer(),
-            'assigned_by_admin_id' => User::factory()->admin(),
+            'assigned_by_admin_id' => Admin::factory(),
             'status'               => $this->faker->randomElement(['pending', 'accepted', 'declined', 'in_progress', 'completed']),
             'freelancer_remarks'   => $this->faker->optional(0.7)->paragraph(),
             'admin_remarks'        => $this->faker->optional(0.5)->paragraph(),
