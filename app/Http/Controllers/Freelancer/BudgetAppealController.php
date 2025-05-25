@@ -85,7 +85,13 @@ class BudgetAppealController extends Controller
      */
     public function index()
     {
-        //
+        $freelancerId = Auth::id();
+        $appeals = BudgetAppeal::where('freelancer_id', $freelancerId)
+            ->with('jobAssignment.job')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('freelancer.budget-appeals.index', compact('appeals'));
     }
 
     /**

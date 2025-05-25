@@ -4,38 +4,24 @@ namespace Database\Factories;
 
 use App\Models\Job;
 use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\JobAssignment>
- */
 class JobAssignmentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        // Create related models first
-        $job = Job::factory()->create(); // This should create a client and set job.client_id
-        $freelancer = User::factory()->freelancer()->create();
-        $admin = \App\Models\Admin::factory()->create(); // Use Admin factory
-
         return [
-            'job_id' => $job->id, // Use the created job's ID
-            'freelancer_id' => $freelancer->id,
-            'assigned_by_admin_id' => $admin->user_id, // Use the user_id from the Admin model
+            'job_id' => Job::factory(),
+            'client_id' => User::factory()->client(),
+            'freelancer_id' => User::factory()->freelancer(),
+            'assigned_by_admin_id' => Admin::factory(),
             'status' => $this->faker->randomElement(['pending', 'accepted', 'declined', 'in_progress', 'completed']),
             'freelancer_remarks' => $this->faker->optional(0.7)->paragraph(),
             'admin_remarks' => $this->faker->optional(0.5)->paragraph(),
         ];
     }
 
-    /**
-     * Indicate that the job assignment is pending.
-     */
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -43,9 +29,6 @@ class JobAssignmentFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the job assignment is accepted.
-     */
     public function accepted(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -53,9 +36,6 @@ class JobAssignmentFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the job assignment is declined.
-     */
     public function declined(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -63,9 +43,6 @@ class JobAssignmentFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the job assignment is in progress.
-     */
     public function inProgress(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -73,9 +50,6 @@ class JobAssignmentFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the job assignment is completed.
-     */
     public function completed(): static
     {
         return $this->state(fn (array $attributes) => [

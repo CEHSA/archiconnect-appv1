@@ -27,8 +27,11 @@ class StoreJobRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'user_id' => 'nullable|exists:users,id,role,' . User::ROLE_CLIENT,
+            'user_id' => 'required|exists:users,id,role,' . User::ROLE_CLIENT,
             'description' => 'required|string',
+            'scope_description' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'budget' => 'nullable|numeric|min:0',
             'hourly_rate' => 'nullable|numeric|min:0',
             'not_to_exceed_budget' => 'nullable|numeric|min:0',

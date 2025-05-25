@@ -63,6 +63,10 @@ use App\Listeners\NotifyParticipantsOfAdminMessage; // Added
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use App\Listeners\NotifyClientOfJobCompletion;
+use App\Listeners\NotifyFreelancerOfJobCompletion;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -72,8 +76,12 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        \Illuminate\Auth\Events\Login::class => [
-            \App\Listeners\LogSuccessfulLogin::class,
+        Registered::class => [
+            SendEmailVerificationNotification::class,
+        ],
+        JobCompleted::class => [
+            NotifyClientOfJobCompletion::class,
+            NotifyFreelancerOfJobCompletion::class,
         ],
         \Illuminate\Auth\Events\Logout::class => [
             \App\Listeners\LogSuccessfulLogout::class,
@@ -129,6 +137,8 @@ class EventServiceProvider extends ServiceProvider
             NotifyAdminsOfFreelancerTaskProgress::class,
         ],
         JobCompleted::class => [
+            NotifyClientOfJobCompletion::class,
+            NotifyFreelancerOfJobCompletion::class,
             NotifyUsersOfJobCompletion::class,
         ],
         \App\Events\PaymentProcessed::class => [

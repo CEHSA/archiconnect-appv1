@@ -10,10 +10,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Models\Job; // Added
 use App\Models\AdminActivityLog; // Import AdminActivityLog
 use App\Events\AdminMessageSent; // Added
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; // Added
 
 class MessageController extends Controller
 {
@@ -74,11 +76,11 @@ class MessageController extends Controller
         if (!$conversation && $request->has('conversation_id')) {
             $conversation = Conversation::find($request->input('conversation_id'));
         }
-        
+
         // If no conversation specified (even after checking request), allow creating a new conversation
         if (!$conversation) {
             // Users excluding other admins, or specific roles like client/freelancer
-            $users = User::where('role', '!=', User::ROLE_ADMIN)->orderBy('name')->get(); 
+            $users = User::where('role', '!=', User::ROLE_ADMIN)->orderBy('name')->get();
             $jobs = Job::orderBy('title')->get(); // Get jobs for linking
             return view('admin.messages.create', compact('users', 'jobs'));
         }
@@ -127,7 +129,7 @@ class MessageController extends Controller
         $message = $conversation->messages()->create([
             'user_id' => $adminUser->id,
             'body' => $validated['content'],
-            'admin_review_status' => 'approved', 
+            'admin_review_status' => 'approved',
         ]);
 
         // Handle file attachments if any
@@ -241,7 +243,7 @@ class MessageController extends Controller
                 $qMessage->where('user_id', $userId); // Filter by sender of the original message
             });
         }
-        
+
         if ($request->filled('user_group')) {
             $userRole = $request->input('user_group');
             $query->whereHasMorph('loggable', [Message::class], function ($qMessage) use ($userRole) {

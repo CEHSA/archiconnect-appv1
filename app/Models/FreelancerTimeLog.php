@@ -20,6 +20,8 @@ class FreelancerTimeLog extends Model
         'duration_minutes',
         'notes',
         'status',
+        'is_offline_recorded', // Added for offline tracking
+        'offline_id',          // Added for offline tracking unique ID
         'reviewed_by_admin_id',
         'reviewed_at',
     ];
@@ -40,8 +42,13 @@ class FreelancerTimeLog extends Model
         return $this->belongsTo(JobAssignment::class, 'job_assignment_id');
     }
 
+    public const STATUS_RUNNING = 'running';
+    public const STATUS_PENDING_REVIEW = 'pending_review';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_DECLINED = 'declined';
+
     public function reviewedByAdmin(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'reviewed_by_admin_id');
+        return $this->belongsTo(User::class, 'reviewed_by_admin_id');
     }
 }

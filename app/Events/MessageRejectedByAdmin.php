@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\Admin;
+use App\Models\User;
 use App\Models\Message;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -13,17 +13,17 @@ class MessageRejectedByAdmin
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Message $message;
-    public Admin $adminUser;
+    public User $adminUser;
     public string $remarks;
 
     /**
      * Create a new event instance.
      *
      * @param \App\Models\Message $message
-     * @param \App\Models\Admin $adminUser
+     * @param \App\Models\User $adminUser
      * @param string|null $remarks
      */
-    public function __construct(Message $message, Admin $adminUser, ?string $remarks)
+    public function __construct(Message $message, User $adminUser, ?string $remarks)
     {
         $this->message = $message;
         $this->adminUser = $adminUser;

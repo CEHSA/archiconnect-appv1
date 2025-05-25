@@ -25,11 +25,13 @@ class LogAdminActivity
     public function handle(object $event): void
     {
         // Prioritize admin user from the event, fallback to Auth
-        $admin = null;
-        if (property_exists($event, 'adminUser') && $event->adminUser instanceof \App\Models\Admin) {
+        $admin = Auth::user(); // Assuming Auth::user() returns the authenticated User model, which should be an admin in this context.
+
+        // If the event explicitly provides an adminUser, use it.
+        // This allows for flexibility if an event is dispatched with a specific admin user,
+        // even if it's not the currently authenticated one.
+        if (property_exists($event, 'adminUser') && $event->adminUser instanceof \App\Models\User) {
             $admin = $event->adminUser;
-        } else {
-            $admin = Auth::guard('admin')->user();
         }
 
         if (!$admin) {

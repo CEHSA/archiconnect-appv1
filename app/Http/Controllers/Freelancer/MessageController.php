@@ -10,7 +10,7 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Events\FreelancerMessageCreated; 
+use App\Events\FreelancerMessageCreated;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
@@ -21,7 +21,7 @@ class MessageController extends Controller
      */
     public function index()
     {
-        $conversations = Conversation::forUser(Auth::user())
+        $conversations = Conversation::forParticipant(Auth::user())
             ->with(['job', 'messages' => function ($query) {
                 $query->latest()->limit(1);
             }])
@@ -64,14 +64,14 @@ class MessageController extends Controller
             ]
         );
 
-        $participants = [$user->id, $assignment->job->user_id]; 
+        $participants = [$user->id, $assignment->job->user_id];
         $adminUsers = User::where('role', User::ROLE_ADMIN)->pluck('id')->toArray();
         $participants = array_unique(array_merge($participants, $adminUsers));
         $conversation->participants()->syncWithoutDetaching($participants);
 
         return view('freelancer.assignments.messages.create', compact('assignment', 'conversation'));
     }
-    
+
     /**
      * Show the form for creating a new message to an admin (general or assignment/task related).
      */
@@ -94,7 +94,7 @@ class MessageController extends Controller
                 })->all(),
             ];
         })->all();
-        
+
         $admins = User::where('role', User::ROLE_ADMIN)->orderBy('name')->get(['id', 'name']);
 
         return view('freelancer.messages.create-admin', compact('assignmentOptions', 'admins'));
@@ -127,7 +127,7 @@ class MessageController extends Controller
 
         $user = Auth::user();
         $conversation = null;
-        $messageBody = $validated['content']; 
+        $messageBody = $validated['content'];
 
         if (isset($validated['conversation_id'])) {
             $conversation = Conversation::findOrFail($validated['conversation_id']);
@@ -158,7 +158,7 @@ class MessageController extends Controller
             if(!$adminRecipient) {
                 return redirect()->back()->with('error', 'Selected admin recipient is invalid.');
             }
-            
+
             $subject = $validated['subject'];
             $jobIdForConvo = null;
             $jobAssignmentIdForConvo = null;
@@ -178,10 +178,10 @@ class MessageController extends Controller
                     $subject = $subjectPrefix . ") - " . $subject;
                 }
             }
-            
+
             $conversation = Conversation::firstOrCreate(
                 [
-                    'subject' => $subject, 
+                    'subject' => $subject,
                     'created_by_user_id' => $user->id,
                     'job_id' => $jobIdForConvo,
                     'job_assignment_id' => $jobAssignmentIdForConvo,
@@ -194,13 +194,13 @@ class MessageController extends Controller
         if (!$conversation) {
             return redirect()->back()->with('error', 'Could not determine or create the conversation.');
         }
-        
+
         $message = $conversation->messages()->create([
             'user_id' => $user->id,
-            'body' => $messageBody, 
+            'body' => $messageBody,
             'admin_review_status' => 'pending_review',
         ]);
-        
+
         if ($request->hasFile('attachments')) {
             $jobId = $conversation->job_id ?? ($conversation->jobAssignment->job_id ?? 'general');
             $storagePath = "ArchiAxis/Job_{$jobId}/chat_thread";
@@ -214,7 +214,7 @@ class MessageController extends Controller
                 ]);
             }
         }
-        
+
         $conversation->update(['last_message_at' => $message->created_at]);
         event(new FreelancerMessageCreated($message));
 
@@ -222,7 +222,7 @@ class MessageController extends Controller
              return redirect()->route('freelancer.messages.index')->with('success', 'Message to admin sent and pending approval.');
         } elseif ($conversation->job_assignment_id) {
             return redirect()->route('freelancer.assignments.show', $conversation->job_assignment_id)->with('success', 'Message sent and pending admin approval.');
-        } else { 
+        } else {
             return redirect()->route('freelancer.messages.show', $conversation)->with('success', 'Message sent and pending admin approval.');
         }
     }
@@ -257,11 +257,11 @@ class MessageController extends Controller
             ['job_id' => $job->id, 'subject' => $subject],
             ['created_by_user_id' => $freelancer->id, 'last_message_at' => now()]
         );
-        
+
         $participantIds = $adminUsers->pluck('id')->toArray();
         $participantIds[] = $freelancer->id;
         $conversation->participants()->syncWithoutDetaching(array_unique($participantIds));
-        
+
         $message = $conversation->messages()->create([
             'user_id' => $freelancer->id,
             'body' => $validated['content'],
@@ -272,7 +272,7 @@ class MessageController extends Controller
             $jobId = $conversation->job_id ?? 'general'; // job_id is guaranteed here from firstOrCreate
             $storagePath = "ArchiAxis/Job_{$jobId}/chat_thread";
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store($storagePath, 'public'); 
+                $path = $file->store($storagePath, 'public');
                 $message->attachments()->create([
                     'file_path' => $path,
                     'original_name' => $file->getClientOriginalName(),

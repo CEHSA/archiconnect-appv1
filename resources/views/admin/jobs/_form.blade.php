@@ -29,6 +29,31 @@
         <x-input-error :messages="$errors->get('description')" class="mt-2" />
     </div>
 
+    <!-- Scope Description -->
+    <div class="md:col-span-2">
+        <x-input-label for="scope_description" :value="__('Scope Description (Optional)')" class="text-gray-700" />
+        <textarea id="scope_description" name="scope_description" rows="4"
+            class="block mt-1 w-full border-gray-300 bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm placeholder-gray-700"
+            placeholder="Provide a detailed description of the project scope.">{{ old('scope_description', $job->scope_description ?? '') }}</textarea>
+        <x-input-error :messages="$errors->get('scope_description')" class="mt-2" />
+    </div>
+
+    <!-- Start Date -->
+    <div>
+        <x-input-label for="start_date" :value="__('Start Date (Optional)')" class="text-gray-700" />
+        <x-text-input id="start_date" class="block mt-1 w-full placeholder-gray-700" type="date" name="start_date"
+            :value="old('start_date', $job->start_date ? \Carbon\Carbon::parse($job->start_date)->format('Y-m-d') : '')" />
+        <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
+    </div>
+
+    <!-- End Date -->
+    <div>
+        <x-input-label for="end_date" :value="__('End Date (Optional)')" class="text-gray-700" />
+        <x-text-input id="end_date" class="block mt-1 w-full placeholder-gray-700" type="date" name="end_date"
+            :value="old('end_date', $job->end_date ? \Carbon\Carbon::parse($job->end_date)->format('Y-m-d') : '')" />
+        <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
+    </div>
+
     <!-- Budget -->
     <div>
         <x-input-label for="budget" :value="__('Budget (Optional)')" class="text-gray-700" />

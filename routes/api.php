@@ -23,4 +23,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('jobs', JobController::class);
     Route::get('/users/online-status', [UserController::class, 'index']); // New route for online status
+
+    // Freelancer Time Log Synchronization
+    Route::post('/freelancer/time-logs/sync', [App\Http\Controllers\Freelancer\TimeLogController::class, 'sync']);
 });

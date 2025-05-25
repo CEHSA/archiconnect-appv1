@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\TimeLog;
+use App\Models\FreelancerTimeLog;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -15,12 +15,12 @@ class FreelancerTimeLogStarted
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public TimeLog $timeLog;
+    public FreelancerTimeLog $timeLog;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(TimeLog $timeLog)
+    public function __construct(FreelancerTimeLog $timeLog)
     {
         $this->timeLog = $timeLog;
     }

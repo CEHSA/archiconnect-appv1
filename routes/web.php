@@ -193,7 +193,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Authenticated admin routes
     Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])->middleware('auth:admin')->name('logout');
 
-    Route::middleware(['auth:admin'])->group(function () {
+    Route::middleware(['auth:admin', 'role:admin'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         // Admin profile routes
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
@@ -205,6 +205,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('jobs/{job}/send-postings', [AdminJobController::class, 'sendPostings'])->name('jobs.send-postings');
         Route::get('jobs/current', [AdminJobController::class, 'currentJobs'])->name('jobs.current'); // New route for current jobs
         Route::post('jobs/{job}/assign', [AdminJobAssignmentController::class, 'assignJob'])->name('jobs.assign'); // Custom route for assigning job
+        Route::patch('jobs/{job}/complete', [AdminJobController::class, 'complete'])->name('jobs.complete'); // New route for marking job as complete
         Route::resource('jobs', AdminJobController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']); // Added 'destroy'
         Route::post('jobs/{job}/comments', [JobCommentController::class, 'store'])->name('jobs.comments.store'); // Added for admin job comments
         Route::post('job-assignments/{jobAssignment}/notes', [AdminJobAssignmentController::class, 'storeNote'])->name('job-assignments.notes.store'); // Added for assignment notes

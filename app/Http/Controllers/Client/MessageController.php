@@ -17,7 +17,7 @@ class MessageController extends Controller
     public function index()
     {
         // Get all conversations where the client is a participant
-        $conversations = Conversation::forUser(Auth::user())
+        $conversations = Conversation::forParticipant(Auth::user())
             ->with(['job', 'messages' => function ($query) {
                 $query->latest()->limit(1);
             }])
@@ -79,7 +79,7 @@ class MessageController extends Controller
                 $message->attachments()->create([
                     'file_path' => $path,
                     'original_name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(), 
+                    'size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
                 ]);
             }

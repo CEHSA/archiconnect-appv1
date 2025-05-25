@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,7 +23,7 @@ class Job extends Model
      */
     protected $fillable = [
         'user_id',
-        'client_id', // Added client_id
+        'client_id',
         'title',
         'description',
         'budget',
@@ -31,8 +32,21 @@ class Job extends Model
         'hourly_rate',
         'not_to_exceed_budget',
         'created_by_user_id',
-        'created_by_admin_id', // Added created_by_admin_id
+        'created_by_admin_id',
         'assigned_freelancer_id',
+        'scope_description',
+        'start_date',
+        'end_date',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
     ];
 
     /**

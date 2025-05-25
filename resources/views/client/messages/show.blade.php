@@ -25,7 +25,7 @@
                                     <div class="max-w-[75%] {{ $message->user_id == Auth::id() ? 'bg-green-500 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none' }} rounded-lg p-3 shadow relative">
                                         {{-- Optional: Add a tail to the message bubble --}}
                                         <div class="absolute bottom-0 {{ $message->user_id == Auth::id() ? 'right-0 mr-[-7px]' : 'left-0 ml-[-7px]' }} w-3 h-3 {{ $message->user_id == Auth::id() ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700' }} transform rotate-45 origin-bottom"></div>
-                                        
+
                                         <div class="flex justify-between items-center mb-1">
                                             <span class="font-medium text-sm {{ $message->user_id == Auth::id() ? 'text-white opacity-90' : 'text-gray-700 dark:text-gray-300' }}">{{ $message->user->name }}</span>
                                             <span class="text-xs opacity-75 {{ $message->user_id == Auth::id() ? 'text-white' : 'text-gray-600 dark:text-gray-400' }}">{{ $message->created_at->format('M d, H:i') }}</span>
@@ -66,24 +66,25 @@
                         <form method="POST" action="{{ route('client.messages.store') }}" class="mt-4" enctype="multipart/form-data"> {{-- Add enctype for file uploads --}}
                             @csrf
                             <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
-                            
+
                             <div class="mb-4">
-                                <x-textarea-input 
-                                    id="content" 
-                                    name="content" 
-                                    class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" 
-                                    rows="3" 
-                                    placeholder="{{ __('Type your message here...') }}" 
+                                <x-textarea-input
+                                    id="message-content"
+                                    name="content"
+                                    class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                    rows="3"
+                                    placeholder="{{ __('Type your message here...') }}"
                                     required
                                 ></x-textarea-input>
                                 <x-input-error :messages="$errors->get('content')" class="mt-2" />
                             </div>
-                            
+
                             <div class="flex justify-end items-center gap-2"> {{-- Added items-center and gap-2 --}}
                                 {{-- Emoji button placeholder --}}
-                                <button type="button" class="inline-flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                                    😊 {{-- Simple emoji icon --}}
+                                <button type="button" id="emoji-button" class="inline-flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                    😊
                                 </button>
+                                <div id="emoji-picker-container" class="absolute bottom-full right-0 mb-2 z-10 hidden"></div>
                                 <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                                     {{ __('Send Message') }}
                                 </button>
@@ -95,11 +96,37 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js';
+
         // Scroll to the bottom of the messages container when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             const messagesContainer = document.getElementById('messages-container');
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            const emojiButton = document.getElementById('emoji-button');
+            const messageContent = document.getElementById('message-content');
+            const emojiPickerContainer = document.getElementById('emoji-picker-container');
+
+            const picker = document.createElement('emoji-picker');
+            picker.classList.add('absolute', 'bottom-full', 'right-0', 'mb-2', 'z-10', 'shadow-lg', 'rounded-lg');
+            emojiPickerContainer.appendChild(picker);
+
+            emojiButton.addEventListener('click', () => {
+                emojiPickerContainer.classList.toggle('hidden');
+            });
+
+            picker.addEventListener('emoji-click', event => {
+                messageContent.value += event.detail.unicode;
+                emojiPickerContainer.classList.add('hidden');
+            });
+
+            // Close picker if clicked outside
+            document.addEventListener('click', (event) => {
+                if (!emojiPickerContainer.contains(event.target) && !emojiButton.contains(event.target)) {
+                    emojiPickerContainer.classList.add('hidden');
+                }
+            });
         });
     </script>
 </x-client-layout>

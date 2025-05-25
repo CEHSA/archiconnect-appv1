@@ -3,75 +3,57 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => bcrypt('password'),
             'remember_token' => Str::random(10),
-            'role' => 'user', // Default role
-            'is_admin' => false, // Default is_admin status
+            'role' => 'user',
+            'is_admin' => false,
         ];
     }
 
-    /**
-     * Indicate that the user is an admin.
-     */
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => \App\Models\User::ROLE_ADMIN,
-            'is_admin' => true,
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'admin',
+                'is_admin' => true,
+            ];
+        });
     }
 
-    /**
-     * Indicate that the user is a client.
-     */
     public function client(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => \App\Models\User::ROLE_CLIENT,
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'client',
+            ];
+        });
     }
 
-    /**
-     * Indicate that the user is a freelancer.
-     */
     public function freelancer(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => \App\Models\User::ROLE_FREELANCER,
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'freelancer',
+            ];
+        });
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'email_verified_at' => null,
+            ];
+        });
     }
 }

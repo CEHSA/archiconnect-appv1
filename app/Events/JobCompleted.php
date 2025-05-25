@@ -9,25 +9,38 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\JobAssignment; // Add this line
+use App\Models\Job;
+use App\Models\User; // Assuming User model is used for admin
 
 class JobCompleted
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * The job assignment instance.
+     * The job instance.
      *
-     * @var \App\Models\JobAssignment
+     * @var \App\Models\Job
      */
-    public $jobAssignment;
+    public $job;
+
+    /**
+     * The admin user who completed the job.
+     *
+     * @var \App\Models\User|null
+     */
+    public $admin;
+    public $notes;
+    public $completionStatus;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(JobAssignment $jobAssignment)
+    public function __construct(Job $job, ?User $admin = null, string $notes = '', string $completionStatus = 'completed')
     {
-        $this->jobAssignment = $jobAssignment;
+        $this->job = $job;
+        $this->admin = $admin;
+        $this->notes = $notes;
+        $this->completionStatus = $completionStatus;
     }
 
     /**
@@ -38,7 +51,10 @@ class JobCompleted
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('job-completed.' . $this->jobAssignment->id),
+            new PrivateChannel('job-completed.' . $this->job->id),
+            new PrivateChannel('admin-notifications'),
+            new PrivateChannel('client-notifications.' . $this->job->client_id),
+            new PrivateChannel('freelancer-notifications.' . $this->job->freelancer_id),
         ];
     }
 }

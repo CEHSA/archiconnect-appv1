@@ -117,6 +117,24 @@ class JobController extends Controller
     }
 
     /**
+     * Mark the specified job as completed.
+     */
+    public function complete(Job $job) // The type hint is already Job, so the error must be internal to the method or related to how it's called.
+    {
+        // Ensure only jobs that are not already completed can be marked as such
+        if ($job->status === 'completed') {
+            return redirect()->back()->with('error', 'This job is already marked as completed.');
+        }
+
+        $job->update(['status' => 'completed']);
+
+        // Dispatch an event for job completion
+        event(new \App\Events\JobCompleted($job, Auth::guard('admin')->user()));
+
+        return redirect()->route('admin.jobs.show', $job)->with('success', 'Job marked as completed successfully.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Job $job)
@@ -187,7 +205,7 @@ class JobController extends Controller
             // $freelancer->is_busy = $freelancer->jobAssignmentsAsFreelancer()->whereIn('status', ['in_progress', 'pending_approval'])->exists();
             return $freelancer;
         });
-        
+
         // Pass filter values back to the view to repopulate fields
         $filters = $request->only(['filter_availability', 'filter_skills', 'filter_experience']);
 
@@ -251,7 +269,7 @@ class JobController extends Controller
 
 
         $jobs = $query->latest()->paginate(10)->withQueryString();
-        
+
         // Data for filter dropdowns
         $clients = User::where('role', User::ROLE_CLIENT)
                         ->whereIn('id', Job::select('user_id')->distinct()->whereIn('status', $currentStatuses))

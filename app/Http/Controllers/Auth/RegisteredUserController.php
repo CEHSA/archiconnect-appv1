@@ -37,20 +37,26 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'role' => ['required', 'string', Rule::in([User::ROLE_CLIENT, User::ROLE_FREELANCER])],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'company_name' => ['nullable', 'string', 'max:255', Rule::requiredIf($request->role === User::ROLE_CLIENT)],
+            'industry' => ['nullable', 'string', 'max:255', Rule::requiredIf($request->role === User::ROLE_CLIENT)],
         ]);
 
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => $request->role,
-            ]);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+        ]);
 
-            if ($request->role === User::ROLE_CLIENT) {
-                ClientProfile::create(['user_id' => $user->id]);
-            } elseif ($request->role === User::ROLE_FREELANCER) {
-                FreelancerProfile::create(['user_id' => $user->id]);
-            }
+        if ($request->role === User::ROLE_CLIENT) {
+            ClientProfile::create([
+                'user_id' => $user->id,
+                'company_name' => $request->company_name,
+                'industry' => $request->industry,
+            ]);
+        } elseif ($request->role === User::ROLE_FREELANCER) {
+            FreelancerProfile::create(['user_id' => $user->id]);
+        }
 
         event(new Registered($user));
 

@@ -6,7 +6,7 @@
     <div class="container mx-auto px-6 py-8">
         <div class="flex justify-between items-center">
             <h3 class="text-gray-700 text-3xl font-medium">{{ __('Messages Management') }}</h3>
-            <a href="{{ route('admin.messages.create') }}" class="bg-architimex-primary hover:bg-architimex-primary-darker text-white font-bold py-2 px-4 rounded">
+            <a href="{{ route('admin.messages.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 {{ __('New Message') }}
             </a>
         </div>
@@ -21,19 +21,19 @@
                         <table class="min-w-full">
                             <thead>
                                 <tr>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Sender') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Conversation/Job') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Content') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Received At') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50"></th>
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700"></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white">
@@ -59,7 +59,7 @@
                                             {{ $message->created_at->diffForHumans() }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-200 text-sm leading-5 font-medium">
-                                            <a href="{{ route('admin.messages.show', $message) }}" class="text-architimex-primary hover:text-architimex-primary-darker">{{ __('Review') }}</a>
+                                            <a href="{{ route('admin.messages.show', $message) }}" class="text-indigo-600 hover:text-indigo-700">{{ __('Review') }}</a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -80,22 +80,22 @@
                         <table class="min-w-full">
                             <thead>
                                 <tr>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{-- Status Icon --}}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Participants') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Related Job') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Last Message') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700 text-left text-xs font-semibold text-white uppercase">
                                         {{ __('Last Activity') }}
                                     </th>
-                                    <th class="px-6 py-3 border-b border-gray-200 bg-gray-50"></th>
+                                    <th class="px-6 py-3 border-b border-gray-200 bg-cyan-700"></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white">
@@ -169,7 +169,7 @@
                                             {{ $conversation->last_message_at ? \Carbon\Carbon::parse($conversation->last_message_at)->diffForHumans() : 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-200 text-sm leading-5 font-medium">
-                                            <a href="{{ route('admin.messages.showConversation', $conversation) }}" class="text-architimex-primary hover:text-architimex-primary-darker">{{ __('View') }}</a>
+                                            <a href="{{ route('admin.messages.showConversation', $conversation) }}" class="text-indigo-600 hover:text-indigo-700">{{ __('View') }}</a>
                                         </td>
                                     </tr>
                                 @empty

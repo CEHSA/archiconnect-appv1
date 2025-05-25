@@ -57,7 +57,7 @@
 
                     <div class="mb-4">
                         <label for="status" class="block text-sm font-medium text-gray-700">{{ __('Status') }}</label>
-                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-architimex-primary focus:border-architimex-primary sm:text-sm rounded-md">
+                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                             <option value="approved">{{ __('Approve') }}</option>
                             <option value="rejected">{{ __('Reject') }}</option>
                         </select>
@@ -68,14 +68,14 @@
 
                     <div class="mb-4">
                         <label for="admin_remarks" class="block text-sm font-medium text-gray-700">{{ __('Admin Remarks (Optional)') }}</label>
-                        <textarea id="admin_remarks" name="admin_remarks" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-architimex-primary focus:border-architimex-primary sm:text-sm"></textarea>
+                        <textarea id="admin_remarks" name="admin_remarks" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
                         @error('admin_remarks')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div class="flex items-center justify-end mt-6">
-                        <x-primary-button class="bg-architimex-primary hover:bg-architimex-primary-darker">
+                        <x-primary-button class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             {{ __('Submit Review') }}
                         </x-primary-button>
                     </div>

@@ -1,41 +1,24 @@
 <?php
 
 use App\Models\User;
-
-use App\Models\FreelancerProfile;
-
-use App\Models\Job;
-
-use App\Models\Proposal;
-
 use Illuminate\Foundation\Testing\RefreshDatabase;
-
-use Illuminate\Support\Facades\Hash;
-
-
 
 uses(RefreshDatabase::class);
 
 test('user has correct fillable attributes', function () {
     $user = new User();
-
-    expect($user->getFillable())->toContain('name')
-        ->toContain('email')
-        ->toContain('password')
-        ->toContain('role');
+    expect($user->getFillable())->toContain('name', 'email', 'password', 'role');
 });
 
 test('user has correct hidden attributes', function () {
     $user = new User();
-
-    expect($user->getHidden())->toContain('password')
-        ->toContain('remember_token');
+    expect($user->getHidden())->toContain('password', 'remember_token');
 });
 
 test('user has correct casts', function () {
-    $user = new User();
-
-    expect($user->getCasts())->toHaveKey('email_verified_at')
+    $user = new User(); // Define $user here
+    expect($user->getCasts())
+        ->toHaveKey('email_verified_at')
         ->toHaveKey('password');
 });
 
@@ -56,42 +39,57 @@ test('user can be created with valid data', function () {
 });
 
 test('user can check if they are an admin', function () {
-    // Skip this test if the isAdmin method doesn't exist
-    if (!method_exists(User::class, 'isAdmin')) {
-        test()->markTestSkipped('User::isAdmin() method does not exist.');
-        return;
-    }
+    $admin = User::create([
+        'name' => 'Admin User',
+        'email' => 'admin@example.com',
+        'password' => 'password',
+        'role' => 'admin'
+    ]);
 
-    $admin = User::factory()->create(['role' => 'admin']);
-    $client = User::factory()->create(['role' => 'client']);
+    $client = User::create([
+        'name' => 'Client User',
+        'email' => 'client@example.com',
+        'password' => 'password',
+        'role' => 'client'
+    ]);
 
     expect($admin->isAdmin())->toBeTrue();
     expect($client->isAdmin())->toBeFalse();
 });
 
 test('user can check if they are a freelancer', function () {
-    // Skip this test if the isFreelancer method doesn't exist
-    if (!method_exists(User::class, 'isFreelancer')) {
-        test()->markTestSkipped('User::isFreelancer() method does not exist.');
-        return;
-    }
+    $freelancer = User::create([
+        'name' => 'Freelancer User',
+        'email' => 'freelancer@example.com',
+        'password' => 'password',
+        'role' => 'freelancer'
+    ]);
 
-    $freelancer = User::factory()->create(['role' => 'freelancer']);
-    $client = User::factory()->create(['role' => 'client']);
+    $client = User::create([
+        'name' => 'Client User 2',
+        'email' => 'client2@example.com',
+        'password' => 'password',
+        'role' => 'client'
+    ]);
 
     expect($freelancer->isFreelancer())->toBeTrue();
     expect($client->isFreelancer())->toBeFalse();
 });
 
 test('user can check if they are a client', function () {
-    // Skip this test if the isClient method doesn't exist
-    if (!method_exists(User::class, 'isClient')) {
-        test()->markTestSkipped('User::isClient() method does not exist.');
-        return;
-    }
+    $client = User::create([
+        'name' => 'Client User 3',
+        'email' => 'client3@example.com',
+        'password' => 'password',
+        'role' => 'client'
+    ]);
 
-    $client = User::factory()->create(['role' => 'client']);
-    $admin = User::factory()->create(['role' => 'admin']);
+    $admin = User::create([
+        'name' => 'Admin User 2',
+        'email' => 'admin2@example.com',
+        'password' => 'password',
+        'role' => 'admin'
+    ]);
 
     expect($client->isClient())->toBeTrue();
     expect($admin->isClient())->toBeFalse();
