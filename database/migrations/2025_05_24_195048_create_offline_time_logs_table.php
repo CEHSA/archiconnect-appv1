@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('offline_time_logs', function (Blueprint $table) {
+        Schema::create("offline_time_logs", function (Blueprint $table) {
             $table->id();
-            $table->foreignId('freelancer_id')->constrained('freelancers');
-            $table->foreignId('job_id')->constrained('jobs');
-            $table->dateTime('start_time');
-            $table->dateTime('end_time');
-            $table->text('description');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('admin_notes')->nullable();
+            $table->foreignId("freelancer_id")->constrained("users");
+            $table->foreignId("job_id")->constrained("jobs");
+            $table->dateTime("start_time");
+            $table->dateTime("end_time");
+            $table->text("description");
+            $table->enum("status", ["pending", "approved", "rejected"])->default("pending");
+            $table->text("admin_notes")->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('offline_time_logs');
+        Schema::dropIfExists("offline_time_logs");
     }
 };

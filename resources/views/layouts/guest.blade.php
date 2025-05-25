@@ -39,5 +39,6 @@
             {{-- The slot will be filled by the login.blade.php content --}}
             {{ $slot }}
         </div>
+    @endif
     </body>
 </html>
