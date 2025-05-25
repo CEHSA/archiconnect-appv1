@@ -32,21 +32,50 @@ deployment:
     - /bin/cp .env.production $DEPLOYPATH/.env
     - /bin/chmod 644 $DEPLOYPATH/.env
     
+    # Fix any line endings
+    - /bin/dos2unix $DEPLOYPATH/.env
+    
+    # Generate application key
+    - cd $DEPLOYPATH && php artisan key:generate --force
+    
+    # Wait for a moment to ensure the key is properly set
+    - sleep 5
+    
     # Install production dependencies
     - cd $DEPLOYPATH && php -d memory_limit=512M /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
     
-    # Clear all caches
+    # Clear everything to start fresh
     - cd $DEPLOYPATH && php artisan clear-compiled
     - cd $DEPLOYPATH && php artisan cache:clear
     - cd $DEPLOYPATH && php artisan config:clear
     - cd $DEPLOYPATH && php artisan route:clear
     - cd $DEPLOYPATH && php artisan view:clear
     
-    # Generate fresh caches
-    - cd $DEPLOYPATH && php artisan key:generate --force
+    # Create storage link first
+    - cd $DEPLOYPATH && php artisan storage:link
+    
+    # Run migrations (with proper timeout)
+    - cd $DEPLOYPATH && php -d max_execution_time=300 artisan migrate --force
+    
+    # Generate fresh caches (in correct order)
     - cd $DEPLOYPATH && php artisan config:cache
     - cd $DEPLOYPATH && php artisan route:cache
     - cd $DEPLOYPATH && php artisan view:cache
+    - cd $DEPLOYPATH && php artisan optimize
+    
+    # Set proper permissions on storage and bootstrap/cache
+    - /bin/chmod -R 755 $DEPLOYPATH/storage
+    - /bin/chmod -R 755 $DEPLOYPATH/bootstrap/cache
+    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 644 {} \;
+    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 644 {} \;
+    
+    # Create required directories if they don't exist
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/{sessions,views,cache}
+    - /bin/mkdir -p $DEPLOYPATH/storage/logs
+    
+    # Touch log file to ensure it exists
+    - /bin/touch $DEPLOYPATH/storage/logs/laravel.log
+    - /bin/chmod 644 $DEPLOYPATH/storage/logs/laravel.log
     
     # Set up storage link
     - cd $DEPLOYPATH && php artisan storage:link
