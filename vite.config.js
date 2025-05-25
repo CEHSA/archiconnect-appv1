@@ -8,4 +8,21 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        // Generate manifest for production
+        manifest: true,
+        // Optimize build
+        minify: 'terser',
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: [
+                        // List vendor modules here if needed
+                    ]
+                }
+            }
+        }
+    },
+    // Ensure proper asset paths in production
+    base: '/build/',
 });
