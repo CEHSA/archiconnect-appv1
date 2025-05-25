@@ -35,55 +35,100 @@ class JobCommentController extends Controller
      */
     public function store(Request $request, Job $job)
     {
-        $user = auth()->user();
-        $isAdmin = auth()->guard('admin')->check();
+        try {
+            $user = auth()->user();
+            $isAdmin = auth()->guard('admin')->check();
 
-        // Allow clients or admins to comment
-        if (!$isAdmin && !$user->hasRole('client')) {
-            abort(403, 'Only clients or admins can create comments.');
+            // Allow clients or admins to comment
+            if (!$isAdmin && !$user->hasRole('client')) {
+                abort(403, 'Only clients or admins can create comments.');
+            }
+
+            // If admin, they can view any job. If client, authorize 'view' policy.
+            if (!$isAdmin) {
+                $this->authorize('view', $job);
+            }
+
+            // Verify the job exists and is active
+            if (!$job->exists || $job->trashed()) {
+                return response()->json(['message' => 'Job not found or inactive'], Response::HTTP_NOT_FOUND);
+            }
+
+            $validated = $request->validate([
+                'content' => 'required|string|max:1000',
+                'parent_comment_id' => 'nullable|exists:job_comments,id',
+                'work_submission_id' => 'nullable|exists:work_submissions,id',
+                'screenshot' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048'
+            ]);
+
+            $commenterId = $isAdmin ? auth()->guard('admin')->id() : $user->id;
+            $commenterType = $isAdmin ? Admin::class : User::class;
+
+            $screenshotPath = null;
+            if ($request->hasFile('screenshot')) {
+                try {
+                    $screenshotPath = $request->file('screenshot')->store('public/comment_screenshots');
+                    $screenshotPath = str_replace('public/', '', $screenshotPath);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to upload comment screenshot: ' . $e->getMessage());
+                    // Continue without the screenshot if upload fails
+                }
+            }
+
+            // Start database transaction
+            \DB::beginTransaction();
+
+            try {
+                $comment = $job->comments()->create([
+                    'user_id' => $commenterId,
+                    'user_type' => $commenterType,
+                    'comment_text' => $validated['content'],
+                    'parent_comment_id' => $validated['parent_comment_id'] ?? null,
+                    'work_submission_id' => $validated['work_submission_id'] ?? null,
+                    'screenshot_path' => $screenshotPath,
+                    'status' => JobComment::STATUS_NEW
+                ]);
+
+                // Broadcast the event within try-catch
+                try {
+                    JobCommentCreated::dispatch($comment);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to dispatch JobCommentCreated event: ' . $e->getMessage());
+                    // Continue even if event dispatch fails
+                }
+
+                \DB::commit();
+
+                // Load necessary relationships
+                $comment->load(['user', 'job.jobAssignment']);
+
+                // Redirect back for admin, return JSON for client
+                if ($isAdmin) {
+                    return redirect()
+                        ->route('admin.jobs.show', $job)
+                        ->with('success', 'Comment posted successfully.');
+                }
+
+                return response()->json($comment, Response::HTTP_CREATED);
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                
+                // Delete uploaded file if it exists and transaction failed
+                if ($screenshotPath) {
+                    Storage::delete('public/' . $screenshotPath);
+                }
+                
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error creating comment: ' . $e->getMessage());
+            return response()->json(
+                ['message' => 'Failed to create comment. Please try again.'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
-
-        // If admin, they can view any job. If client, authorize 'view' policy.
-        if (!$isAdmin) {
-            $this->authorize('view', $job);
-        }
-
-        $validated = $request->validate([
-            'content' => 'required|string|max:1000',
-            'parent_comment_id' => 'nullable|exists:job_comments,id',
-            'work_submission_id' => 'nullable|exists:work_submissions,id', // Added
-            'screenshot' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048' // Added
-        ]);
-
-        $commenterId = $isAdmin ? auth()->guard('admin')->id() : $user->id;
-        $commenterType = $isAdmin ? Admin::class : User::class;
-
-        $screenshotPath = null;
-        if ($request->hasFile('screenshot')) {
-            $screenshotPath = $request->file('screenshot')->store('public/comment_screenshots');
-            // Clean up the path to be stored in DB, removing 'public/'
-            $screenshotPath = str_replace('public/', '', $screenshotPath);
-        }
-
-        $comment = $job->comments()->create([
-            'user_id' => $commenterId,
-            'user_type' => $commenterType,
-            'comment_text' => $validated['content'],
-            'parent_comment_id' => $validated['parent_comment_id'] ?? null,
-            'work_submission_id' => $validated['work_submission_id'] ?? null, // Added
-            'screenshot_path' => $screenshotPath, // Added
-            'status' => JobComment::STATUS_NEW
-        ]);
-
-        // Broadcast the event
-        JobCommentCreated::dispatch($comment);
-
-        // Redirect back for admin, return JSON for client (or handle based on request type)
-        if ($isAdmin) {
-            return redirect()->route('admin.jobs.show', $job)->with('success', 'Comment posted successfully.');
-        }
-
-        return response()->json($comment->load('user'), Response::HTTP_CREATED);
     }
 
     /**
@@ -91,20 +136,48 @@ class JobCommentController extends Controller
      */
     public function markAsDiscussed(JobComment $comment)
     {
-        if (!auth()->user()->hasRole('freelancer')) {
-            abort(403, 'Only freelancers can mark comments as discussed');
+        try {
+            if (!auth()->user()->hasRole('freelancer')) {
+                abort(403, 'Only freelancers can mark comments as discussed');
+            }
+
+            if (!$comment->exists || !$comment->job) {
+                return response()->json(['message' => 'Comment not found or invalid'], Response::HTTP_NOT_FOUND);
+            }
+
+            $this->authorize('update', $comment->job);
+
+            $oldStatus = $comment->status;
+
+            \DB::beginTransaction();
+            try {
+                if (!$comment->markAsDiscussed()) {
+                    throw new \Exception('Failed to update comment status');
+                }
+
+                try {
+                    JobCommentStatusUpdated::dispatch($comment, $oldStatus);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to dispatch JobCommentStatusUpdated event: ' . $e->getMessage());
+                    // Continue even if event dispatch fails
+                }
+
+                \DB::commit();
+
+                return response()->json($comment->fresh(['job', 'user']));
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error marking comment as discussed: ' . $e->getMessage());
+            return response()->json(
+                ['message' => 'Failed to update comment status. Please try again.'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
-
-        $this->authorize('update', $comment->job);
-
-        $oldStatus = $comment->status;
-
-        if ($comment->markAsDiscussed()) {
-            JobCommentStatusUpdated::dispatch($comment, $oldStatus);
-            return response()->json($comment->fresh());
-        }
-
-        return response()->json(['message' => 'Failed to update status'], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -112,18 +185,46 @@ class JobCommentController extends Controller
      */
     public function markAsPendingFreelancer(JobComment $comment)
     {
-        if (!auth()->user()->hasRole('admin')) {
-            abort(403, 'Only admins can mark comments as pending freelancer action');
+        try {
+            if (!auth()->user()->hasRole('admin')) {
+                abort(403, 'Only admins can mark comments as pending freelancer action');
+            }
+
+            if (!$comment->exists || !$comment->job) {
+                return response()->json(['message' => 'Comment not found or invalid'], Response::HTTP_NOT_FOUND);
+            }
+
+            $oldStatus = $comment->status;
+
+            \DB::beginTransaction();
+            try {
+                if (!$comment->markAsPendingFreelancer()) {
+                    throw new \Exception('Failed to update comment status');
+                }
+
+                try {
+                    JobCommentStatusUpdated::dispatch($comment, $oldStatus);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to dispatch JobCommentStatusUpdated event: ' . $e->getMessage());
+                    // Continue even if event dispatch fails
+                }
+
+                \DB::commit();
+
+                return response()->json($comment->fresh(['job', 'user']));
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error marking comment as pending freelancer: ' . $e->getMessage());
+            return response()->json(
+                ['message' => 'Failed to update comment status. Please try again.'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
-
-        $oldStatus = $comment->status;
-
-        if ($comment->markAsPendingFreelancer()) {
-            JobCommentStatusUpdated::dispatch($comment, $oldStatus);
-            return response()->json($comment->fresh());
-        }
-
-        return response()->json(['message' => 'Failed to update status'], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -131,18 +232,46 @@ class JobCommentController extends Controller
      */
     public function markAsResolved(JobComment $comment)
     {
-        if (!auth()->user()->hasRole('admin')) {
-            abort(403, 'Only admins can mark comments as resolved');
+        try {
+            if (!auth()->user()->hasRole('admin')) {
+                abort(403, 'Only admins can mark comments as resolved');
+            }
+
+            if (!$comment->exists || !$comment->job) {
+                return response()->json(['message' => 'Comment not found or invalid'], Response::HTTP_NOT_FOUND);
+            }
+
+            $oldStatus = $comment->status;
+
+            \DB::beginTransaction();
+            try {
+                if (!$comment->markAsResolved()) {
+                    throw new \Exception('Failed to update comment status');
+                }
+
+                try {
+                    JobCommentStatusUpdated::dispatch($comment, $oldStatus);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to dispatch JobCommentStatusUpdated event: ' . $e->getMessage());
+                    // Continue even if event dispatch fails
+                }
+
+                \DB::commit();
+
+                return response()->json($comment->fresh(['job', 'user']));
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error marking comment as resolved: ' . $e->getMessage());
+            return response()->json(
+                ['message' => 'Failed to update comment status. Please try again.'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
-
-        $oldStatus = $comment->status;
-
-        if ($comment->markAsResolved()) {
-            JobCommentStatusUpdated::dispatch($comment, $oldStatus);
-            return response()->json($comment->fresh());
-        }
-
-        return response()->json(['message' => 'Failed to update status'], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     /**

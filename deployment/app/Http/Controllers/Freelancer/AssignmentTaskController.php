@@ -16,7 +16,7 @@ class AssignmentTaskController extends Controller
     public function index(JobAssignment $assignment) // Modified
     {
         // TODO: Authorization: Ensure the logged-in freelancer owns this assignment
-        // $this->authorize('view', $assignment); 
+        // $this->authorize('view', $assignment);
 
         $tasks = $assignment->tasks()->orderBy('order')->get();
         return view('freelancer.assignments.tasks.index', compact('assignment', 'tasks'));
@@ -28,7 +28,7 @@ class AssignmentTaskController extends Controller
     public function create(JobAssignment $assignment) // Modified
     {
         // TODO: Authorization
-        // $this->authorize('update', $assignment); 
+        // $this->authorize('update', $assignment);
         return view('freelancer.assignments.tasks.create', compact('assignment'));
     }
 
@@ -71,12 +71,22 @@ class AssignmentTaskController extends Controller
      */
     public function edit(AssignmentTask $assignmentTask) // $assignmentTask is bound directly
     {
-        // Eager load the job assignment for context in the view
-        $assignmentTask->load('jobAssignment.job'); 
+        // Check if the AssignmentTask model was found by route model binding
+        if (!$assignmentTask->exists) {
+            abort(404, 'Assignment Task not found.');
+        }
+
+        // Eager load the job assignment and its job for context in the view
+        $assignmentTask->load('jobAssignment.job');
         $assignment = $assignmentTask->jobAssignment;
 
+        // Ensure the assignment and its associated job exist
+        if (!$assignment || !$assignment->job) {
+            abort(404, 'Assignment or associated job not found for this task.');
+        }
+
         // TODO: Authorization: Ensure the logged-in freelancer owns this task's assignment
-        // $this->authorize('update', $assignment); 
+        // $this->authorize('update', $assignment);
         // $this->authorize('update', $assignmentTask); // Or a specific task policy
 
         return view('freelancer.assignments.tasks.edit', compact('assignmentTask', 'assignment'));
@@ -88,7 +98,7 @@ class AssignmentTaskController extends Controller
     public function update(Request $request, AssignmentTask $assignmentTask)
     {
         // TODO: Authorization: Ensure the logged-in freelancer owns this task's assignment
-        // $this->authorize('update', $assignmentTask->jobAssignment); 
+        // $this->authorize('update', $assignmentTask->jobAssignment);
         // $this->authorize('update', $assignmentTask);
 
         $validated = $request->validate([
@@ -115,9 +125,20 @@ class AssignmentTaskController extends Controller
         // $this->authorize('delete', $assignmentTask);
 
         $assignment = $assignmentTask->jobAssignment; // Get parent assignment for redirection
+        
+        // Store the ID before deleting the task, in case $assignment is null
+        // or to prevent issues if the relationship is somehow cleared during deletion.
+        $jobAssignmentId = $assignment ? $assignment->id : null;
+
         $assignmentTask->delete();
 
-        return redirect()->route('freelancer.assignments.show', $assignment)
-            ->with('success', 'Task deleted successfully.');
+        if ($jobAssignmentId) {
+            return redirect()->route('freelancer.assignments.show', $jobAssignmentId)
+                ->with('success', 'Task deleted successfully.');
+        } else {
+            // If there was no associated assignment, redirect to a general page like the dashboard.
+            return redirect()->route('freelancer.dashboard')
+                ->with('warning', 'Task deleted, but could not redirect to its assignment page as it was not properly associated.');
+        }
     }
 }

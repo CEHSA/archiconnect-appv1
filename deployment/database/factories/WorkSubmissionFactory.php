@@ -21,9 +21,9 @@ class WorkSubmissionFactory extends Factory
     {
         return [
             'job_assignment_id' => JobAssignment::factory(),
-            'freelancer_id' => User::factory()->create(['role' => User::ROLE_FREELANCER])->id,
+            'freelancer_id' => User::factory()->freelancer()->create()->id,
             'admin_id' => fake()->optional(0.3)->randomElement([
-                User::factory()->create(['role' => User::ROLE_ADMIN])->id,
+                User::factory()->admin()->create()->id,
                 null
             ]),
             'title' => fake()->sentence(),
@@ -58,7 +58,7 @@ class WorkSubmissionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'under_review',
-            'admin_id' => User::factory()->create(['role' => User::ROLE_ADMIN])->id,
+            'admin_id' => User::factory()->admin()->create()->id,
             'reviewed_at' => null,
         ]);
     }
@@ -70,7 +70,7 @@ class WorkSubmissionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'approved',
-            'admin_id' => User::factory()->create(['role' => User::ROLE_ADMIN])->id,
+            'admin_id' => User::factory()->admin()->create()->id,
             'reviewed_at' => fake()->dateTimeBetween('-1 week', 'now'),
             'admin_remarks' => fake()->paragraph(),
         ]);
@@ -83,7 +83,7 @@ class WorkSubmissionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'rejected',
-            'admin_id' => User::factory()->create(['role' => User::ROLE_ADMIN])->id,
+            'admin_id' => User::factory()->admin()->create()->id,
             'reviewed_at' => fake()->dateTimeBetween('-1 week', 'now'),
             'admin_remarks' => fake()->paragraph(),
         ]);

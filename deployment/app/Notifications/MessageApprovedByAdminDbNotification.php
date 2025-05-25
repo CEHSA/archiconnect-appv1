@@ -73,15 +73,10 @@ class MessageApprovedByAdminDbNotification extends Notification implements Shoul
             // return route('client.jobs.show', $conversation->job_id) . '#message-' . $this->message->id;
             // Let's assume a generic message view for now, or link to the job.
             // If client views messages in context of a job:
-            if ($conversation->job) {
-                 return route('client.jobs.show', $conversation->job_id) . '#conversation-' . $conversation->id;
-            }
+            return route('client.messages.show', $conversation->id);
         } elseif ($notifiable->hasRole('freelancer')) {
             // Freelancers view messages in context of an assignment
-            $assignment = $conversation->job->assignments->where('freelancer_id', $notifiable->id)->first();
-            if ($assignment) {
-                return route('freelancer.assignments.show', $assignment->id) . '#conversation-' . $conversation->id;
-            }
+            return route('freelancer.messages.show', $conversation->id);
         }
         // Fallback URL if specific role route isn't found or applicable
         return route('dashboard'); // Or a generic notifications page

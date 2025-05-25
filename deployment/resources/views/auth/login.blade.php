@@ -23,7 +23,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <x-text-input id="email" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="Enter your email" />
+                        <x-text-input id="email" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="Enter your email" />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
@@ -37,7 +37,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <x-text-input id="password" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300" type="password" name="password" required autocomplete="current-password" placeholder="Enter your password" />
+                        <x-text-input id="password" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300" type="password" name="password" required autocomplete="current-password" placeholder="Enter your password" />
                     </div>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
@@ -51,7 +51,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
-                        <select id="role" name="role" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md shadow-sm focus:border-architimex-primary focus:ring focus:ring-architimex-primary focus:ring-opacity-50 transition-all duration-300 appearance-none" onchange="toggleRegisterLink(this.value)">
+                        <select id="role" name="role" class="block w-full pl-10 px-4 py-3 text-gray-700 bg-[#EBF0F5] border-0 rounded-md shadow-sm focus:border-cyan-500 focus:ring focus:ring-cyan-500 focus:ring-opacity-50 transition-all duration-300 appearance-none" onchange="toggleRegisterLink(this.value)">
                             <option value="freelancer">Freelancer</option>
                             <option value="client">Client</option>
                         </select>
@@ -66,26 +66,26 @@
                 <!-- Remember Me -->
                 <div class="flex items-center justify-between mt-4">
                     <label for="remember_me" class="inline-flex items-center">
-                        <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-architimex-primary shadow-sm focus:ring-architimex-primary" name="remember">
+                        <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-cyan-600 shadow-sm focus:ring-cyan-500" name="remember">
                         <span class="ml-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
                     </label>
 
                     @if (Route::has('password.request'))
-                        <a class="text-sm text-architimex-primary hover:text-architimex-primary-darker transition-colors duration-300 underline" href="{{ route('password.request') }}">
+                        <a class="text-sm text-cyan-700 hover:text-cyan-600 transition-colors duration-300 underline" href="{{ route('password.request') }}">
                             {{ __('Forgot password?') }}
                         </a>
                     @endif
                 </div>
 
                 <div class="flex flex-col items-center pt-4">
-                    <button type="submit" class="w-full px-4 py-3 text-sm font-medium text-white uppercase bg-architimex-primary rounded-md hover:bg-architimex-primary-darker focus:outline-none focus:ring-2 focus:ring-architimex-primary focus:ring-offset-2 transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-0">
+                    <button type="submit" class="w-full px-4 py-3 text-sm font-medium text-white uppercase bg-cyan-700 rounded-md hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-300 transform hover:translate-y-[-2px] active:bg-cyan-800 active:translate-y-0">
                         Log in
                     </button>
                 </div>
 
                 <div class="mt-6 text-center" id="register-link-container">
                     <p class="text-sm text-gray-600">
-                        Don't have an account? <a href="{{ route('register') }}" class="font-medium text-architimex-primary hover:text-architimex-primary-darker transition-colors duration-300 underline">Register now</a>
+                        Don't have an account? <a href="{{ route('register') }}" class="font-medium text-cyan-700 hover:text-cyan-600 transition-colors duration-300 underline">Register now</a>
                     </p>
                 </div>
             </form>

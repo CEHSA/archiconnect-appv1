@@ -20,9 +20,8 @@ class ClientProfileFactory extends Factory
         return [
             'user_id' => User::factory()->create(['role' => User::ROLE_CLIENT])->id,
             'company_name' => fake()->company(),
-            'project_preferences' => fake()->randomElements(['residential', 'commercial', 'industrial', 'landscape', 'interior'], rand(1, 3)),
+            'project_preferences' => json_encode(fake()->randomElements(['residential', 'commercial', 'industrial', 'landscape', 'interior'], rand(1, 3))),
             'contact_details' => fake()->phoneNumber(),
-            'profile_picture' => fake()->optional(0.6)->imageUrl(),
             'company_website' => fake()->optional(0.8)->url(),
             'industry' => fake()->randomElement(['architecture', 'construction', 'real_estate', 'interior_design', 'urban_planning']),
         ];

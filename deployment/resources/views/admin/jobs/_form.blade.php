@@ -2,14 +2,14 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- Job Title -->
     <div>
-        <x-input-label for="title" :value="__('Job Title')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="title" :value="__('Job Title')" class="text-gray-700" />
         <x-text-input id="title" class="block mt-1 w-full placeholder-gray-700" type="text" name="title" :value="old('title', $job->title ?? '')" placeholder="Enter job title" required autofocus />
         <x-input-error :messages="$errors->get('title')" class="mt-2" />
     </div>
 
     <!-- Client Assignment (User ID) -->
     <div>
-        <x-input-label for="user_id" :value="__('Assign to Client (Optional)')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="user_id" :value="__('Assign to Client (Optional)')" class="text-gray-700" />
         <select name="user_id" id="user_id"
             class="block mt-1 w-full border-gray-300 bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
             <option value="">{{ __('Select a Client') }}</option>
@@ -22,23 +22,48 @@
         <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
     </div> <!-- Job Description -->
     <div class="md:col-span-2">
-        <x-input-label for="editor-container" :value="__('Job Description')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="editor-container" :value="__('Job Description')" class="text-gray-700" />
         <div id="editor-container" class="mt-1 h-64 border border-gray-300 rounded-md"></div>
         <textarea id="description" name="description"
             class="hidden">{{ old('description', $job->description ?? '') }}</textarea>
         <x-input-error :messages="$errors->get('description')" class="mt-2" />
     </div>
 
+    <!-- Scope Description -->
+    <div class="md:col-span-2">
+        <x-input-label for="scope_description" :value="__('Scope Description (Optional)')" class="text-gray-700" />
+        <textarea id="scope_description" name="scope_description" rows="4"
+            class="block mt-1 w-full border-gray-300 bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm placeholder-gray-700"
+            placeholder="Provide a detailed description of the project scope.">{{ old('scope_description', $job->scope_description ?? '') }}</textarea>
+        <x-input-error :messages="$errors->get('scope_description')" class="mt-2" />
+    </div>
+
+    <!-- Start Date -->
+    <div>
+        <x-input-label for="start_date" :value="__('Start Date (Optional)')" class="text-gray-700" />
+        <x-text-input id="start_date" class="block mt-1 w-full placeholder-gray-700" type="date" name="start_date"
+            :value="old('start_date', $job->start_date ? \Carbon\Carbon::parse($job->start_date)->format('Y-m-d') : '')" />
+        <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
+    </div>
+
+    <!-- End Date -->
+    <div>
+        <x-input-label for="end_date" :value="__('End Date (Optional)')" class="text-gray-700" />
+        <x-text-input id="end_date" class="block mt-1 w-full placeholder-gray-700" type="date" name="end_date"
+            :value="old('end_date', $job->end_date ? \Carbon\Carbon::parse($job->end_date)->format('Y-m-d') : '')" />
+        <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
+    </div>
+
     <!-- Budget -->
     <div>
-        <x-input-label for="budget" :value="__('Budget (Optional)')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="budget" :value="__('Budget (Optional)')" class="text-gray-700" />
         <x-text-input id="budget" class="block mt-1 w-full placeholder-gray-700" type="number" name="budget" :value="old('budget', $job->budget ?? '')" placeholder="e.g., 5000.00" step="0.01" />
         <x-input-error :messages="$errors->get('budget')" class="mt-2" />
     </div>
 
     <!-- Hourly Rate -->
     <div>
-        <x-input-label for="hourly_rate" :value="__('Hourly Rate (Optional)')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="hourly_rate" :value="__('Hourly Rate (Optional)')" class="text-gray-700" />
         <x-text-input id="hourly_rate" class="block mt-1 w-full placeholder-gray-700" type="number" name="hourly_rate"
             :value="old('hourly_rate', $job->hourly_rate ?? '')" placeholder="e.g., 50.00" step="0.01" />
         <x-input-error :messages="$errors->get('hourly_rate')" class="mt-2" />
@@ -46,7 +71,7 @@
 
     <!-- Not-to-Exceed Budget -->
     <div>
-        <x-input-label for="not_to_exceed_budget" :value="__('Not-to-Exceed Budget (Optional)')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="not_to_exceed_budget" :value="__('Not-to-Exceed Budget (Optional)')" class="text-gray-700" />
         <x-text-input id="not_to_exceed_budget" class="block mt-1 w-full placeholder-gray-700" type="number" name="not_to_exceed_budget"
             :value="old('not_to_exceed_budget', $job->not_to_exceed_budget ?? '')" placeholder="e.g., 10000.00" step="0.01" />
         <x-input-error :messages="$errors->get('not_to_exceed_budget')" class="mt-2" />
@@ -54,13 +79,13 @@
 
     <!-- Skills Required -->
     <div>
-        <x-input-label for="skills_required" :value="__('Skills Required (Optional, comma-separated)')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="skills_required" :value="__('Skills Required (Optional, comma-separated)')" class="text-gray-700" />
         <x-text-input id="skills_required" class="block mt-1 w-full placeholder-gray-700" type="text" name="skills_required"
             :value="old('skills_required', $job->skills_required ?? '')" placeholder="e.g., Drafting, 3D Modeling" />
         <x-input-error :messages="$errors->get('skills_required')" class="mt-2" />
     </div> <!-- Status -->
     <div>
-        <x-input-label for="status" :value="__('Status')" class="text-gray-700 dark:text-architimex-primary" />
+        <x-input-label for="status" :value="__('Status')" class="text-gray-700" />
         <select name="status" id="status"
             class="block mt-1 w-full border-gray-300 bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
             @php
@@ -73,6 +98,24 @@
             @endforeach
         </select>
         <x-input-error :messages="$errors->get('status')" class="mt-2" />
+    </div>
+
+    <!-- Freelancer Assignment (assigned_freelancer_id) -->
+    <div>
+        <x-input-label for="assigned_freelancer_id" :value="__('Assign to Freelancer (Optional)')" class="text-gray-700" />
+        <select name="assigned_freelancer_id" id="assigned_freelancer_id"
+            class="block mt-1 w-full border-gray-300 bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+            <option value="">{{ __('Select a Freelancer') }}</option>
+            {{-- Assuming $freelancers is passed to the view --}}
+            @isset($freelancers)
+                @foreach($freelancers as $freelancer)
+                    <option value="{{ $freelancer->id }}" {{ old('assigned_freelancer_id', $job->assigned_freelancer_id ?? '') == $freelancer->id ? 'selected' : '' }}>
+                        {{ $freelancer->name }} ({{ $freelancer->email }}) {{-- Assuming freelancer model has name and email --}}
+                    </option>
+                @endforeach
+            @endisset
+        </select>
+        <x-input-error :messages="$errors->get('assigned_freelancer_id')" class="mt-2" />
     </div>
 </div>
 
@@ -181,6 +224,12 @@
         class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded mr-4">
         {{ __('Cancel') }}
     </a>
+    @if(isset($job) && $job->id)
+        <a href="{{ route('admin.jobs.post-to-freelancers', $job) }}"
+           class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150 mr-4">
+            {{ __('Post to Freelancers') }}
+        </a>
+    @endif
     <x-primary-button>
         {{ isset($job) ? __('Update Job') : __('Create Job') }}
     </x-primary-button>

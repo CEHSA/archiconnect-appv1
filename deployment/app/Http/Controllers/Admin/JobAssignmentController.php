@@ -7,6 +7,7 @@ use App\Models\Job;
 use App\Models\JobAssignment;
 use App\Models\User;
 use App\Models\AssignmentNote; // Added for notes
+use App\Models\Conversation; // Added
 use App\Events\JobAssigned; // Import the event
 use App\Events\JobCompleted; // Added import
 use Illuminate\Http\Request;
@@ -77,20 +78,39 @@ class JobAssignmentController extends Controller
 
         $job = Job::findOrFail($validated['job_id']); // Fetch the job
 
-        $assignment = new JobAssignment();
-        $assignment->job_id = $job->id;
-        $assignment->freelancer_id = $validated['freelancer_id'];
-        $assignment->assigned_by_admin_id = Auth::id();
-        $assignment->admin_remarks = $validated['admin_remarks'];
+$assignment = new JobAssignment();
+ $assignment->job_id = $job->id;
+$assignment->client_id = $job->client_id;
+ $assignment->freelancer_id = $validated['freelancer_id'];
+ $assignment->assigned_by_admin_id = Auth::id();
+ $assignment->admin_remarks = $validated['admin_remarks'];
         // Status defaults to 'pending_freelancer_acceptance' via migration
 
         $assignment->save();
 
         // Dispatch the event
-        event(new JobAssigned($assignment->load(['job', 'freelancer', 'assignedByAdmin']))); // Eager load for the listener
+        event(new JobAssigned($assignment->load(['job.user', 'freelancer', 'assignedByAdmin']))); // Eager load for the listener
+
+        // Find or create a conversation for this assignment and sync participants
+        $conversation = Conversation::firstOrCreate(
+            ['job_assignment_id' => $assignment->id],
+            [
+                'job_id' => $assignment->job_id,
+                'created_by_user_id' => Auth::id(), // Admin initiated this context
+                'subject' => 'Conversation for Assignment: ' . $assignment->job->title,
+                'last_message_at' => now(),
+            ]
+        );
+        $participantIds = [
+            $assignment->job->user_id, // Client
+            $assignment->freelancer_id, // Freelancer
+        ];
+        $adminUsers = User::where('role', User::ROLE_ADMIN)->pluck('id')->toArray();
+        $participantIds = array_unique(array_merge($participantIds, $adminUsers));
+        $conversation->participants()->syncWithoutDetaching($participantIds);
 
         return redirect()->route('admin.jobs.show', $job) // Changed redirect to job show page
-                         ->with('success', 'Freelancer assigned successfully. Notification will be sent.');
+                         ->with('success', 'Freelancer assigned, conversation updated, and notification will be sent.');
     }
 
     /**
@@ -200,5 +220,46 @@ class JobAssignmentController extends Controller
 
         return redirect()->route('admin.job-assignments.show', $jobAssignment)
                          ->with('success', 'Note added successfully.');
+    }
+
+    /**
+     * Assign a job to a freelancer.
+     */
+    public function assignJob(Request $request, Job $job)
+    {
+        $validated = $request->validate([
+            'freelancer_id' => [
+                'required',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $user = User::find($value);
+                    if (!$user || !$user->hasRole(User::ROLE_FREELANCER)) {
+                        $fail('The selected user is not a freelancer.');
+                    }
+                },
+            ],
+            'assigned_by_admin_id' => ['required', 'exists:users,id'],
+            'status' => ['required', 'string', 'in:assigned,pending_freelancer_acceptance'],
+        ]);
+
+        // Create the job assignment
+        $assignment = JobAssignment::create([
+            'job_id' => $job->id,
+            'client_id' => $job->client_id, // Add client_id from the job
+            'freelancer_id' => $validated['freelancer_id'],
+            'assigned_by_admin_id' => $validated['assigned_by_admin_id'],
+            'status' => $validated['status'],
+        ]);
+
+        // Update the job status and assigned freelancer
+        $job->update([
+            'assigned_freelancer_id' => $validated['freelancer_id'],
+            'status' => $validated['status'],
+        ]);
+
+        // Dispatch event (if needed, based on your application's event system)
+        // event(new JobAssigned($assignment));
+
+        return response()->json(['message' => 'Job assigned successfully', 'assignment' => $assignment], 200);
     }
 }

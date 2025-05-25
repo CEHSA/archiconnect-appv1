@@ -73,8 +73,11 @@
                     @endif
 
                     <!-- Notifications Link -->
-                    <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.index')">
-                        {{ __('Notifications') }}
+                    <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.index')" x-data="{ unreadCount: {{ $unreadNotificationsCount ?? 0 }} }">
+                        <div class="relative">
+                            {{ __('Notifications') }}
+                            <span x-show="unreadCount > 0" class="absolute top-0 right-0 block h-2 w-2 transform translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 ring-2 ring-white animate-pulse-red"></span>
+                        </div>
                         @if(Auth::user()->unreadNotifications->count() > 0)
                             <span class="ms-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
                                 {{ Auth::user()->unreadNotifications->count() }}

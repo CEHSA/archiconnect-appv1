@@ -2,19 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Admin;
 
 class Conversation extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'participant1_id',
-        'participant1_type',
-        'participant2_id',
-        'participant2_type',
         'job_id',
+        'job_assignment_id',
+        'created_by_user_id',
+        'subject',
         'status',
         'last_message_at',
     ];
@@ -24,23 +27,7 @@ class Conversation extends Model
     ];
 
     /**
-     * Get the first participant of the conversation.
-     */
-    public function participant1(): \Illuminate\Database\Eloquent\Relations\MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    /**
-     * Get the second participant of the conversation.
-     */
-    public function participant2(): \Illuminate\Database\Eloquent\Relations\MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    /**
-     * Get the job associated with the conversation.
+     * The job this conversation is associated with (optional).
      */
     public function job(): BelongsTo
     {
@@ -48,7 +35,7 @@ class Conversation extends Model
     }
 
     /**
-     * Get the messages for the conversation.
+     * The messages in this conversation.
      */
     public function messages(): HasMany
     {
@@ -56,81 +43,96 @@ class Conversation extends Model
     }
 
     /**
-     * Get conversations for a specific user.
+     * The users participating in this conversation.
      */
-    public function scopeForUser($query, User $user) // This scope is specific to User model
+    public function userParticipants(): BelongsToMany
     {
-        return $query->where(function ($q) use ($user) {
-                        $q->where('participant1_id', $user->id)
-                          ->where('participant1_type', 'user');
-                    })->orWhere(function ($q) use ($user) {
-                        $q->where('participant2_id', $user->id)
-                          ->where('participant2_type', 'user');
-                    });
+        return $this->belongsToMany(User::class, 'conversation_user', 'conversation_id', 'user_id')
+                    ->withTimestamps()
+                    ->withPivot('last_read_at');
     }
 
     /**
-     * Get unread messages count for a participant (User or Admin).
-     * @param \App\Models\User|\App\Models\Admin $participant
+     * The admins participating in this conversation.
      */
-    public function unreadCount($participant): int // Removed User type hint
+    public function adminParticipants(): BelongsToMany
     {
-        // Ensure participant is a valid model instance with an id property
-        if (!is_object($participant) || !property_exists($participant, 'id')) {
-            return 0;
-        }
+        return $this->belongsToMany(Admin::class, 'conversation_user', 'conversation_id', 'user_id')
+                    ->withTimestamps()
+                    ->withPivot('last_read_at');
+    }
+
+    /**
+     * Get all participants (both users and admins).
+     */
+    public function participants()
+    {
+        return $this->userParticipants->merge($this->adminParticipants);
+    }
+
+    /**
+     * Get the latest message in the conversation.
+     */
+    public function getLatestMessageAttribute()
+    {
+        return $this->messages()->latest()->first();
+    }
+
+    /**
+     * Get conversations for a specific participant (user or admin).
+     */
+    public function scopeForParticipant($query, $participant)
+    {
+        return $query->whereHas('userParticipants', function ($q) use ($participant) {
+            $q->where('conversation_user.user_id', $participant->id);
+        })->orWhereHas('adminParticipants', function ($q) use ($participant) {
+            $q->where('conversation_user.user_id', $participant->id);
+        });
+    }
+
+    /**
+     * Get unread messages count for a participant (user or admin).
+     */
+    public function unreadCount($participant): int
+    {
+        // Get the last_read_at timestamp for the participant from the pivot table
+        $relationship = $participant instanceof Admin ? 'adminParticipants' : 'userParticipants';
+        $lastReadAt = $this->{$relationship}()
+            ->where('conversation_user.user_id', $participant->id)
+            ->first()?->pivot->last_read_at;
 
         return $this->messages()
-                    ->whereNull('read_at')
-                    // Check that the message's user_id is not the participant's id.
-                    // This assumes messages.user_id can hold IDs from User or Admin model
-                    // and that these IDs are distinct or Message model's user() relationship is polymorphic.
-                    ->where('user_id', '!=', $participant->id)
-                    ->count();
+            ->where('user_id', '!=', $participant->id)
+            ->when($lastReadAt, function ($query) use ($lastReadAt) {
+                return $query->where('created_at', '>', $lastReadAt);
+            })
+            ->count();
+    }
+    
+    /**
+     * Mark messages as read for a participant up to a certain point (e.g., now).
+     */
+    public function markAsRead($participant, ?\Carbon\Carbon $timestamp = null): void
+    {
+        $timestamp = $timestamp ?? now();
+        $relationship = $participant instanceof Admin ? 'adminParticipants' : 'userParticipants';
+        $this->{$relationship}()->updateExistingPivot($participant->id, ['last_read_at' => $timestamp]);
     }
 
     /**
-     * Check if a user is a participant in the conversation.
-     * This method should ideally accept a more generic Authenticatable or a shared interface.
+     * Check if a user or admin is a participant in this conversation.
      */
     public function isParticipant($participant): bool
     {
-        if (!is_object($participant) || !property_exists($participant, 'id') || !method_exists($participant, 'getMorphClass')) {
-            return false;
-        }
-        return ($this->participant1_id === $participant->id && $this->participant1_type === $participant->getMorphClass()) ||
-               ($this->participant2_id === $participant->id && $this->participant2_type === $participant->getMorphClass());
+        $relationship = $participant instanceof Admin ? 'adminParticipants' : 'userParticipants';
+        return $this->{$relationship}()->where('conversation_user.user_id', $participant->id)->exists();
     }
 
     /**
-     * Get the other participant in the conversation.
-     * This method should also accept a more generic type.
+     * Get the user who created the conversation.
      */
-    public function getOtherParticipant($currentUser): ?Model
+    public function createdBy(): BelongsTo
     {
-        if (!is_object($currentUser) || !property_exists($currentUser, 'id') || !method_exists($currentUser, 'getMorphClass')) {
-            return null;
-        }
-
-        if ($this->participant1_id === $currentUser->id && $this->participant1_type === $currentUser->getMorphClass()) {
-            return $this->participant2;
-        }
-        if ($this->participant2_id === $currentUser->id && $this->participant2_type === $currentUser->getMorphClass()) {
-            return $this->participant1;
-        }
-        return null;
-    }
-
-    /**
-     * Helper to determine if a user is an admin participant.
-     * This is a basic example; you might have a more robust way to check admin roles.
-     */
-    protected function isAdminParticipant($participant): bool
-    {
-        if (!is_object($participant) || !property_exists($participant, 'id') || !method_exists($participant, 'getMorphClass')) {
-            return false;
-        }
-        return ($this->participant1_id === $participant->id && $this->participant1_type === Admin::class) || // Assuming Admin::class is the morph key
-               ($this->participant2_id === $participant->id && $this->participant2_type === Admin::class);
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 }

@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('job_assignments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('job_id')->constrained()->onDelete('cascade');
+            $table->foreignId('client_id')->constrained('users')->onDelete('cascade'); // Client associated with the assignment
             $table->foreignId('freelancer_id')->constrained('users')->onDelete('cascade'); // Assuming freelancer is a user
-            $table->foreignId('assigned_by_admin_id')->constrained('users')->onDelete('cascade'); // Admin who assigned
+            $table->foreignId('assigned_by_admin_id')->nullable()->constrained('users')->onDelete('cascade'); // Admin who assigned
             $table->string('status')->default('pending_freelancer_acceptance'); // e.g., pending_freelancer_acceptance, accepted, declined, assigned, in_progress, completed
             $table->text('freelancer_remarks')->nullable();
             $table->text('admin_remarks')->nullable();

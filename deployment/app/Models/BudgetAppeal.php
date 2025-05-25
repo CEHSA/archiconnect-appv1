@@ -39,8 +39,22 @@ class BudgetAppeal extends Model
     /**
      * Get the freelancer associated with the budget appeal.
      */
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
     public function freelancer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'freelancer_id');
+    }
+
+    public function reviewedByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by_admin_id');
+    }
+
+    public function reviewedByClient(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by_client_id');
     }
 }

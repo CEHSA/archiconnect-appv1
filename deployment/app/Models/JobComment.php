@@ -41,6 +41,14 @@ class JobComment extends Model
     }
 
     /**
+     * Get the job assignment this comment is associated with through the job.
+     */
+    public function jobAssignment(): BelongsTo
+    {
+        return $this->belongsTo(JobAssignment::class, 'job_id', 'job_id');
+    }
+
+    /**
      * Get the user who made the comment.
      */
     public function user(): BelongsTo

@@ -11,7 +11,7 @@ class Proposal extends Model
     use HasFactory;
     protected $fillable = [
         'job_id',
-        'user_id',
+        'freelancer_id',
         'cover_letter',
         'proposed_budget',
         'status',
@@ -29,8 +29,8 @@ class Proposal extends Model
     /**
      * Get the user (freelancer) who made the proposal.
      */
-    public function user(): BelongsTo
+    public function freelancer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'freelancer_id');
     }
 }

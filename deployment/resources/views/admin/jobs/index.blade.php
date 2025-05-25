@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12" x-data="{ confirmJobDeletion: false, jobIdToDelete: null }">
+    <div class="py-12" x-data="{ jobIdToDelete: null }" @delete-confirmed.window="if(jobIdToDelete) { $refs['deleteJobForm' + jobIdToDelete].submit(); } jobIdToDelete = null; $dispatch('close-modal', 'confirm-job-deletion')">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
                 <div class="p-6 text-gray-900">
@@ -19,6 +19,50 @@
                             {{ __('Create New Job') }}
                         </a>
                     </div>
+
+                    <!-- Filter Form -->
+                    <form method="GET" action="{{ route('admin.jobs.index') }}" class="mb-6 bg-gray-50 p-4 rounded-lg shadow">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-700">{{ __('Status') }}</label>
+                                <select name="status" id="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                    <option value="">{{ __('All Statuses') }}</option>
+                                    @foreach($statuses as $statusValue)
+                                        <option value="{{ $statusValue }}" {{ $request->get('status') == $statusValue ? 'selected' : '' }}>
+                                            {{ ucfirst(str_replace('_', ' ', $statusValue)) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label for="client_id" class="block text-sm font-medium text-gray-700">{{ __('Client') }}</label>
+                                <select name="client_id" id="client_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                    <option value="">{{ __('All Clients') }}</option>
+                                    @foreach($clients as $id => $name)
+                                        <option value="{{ $id }}" {{ $request->get('client_id') == $id ? 'selected' : '' }}>
+                                            {{ $name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label for="date_from" class="block text-sm font-medium text-gray-700">{{ __('Date From') }}</label>
+                                <input type="date" name="date_from" id="date_from" value="{{ $request->get('date_from') }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            </div>
+                            <div>
+                                <label for="date_to" class="block text-sm font-medium text-gray-700">{{ __('Date To') }}</label>
+                                <input type="date" name="date_to" id="date_to" value="{{ $request->get('date_to') }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center space-x-2">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                {{ __('Filter') }}
+                            </button>
+                            <a href="{{ route('admin.jobs.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400 active:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition ease-in-out duration-150">
+                                {{ __('Clear') }}
+                            </a>
+                        </div>
+                    </form>
 
                     <!-- Session Messages -->
                     @if (session('success'))
@@ -100,7 +144,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button"
-                                                    @click.prevent="confirmJobDeletion = true; jobIdToDelete = {{ $job->id }}"
+                                                    @click.prevent="$dispatch('open-modal', 'confirm-job-deletion'); jobIdToDelete = {{ $job->id }}"
                                                     class="text-red-600 hover:text-red-700">{{ __('Delete') }}</button>
                                             </form>
                                         </td>
@@ -124,37 +168,26 @@
             </div>
         </div>
     </div>
-    <x-modal name="confirm-job-deletion" :show="false" x-show="confirmJobDeletion"
-        @close.stop="confirmJobDeletion = false" focusable>
-        <form method="post" @submit.prevent="$refs['deleteJobForm' + jobIdToDelete].submit()" class="p-6">
+    {{-- The modal's visibility is now controlled by its internal state, triggered by events --}}
+    <x-modal name="confirm-job-deletion" :show="false" focusable>
+        <div class="p-6">
             <h2 class="text-lg font-medium text-gray-900">
                 {{ __('Are you sure you want to delete this job?') }}
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
                 {{ __('Once the job is deleted, all of its resources and data will be permanently deleted.') }}
-                {{-- Password confirmation is typically needed for sensitive actions like deletion --}}
             </p>
 
-            {{-- Password confirmation input (optional but recommended for sensitive actions) --}}
-            {{-- <div class="mt-6">
-                <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
-
-                <x-text-input id="password" name="password" type="password" class="mt-1 block w-3/4"
-                    placeholder="{{ __('Password') }}" />
-
-                <x-input-error :messages="$errors->get('password')" class="mt-2" />
-            </div> --}}
-
             <div class="mt-6 flex justify-end">
-                <x-secondary-button @click="confirmJobDeletion = false">
+                <x-secondary-button @click="$dispatch('close-modal', 'confirm-job-deletion')">
                     {{ __('Cancel') }}
                 </x-secondary-button>
 
-                <x-danger-button class="ms-3">
+                <x-danger-button class="ms-3" @click="$dispatch('delete-confirmed')">
                     {{ __('Delete Job') }}
                 </x-danger-button>
             </div>
-        </form>
+        </div>
     </x-modal>
-    </x-app-layout>
+</x-admin-layout>

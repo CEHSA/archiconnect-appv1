@@ -1,6 +1,8 @@
 <x-layouts.freelancer>
     <x-slot name="header">
-        {{ __('Freelancer Dashboard') }}
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Freelancer Dashboard') }}
+        </h2>
     </x-slot>
 
     <!-- Freelancer Summary Cards -->

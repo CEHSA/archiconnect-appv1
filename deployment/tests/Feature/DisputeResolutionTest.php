@@ -21,13 +21,24 @@ class DisputeResolutionTest extends TestCase
     public function test_admin_can_view_disputes_list()
     {
         // Create an admin user
-        $admin = Admin::factory()->create();
+        $userAdmin = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $userAdmin->id]);
 
         // Create some disputes (optional, but good for testing list view)
-        Dispute::factory()->count(3)->create();
+        // Ensure disputes are linked to valid job assignments which in turn need valid users
+        $clientUser = User::factory()->client()->create();
+        $freelancerUser = User::factory()->freelancer()->create();
+        $job = \App\Models\Job::factory()->create(['client_id' => $clientUser->id]);
+        $assignment = \App\Models\JobAssignment::factory()->create([
+            'job_id' => $job->id,
+            'client_id' => $clientUser->id,
+            'freelancer_id' => $freelancerUser->id,
+            'assigned_by_admin_id' => $admin->id
+        ]);
+        Dispute::factory()->count(3)->create(['job_assignment_id' => $assignment->id]);
 
         // Act as the admin and visit the disputes index page
-        $response = $this->actingAs($admin, 'admin')->get(route('admin.disputes.index'));
+        $response = $this->actingAs($userAdmin, 'admin')->get(route('admin.disputes.index'));
 
         // Assert that the response is successful
         $response->assertStatus(200);
@@ -46,13 +57,23 @@ class DisputeResolutionTest extends TestCase
     public function test_admin_can_view_specific_dispute()
     {
         // Create an admin user
-        $admin = Admin::factory()->create();
+        $userAdmin = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $userAdmin->id]);
 
         // Create a dispute
-        $dispute = Dispute::factory()->create();
+        $clientUser = User::factory()->client()->create();
+        $freelancerUser = User::factory()->freelancer()->create();
+        $job = \App\Models\Job::factory()->create(['client_id' => $clientUser->id]);
+        $assignment = \App\Models\JobAssignment::factory()->create([
+            'job_id' => $job->id,
+            'client_id' => $clientUser->id,
+            'freelancer_id' => $freelancerUser->id,
+            'assigned_by_admin_id' => $admin->id
+        ]);
+        $dispute = Dispute::factory()->create(['job_assignment_id' => $assignment->id]);
 
         // Act as the admin and visit the specific dispute show page
-        $response = $this->actingAs($admin, 'admin')->get(route('admin.disputes.show', $dispute));
+        $response = $this->actingAs($userAdmin, 'admin')->get(route('admin.disputes.show', $dispute));
 
         // Assert that the response is successful
         $response->assertStatus(200);
@@ -70,17 +91,27 @@ class DisputeResolutionTest extends TestCase
     public function test_admin_can_update_dispute()
     {
         // Create an admin user
-        $admin = Admin::factory()->create();
+        $userAdmin = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $userAdmin->id]);
 
         // Create a dispute
-        $dispute = Dispute::factory()->create(['status' => 'open']);
+        $clientUser = User::factory()->client()->create();
+        $freelancerUser = User::factory()->freelancer()->create();
+        $job = \App\Models\Job::factory()->create(['client_id' => $clientUser->id]);
+        $assignment = \App\Models\JobAssignment::factory()->create([
+            'job_id' => $job->id,
+            'client_id' => $clientUser->id,
+            'freelancer_id' => $freelancerUser->id,
+            'assigned_by_admin_id' => $admin->id
+        ]);
+        $dispute = Dispute::factory()->create(['status' => 'open', 'job_assignment_id' => $assignment->id]);
 
         // New data for the update
         $updatedStatus = 'resolved';
         $adminRemarks = 'Issue resolved after mediation.';
 
         // Act as the admin and send a PUT request to update the dispute
-        $response = $this->actingAs($admin, 'admin')->put(route('admin.disputes.update', $dispute), [
+        $response = $this->actingAs($userAdmin, 'admin')->put(route('admin.disputes.update', $dispute), [
             'status' => $updatedStatus,
             'admin_remarks' => $adminRemarks,
         ]);
@@ -100,7 +131,7 @@ class DisputeResolutionTest extends TestCase
             'dispute_id' => $dispute->id,
             'new_status' => 'resolved',
             'new_admin_remarks' => 'Issue resolved after mediation.',
-            'user_id' => $admin->id,
+            'user_id' => $userAdmin->id,
             // 'updated_by_type' is not stored, user_id refers to an admin
         ]);
     }
@@ -123,7 +154,21 @@ class DisputeResolutionTest extends TestCase
         $user = User::factory()->create(['role' => 'client']); // Or 'freelancer'
 
         // Create a dispute
-        $dispute = Dispute::factory()->create();
+        $clientUser = User::factory()->client()->create();
+        $freelancerUser = User::factory()->freelancer()->create();
+        $adminUser = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $adminUser->id]);
+        $job = \App\Models\Job::factory()->create(['client_id' => $clientUser->id]);
+        $assignment = \App\Models\JobAssignment::factory()->create([
+            'job_id' => $job->id,
+            'client_id' => $clientUser->id,
+            'freelancer_id' => $freelancerUser->id,
+            'assigned_by_admin_id' => $admin->id
+        ]);
+        $dispute = Dispute::factory()->create([
+            'job_assignment_id' => $assignment->id,
+            'status' => 'open', // Explicitly set status to non-resolved
+        ]);
 
         // Attempt to access the admin disputes index page as a non-admin
         $responseIndex = $this->actingAs($user)->get(route('admin.disputes.index'));
@@ -146,7 +191,7 @@ class DisputeResolutionTest extends TestCase
             'admin_remarks' => 'Attempted update by non-admin.',
         ]);
         $responseUpdate->assertStatus(302); // Should be redirected
-        $responseUpdate->assertRedirect(route('login'));
+        $responseUpdate->assertRedirect(route('login')); // Actual redirect is to default login
 
         // Ensure the dispute was not updated
         $dispute->refresh();
@@ -161,13 +206,16 @@ class DisputeResolutionTest extends TestCase
     public function test_client_can_create_dispute_against_freelancer()
     {
         // Create a client, a freelancer, a job, and an assignment
-        $client = User::factory()->create(['role' => 'client']);
-        $freelancer = User::factory()->create(['role' => 'freelancer']);
-        $job = \App\Models\Job::factory()->create(['client_id' => $client->id]); 
-        $assignment = \App\Models\JobAssignment::factory()->create([ 
+        $client = User::factory()->client()->create();
+        $freelancer = User::factory()->freelancer()->create();
+        $adminUser = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $adminUser->id]);
+        $job = \App\Models\Job::factory()->create(['client_id' => $client->id]);
+        $assignment = \App\Models\JobAssignment::factory()->create([
             'job_id' => $job->id,
             'client_id' => $client->id,
             'freelancer_id' => $freelancer->id,
+            'assigned_by_admin_id' => $admin->id,
         ]);
 
         // Dispute data
@@ -193,7 +241,7 @@ class DisputeResolutionTest extends TestCase
             'reporter_id' => $client->id,
             'reported_id' => $freelancer->id,
             'reason' => 'Freelancer failed to deliver work on time.',
-            'status' => 'open', 
+            'status' => 'open',
         ]);
 
         // Check the redirect target (assuming it's client dashboard or similar)
@@ -218,13 +266,16 @@ class DisputeResolutionTest extends TestCase
      */
     public function test_freelancer_can_create_dispute_against_client()
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $freelancer = User::factory()->create(['role' => 'freelancer']);
+        $client = User::factory()->client()->create();
+        $freelancer = User::factory()->freelancer()->create();
+        $adminUser = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $adminUser->id]);
         $job = \App\Models\Job::factory()->create(['client_id' => $client->id]);
         $assignment = \App\Models\JobAssignment::factory()->create([
             'job_id' => $job->id,
             'client_id' => $client->id,
             'freelancer_id' => $freelancer->id,
+            'assigned_by_admin_id' => $admin->id,
         ]);
 
         $disputeData = [
@@ -256,14 +307,17 @@ class DisputeResolutionTest extends TestCase
      */
     public function test_user_can_view_their_own_disputes()
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $freelancer = User::factory()->create(['role' => 'freelancer']);
+        $client = User::factory()->client()->create();
+        $freelancer = User::factory()->freelancer()->create();
+        $adminUser = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $adminUser->id]);
 
         $job1 = \App\Models\Job::factory()->create(['client_id' => $client->id]);
         $assignment1 = \App\Models\JobAssignment::factory()->create([
             'job_id' => $job1->id,
             'client_id' => $client->id,
             'freelancer_id' => $freelancer->id,
+            'assigned_by_admin_id' => $admin->id,
         ]);
         $disputeByClient = Dispute::factory()->create([
             'job_assignment_id' => $assignment1->id,
@@ -272,11 +326,12 @@ class DisputeResolutionTest extends TestCase
             'reason' => 'Client dispute reason',
         ]);
 
-        $job2 = \App\Models\Job::factory()->create(['client_id' => $client->id]); 
+        $job2 = \App\Models\Job::factory()->create(['client_id' => $client->id]);
         $assignment2 = \App\Models\JobAssignment::factory()->create([
             'job_id' => $job2->id,
             'client_id' => $client->id,
             'freelancer_id' => $freelancer->id,
+            'assigned_by_admin_id' => $admin->id,
         ]);
          $disputeByFreelancer = Dispute::factory()->create([
             'job_assignment_id' => $assignment2->id,
@@ -285,13 +340,16 @@ class DisputeResolutionTest extends TestCase
             'reason' => 'Freelancer dispute reason',
         ]);
 
-        $otherClient = User::factory()->create(['role' => 'client']);
-        $otherFreelancer = User::factory()->create(['role' => 'freelancer']);
+        $otherClient = User::factory()->client()->create();
+        $otherFreelancer = User::factory()->freelancer()->create();
+        $otherAdminUser = User::factory()->admin()->create();
+        $otherAdmin = Admin::factory()->create(['user_id' => $otherAdminUser->id]);
         $otherJob = \App\Models\Job::factory()->create(['client_id' => $otherClient->id]);
         $otherAssignment = \App\Models\JobAssignment::factory()->create([
             'job_id' => $otherJob->id,
             'client_id' => $otherClient->id,
             'freelancer_id' => $otherFreelancer->id,
+            'assigned_by_admin_id' => $otherAdmin->id,
         ]);
         $otherDispute = Dispute::factory()->create([
             'job_assignment_id' => $otherAssignment->id,
@@ -304,9 +362,9 @@ class DisputeResolutionTest extends TestCase
         // TODO: Implement client dispute index route and controller method
         // $responseClientIndex = $this->actingAs($client)->get(route('disputes.index'));
         // $responseClientIndex->assertStatus(200);
-        // $responseClientIndex->assertSee($disputeByClient->reason); 
-        // $responseClientIndex->assertSee($disputeByFreelancer->reason); 
-        // $responseClientIndex->assertDontSee($otherDispute->reason); 
+        // $responseClientIndex->assertSee($disputeByClient->reason);
+        // $responseClientIndex->assertSee($disputeByFreelancer->reason);
+        // $responseClientIndex->assertDontSee($otherDispute->reason);
 
         // Test client viewing their specific dispute
         // TODO: Implement user dispute show route and controller method
@@ -323,15 +381,15 @@ class DisputeResolutionTest extends TestCase
         // Test client cannot view a dispute they are not involved in
         // TODO: Implement user dispute show route and controller method
         // $responseClientShowOther = $this->actingAs($client)->get(route('disputes.show', $otherDispute));
-        // $responseClientShowOther->assertStatus(403); 
+        // $responseClientShowOther->assertStatus(403);
 
 
         // Test freelancer viewing their disputes list
         $responseFreelancerIndex = $this->actingAs($freelancer)->get(route('freelancer.disputes.index'));
         $responseFreelancerIndex->assertStatus(200);
-        $responseFreelancerIndex->assertSee($disputeByFreelancer->reason); 
-        $responseFreelancerIndex->assertSee($disputeByClient->reason); 
-        $responseFreelancerIndex->assertDontSee($otherDispute->reason); 
+        $responseFreelancerIndex->assertSee($disputeByFreelancer->reason);
+        $responseFreelancerIndex->assertSee($disputeByClient->reason);
+        $responseFreelancerIndex->assertDontSee($otherDispute->reason);
 
         // Test freelancer viewing their specific dispute
         // TODO: Implement user dispute show route and controller method
@@ -348,7 +406,7 @@ class DisputeResolutionTest extends TestCase
         // Test freelancer cannot view a dispute they are not involved in
         // TODO: Implement user dispute show route and controller method
         // $responseFreelancerShowOther = $this->actingAs($freelancer)->get(route('disputes.show', $otherDispute));
-        // $responseFreelancerShowOther->assertStatus(403); 
+        // $responseFreelancerShowOther->assertStatus(403);
     }
 
     /**
@@ -358,24 +416,27 @@ class DisputeResolutionTest extends TestCase
      */
     public function test_dispute_creation_validation()
     {
-        $user = User::factory()->create(['role' => 'client']);
+        $user = User::factory()->client()->create();
+        $adminUser = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $adminUser->id]);
         $job = \App\Models\Job::factory()->create(['client_id' => $user->id]);
         $assignment = \App\Models\JobAssignment::factory()->create([
             'job_id' => $job->id,
             'client_id' => $user->id,
-            'freelancer_id' => User::factory()->create(['role' => 'freelancer'])->id,
+            'freelancer_id' => User::factory()->freelancer()->create()->id,
+            'assigned_by_admin_id' => $admin->id,
         ]);
 
         // Test case 1: Missing required fields
         $responseMissingFields = $this->actingAs($user)->post(route('job_assignments.disputes.store', $assignment), []);
-        $responseMissingFields->assertStatus(302); 
+        $responseMissingFields->assertStatus(302);
         $responseMissingFields->assertSessionHasErrors(['reason']); // Only reason is truly required by controller, others derived
 
         // Test case 2: Invalid reported_user_type (This validation is not in controller, factory handles types)
         // This test case might be obsolete if types are not part of request
-        
+
         // Test case 3: reported_user_id does not exist (Controller derives reported_id, not from request)
-        
+
         // Test case 4: job_assignment_id does not exist (Route model binding handles this)
 
         // Test case 5: User is trying to report themselves (Controller logic should prevent this, or a custom rule)
@@ -390,17 +451,27 @@ class DisputeResolutionTest extends TestCase
      */
     public function test_dispute_update_validation()
     {
-        $admin = Admin::factory()->create();
-        $dispute = Dispute::factory()->create(['status' => 'open']);
+        $userAdmin = User::factory()->admin()->create();
+        $admin = Admin::factory()->create(['user_id' => $userAdmin->id]);
+        $clientUser = User::factory()->client()->create();
+        $freelancerUser = User::factory()->freelancer()->create();
+        $job = \App\Models\Job::factory()->create(['client_id' => $clientUser->id]);
+        $assignment = \App\Models\JobAssignment::factory()->create([
+            'job_id' => $job->id,
+            'client_id' => $clientUser->id,
+            'freelancer_id' => $freelancerUser->id,
+            'assigned_by_admin_id' => $admin->id
+        ]);
+        $dispute = Dispute::factory()->create(['status' => 'open', 'job_assignment_id' => $assignment->id]);
 
-        $responseMissingStatus = $this->actingAs($admin, 'admin')->put(route('admin.disputes.update', $dispute), [
+        $responseMissingStatus = $this->actingAs($userAdmin, 'admin')->put(route('admin.disputes.update', $dispute), [
             'admin_remarks' => 'Some remarks without status.',
         ]);
-        $responseMissingStatus->assertStatus(302); 
+        $responseMissingStatus->assertStatus(302);
         $responseMissingStatus->assertSessionHasErrors(['status']);
 
-        $responseInvalidStatus = $this->actingAs($admin, 'admin')->put(route('admin.disputes.update', $dispute), [
-            'status' => 'invalid_status', 
+        $responseInvalidStatus = $this->actingAs($userAdmin, 'admin')->put(route('admin.disputes.update', $dispute), [
+            'status' => 'invalid_status',
             'admin_remarks' => 'Some remarks with invalid status.',
         ]);
         $responseInvalidStatus->assertStatus(302);
@@ -410,7 +481,7 @@ class DisputeResolutionTest extends TestCase
             'status' => 'under_review',
             'admin_remarks' => 'Valid remarks.',
         ];
-        $responseValid = $this->actingAs($admin, 'admin')->put(route('admin.disputes.update', $dispute), $validUpdateData);
+        $responseValid = $this->actingAs($userAdmin, 'admin')->put(route('admin.disputes.update', $dispute), $validUpdateData);
         $responseValid->assertSessionHasNoErrors();
     }
 }

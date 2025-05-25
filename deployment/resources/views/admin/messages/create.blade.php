@@ -60,6 +60,19 @@
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div class="mb-6">
+                        <label for="job_id" class="block text-sm font-medium text-gray-700">{{ __('Link to Job (Optional)') }}</label>
+                        <select id="job_id" name="job_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-architimex-primary focus:border-architimex-primary sm:text-sm rounded-md">
+                            <option value="">{{ __('-- No job selected --') }}</option>
+                            @foreach($jobs as $job)
+                                <option value="{{ $job->id }}">{{ $job->title }} - {{ $job->user->name }} ({{ ucfirst($job->status) }})</option>
+                            @endforeach
+                        </select>
+                        @error('job_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 @endif
 
                 <div class="mb-6">

@@ -40,13 +40,36 @@
                     <x-freelancer-nav-link :href="route('freelancer.assignments.index')" :active="request()->routeIs('freelancer.assignments.*')">
                         {{ __('Assigned Jobs') }}
                     </x-freelancer-nav-link>
-                    <x-freelancer-nav-link :href="route('freelancer.time-logs.index')" :active="request()->routeIs('freelancer.time-logs.*')">
-                        {{ __('Time Logs') }}
-                    </x-freelancer-nav-link>
-                     <x-freelancer-nav-link :href="route('freelancer.messages.index')" :active="request()->routeIs('freelancer.messages.*')">
+                    <!-- Time Logs Section -->
+                    <div class="space-y-1" x-data="{ activeAccordion: $persist('{{ request()->segment(2) }}').as('freelancerMenuState') }">
+                        <button @click.stop="activeAccordion = activeAccordion === 'time-logs' ? '' : 'time-logs'"
+                                class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary hover:text-white rounded-md">
+                            <span>{{ __('Time Management') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform"
+                                :class="{'rotate-180': activeAccordion === 'time-logs'}"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'time-logs'"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             class="pl-4 pr-1 space-y-1">
+                            <x-freelancer-nav-link :href="route('freelancer.time-logs.index')" :active="request()->routeIs('freelancer.time-logs.index')">
+                                {{ __('My Time Logs') }}
+                            </x-freelancer-nav-link>
+                            {{-- Add link to start new timer if applicable --}}
+                            {{-- <x-freelancer-nav-link :href="route('freelancer.time-logs.create')" :active="request()->routeIs('freelancer.time-logs.create')">
+                                {{ __('Start New Timer') }}
+                            </x-freelancer-nav-link> --}}
+                        </div>
+                    </div>
+
+                    <x-freelancer-nav-link :href="route('freelancer.messages.index')" :active="request()->routeIs('freelancer.messages.*')">
                         {{ __('Messages') }}
                     </x-freelancer-nav-link>
-                     <x-freelancer-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
+                    <x-freelancer-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
                         {{ __('Profile') }}
                     </x-freelancer-nav-link>
                     <x-freelancer-nav-link :href="route('freelancer.disputes.index')" :active="request()->routeIs('freelancer.disputes.*')">
@@ -83,18 +106,9 @@
                         <!-- Right side of header: Notifications, User dropdown -->
                         <div class="flex items-center space-x-4">
                            <!-- Notification Bell Icon -->
-                           <a href="{{ route('notifications.index') }}" class="relative text-gray-500 hover:text-gray-700">
+                           <a href="{{ route('notifications.index') }}" class="relative text-gray-500 hover:text-gray-700" x-data="{ unreadCount: {{ $unreadNotificationsCount ?? 0 }} }">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                {{-- Placeholder for notification count --}}
-                                {{-- <span class="absolute top-0 right-0 block h-2 w-2 transform translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 ring-2 ring-white"></span> --}}
-                                @php
-                                    // Example: Get unread notification count. This should be handled by a view composer or passed to the layout.
-                                    // $unreadNotificationsCount = Auth::user() ? Auth::user()->unreadNotifications()->count() : 0;
-                                    $unreadNotificationsCount = 0; // Placeholder
-                                @endphp
-                                @if($unreadNotificationsCount > 0)
-                                    <span class="absolute -top-1 -right-1 px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full">{{ $unreadNotificationsCount }}</span>
-                                @endif
+                                <span x-show="unreadCount > 0" class="absolute top-0 right-0 block h-2 w-2 transform translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 ring-2 ring-white animate-pulse-red"></span>
                            </a>
                             <!-- Settings Dropdown -->
                             <div class="hidden sm:flex sm:items-center sm:ms-6">

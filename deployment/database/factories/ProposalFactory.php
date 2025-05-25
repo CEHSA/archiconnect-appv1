@@ -20,7 +20,7 @@ class ProposalFactory extends Factory
     {
         return [
             'job_id' => Job::factory(),
-            'user_id' => User::factory()->create(['role' => User::ROLE_FREELANCER])->id,
+            'freelancer_id' => User::factory()->create(['role' => User::ROLE_FREELANCER])->id,
             'cover_letter' => fake()->paragraphs(3, true),
             'proposed_budget' => fake()->numberBetween(500, 5000),
             'status' => fake()->randomElement(['pending', 'accepted', 'rejected']),

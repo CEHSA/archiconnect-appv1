@@ -1,98 +1,94 @@
 <?php
 
-use App\Models\User;
-
 use App\Models\FreelancerProfile;
-
 use App\Models\Job;
-
 use App\Models\Proposal;
-
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 
-use Illuminate\Support\Facades\Hash;
-
-
-
-uses(RefreshDatabase::class);
+uses(RefreshDatabase::class, WithFaker::class);
 
 test('user has correct fillable attributes', function () {
     $user = new User();
-
-    expect($user->getFillable())->toContain('name')
-        ->toContain('email')
-        ->toContain('password')
-        ->toContain('role');
+    expect($user->getFillable())->toContain('name', 'email', 'password', 'role');
 });
 
 test('user has correct hidden attributes', function () {
     $user = new User();
-
-    expect($user->getHidden())->toContain('password')
-        ->toContain('remember_token');
+    expect($user->getHidden())->toContain('password', 'remember_token');
 });
 
 test('user has correct casts', function () {
     $user = new User();
-
-    expect($user->getCasts())->toHaveKey('email_verified_at')
+    expect($user->getCasts())
+        ->toHaveKey('email_verified_at')
         ->toHaveKey('password');
 });
 
 test('client user can have many jobs', function () {
-    test()->markTestSkipped('Skipped due to binding resolution issues. See UserModelTest instead.');
+    $client = User::factory()->client()->create();
+    $job1   = Job::factory()->create(['client_id' => $client->id]);
+    $job2   = Job::factory()->create(['client_id' => $client->id]);
+
+    expect($client->jobs)->toHaveCount(2);
+    expect($client->jobs->contains($job1))->toBeTrue();
+    expect($client->jobs->contains($job2))->toBeTrue();
 });
 
 test('freelancer user can have a freelancer profile', function () {
-    test()->markTestSkipped('Skipped due to binding resolution issues. See UserModelTest instead.');
+    $freelancer = User::factory()->freelancer()->create();
+    $profile    = FreelancerProfile::factory()->create(['user_id' => $freelancer->id]);
+
+    expect($freelancer->freelancerProfile)->toBeInstanceOf(FreelancerProfile::class);
+    expect($freelancer->freelancerProfile->id)->toBe($profile->id);
 });
 
 test('freelancer user can have many proposals', function () {
-    test()->markTestSkipped('Skipped due to binding resolution issues. See UserModelTest instead.');
+    $freelancer = User::factory()->freelancer()->create();
+    $proposal1  = Proposal::factory()->create(['freelancer_id' => $freelancer->id]);
+    $proposal2  = Proposal::factory()->create(['freelancer_id' => $freelancer->id]);
+
+    expect($freelancer->proposals)->toHaveCount(2);
+    expect($freelancer->proposals->contains($proposal1))->toBeTrue();
+    expect($freelancer->proposals->contains($proposal2))->toBeTrue();
 });
 
 test('user can be created with valid data', function () {
-    test()->markTestSkipped('Skipped due to binding resolution issues. See UserModelTest instead.');
+    $userData = [
+        'name'     => 'Test User',
+        'email'    => 'test@example.com',
+        'password' => 'password123',
+        'role'     => User::ROLE_CLIENT,
+    ];
+
+    $user = User::create($userData);
+    expect($user)->toBeInstanceOf(User::class)
+        ->and($user->name)->toBe($userData['name'])
+        ->and($user->email)->toBe($userData['email'])
+        ->and($user->role)->toBe($userData['role']);
 });
 
 test('user can check if they are an admin', function () {
-    // Skip this test if the isAdmin method doesn't exist
-    if (!method_exists(User::class, 'isAdmin')) {
-        test()->markTestSkipped('User::isAdmin() method does not exist.');
-        return;
-    }
+    $admin  = User::factory()->admin()->create();
+    $client = User::factory()->client()->create();
 
-    $admin = User::factory()->create(['role' => 'admin']);
-    $client = User::factory()->create(['role' => 'client']);
-
-    expect($admin->isAdmin())->toBeTrue();
-    expect($client->isAdmin())->toBeFalse();
+    expect($admin->isAdmin())->toBeTrue()
+        ->and($client->isAdmin())->toBeFalse();
 });
 
 test('user can check if they are a freelancer', function () {
-    // Skip this test if the isFreelancer method doesn't exist
-    if (!method_exists(User::class, 'isFreelancer')) {
-        test()->markTestSkipped('User::isFreelancer() method does not exist.');
-        return;
-    }
+    $freelancer = User::factory()->freelancer()->create();
+    $client     = User::factory()->client()->create();
 
-    $freelancer = User::factory()->create(['role' => 'freelancer']);
-    $client = User::factory()->create(['role' => 'client']);
-
-    expect($freelancer->isFreelancer())->toBeTrue();
-    expect($client->isFreelancer())->toBeFalse();
+    expect($freelancer->isFreelancer())->toBeTrue()
+        ->and($client->isFreelancer())->toBeFalse();
 });
 
 test('user can check if they are a client', function () {
-    // Skip this test if the isClient method doesn't exist
-    if (!method_exists(User::class, 'isClient')) {
-        test()->markTestSkipped('User::isClient() method does not exist.');
-        return;
-    }
+    $client = User::factory()->client()->create();
+    $admin  = User::factory()->admin()->create();
 
-    $client = User::factory()->create(['role' => 'client']);
-    $admin = User::factory()->create(['role' => 'admin']);
-
-    expect($client->isClient())->toBeTrue();
-    expect($admin->isClient())->toBeFalse();
+    expect($client->isClient())->toBeTrue()
+        ->and($admin->isClient())->toBeFalse();
 });

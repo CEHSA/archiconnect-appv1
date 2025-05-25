@@ -2,37 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 class Message extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'conversation_id',
-        'user_id',
+        'user_id', // Sender
         'content',
-        'read_at',
-        'status',
-        'reviewed_by_admin_id',
-        'admin_remarks',
+        'is_approved', // For freelancer messages needing admin approval
+        'approved_by', // Admin user_id who approved
+        'approved_at',
     ];
 
     protected $casts = [
-        'read_at' => 'datetime',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     /**
-     * Get the admin who reviewed the message.
-     */
-    public function reviewedByAdmin(): BelongsTo
-    {
-        return $this->belongsTo(Admin::class, 'reviewed_by_admin_id');
-    }
-
-    /**
-     * Get the conversation that the message belongs to.
+     * The conversation this message belongs to.
      */
     public function conversation(): BelongsTo
     {
@@ -40,7 +34,7 @@ class Message extends Model
     }
 
     /**
-     * Get the user who sent the message.
+     * The user who sent this message.
      */
     public function user(): BelongsTo
     {
@@ -48,29 +42,18 @@ class Message extends Model
     }
 
     /**
-     * Get the attachments for the message.
+     * The admin who approved this message (if applicable).
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * The attachments for this message.
      */
     public function attachments(): HasMany
     {
         return $this->hasMany(MessageAttachment::class);
-    }
-
-    /**
-     * Check if the message is unread.
-     */
-    public function isUnread(): bool
-    {
-        return is_null($this->read_at);
-    }
-
-    /**
-     * Mark the message as read.
-     */
-    public function markAsRead(): bool
-    {
-        if ($this->isUnread()) {
-            return $this->update(['read_at' => now()]);
-        }
-        return false;
     }
 }

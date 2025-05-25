@@ -6,9 +6,10 @@
 echo "Starting preparation for ArchiConnect App deployment to cPanel..."
 
 # Configuration - Update these variables
-CPANEL_USERNAME="architex"
-CPANEL_DOMAIN="login.architex.co.za"
-CPANEL_GIT_REPO_NAME="archiconnect-app"
+CPANEL_USERNAME="greg@architex.co.za"
+CPANEL_PASSWORD="
+CPANEL_DOMAIN="architex.co.za:2083"
+CPANEL_GIT_REPO_NAME="archiconnect-appv1"
 PRODUCTION_ENV_FILE=".env.production"
 DEPLOYMENT_ZIP="archiconnect-app-deployment.zip"
 
@@ -23,7 +24,7 @@ echo "Building frontend assets for production..."
 npm run build
 
 # Verify Vite build was successful
-if [ ! -d "public/build" ] || [ ! -f "public/build/manifest.json" ]; then
+if [ ! -d "public/build" ] || [ ! -f "public/build/.vite/manifest.json" ]; then
     echo "ERROR: Vite build failed or assets are missing. Cannot continue deployment."
     echo "Please check for build errors and try again."
     exit 1
@@ -57,25 +58,69 @@ cp phpinfo.php deployment/
 cp db-check.php deployment/
 cp check-vite-assets.php deployment/
 
-# Create necessary directories
-echo "Creating necessary directories..."
+# Create necessary directories and set permissions
+echo "Creating necessary directories and setting permissions..."
 mkdir -p deployment/storage/framework/sessions
 mkdir -p deployment/storage/framework/views
 mkdir -p deployment/storage/framework/cache
 mkdir -p deployment/storage/app/public
 
+# Set directory permissions
+echo "Setting directory permissions..."
+find deployment/storage -type d -exec chmod 755 {} \;
+find deployment/bootstrap/cache -type d -exec chmod 755 {} \;
+find deployment/storage -type f -exec chmod 644 {} \;
+find deployment/bootstrap/cache -type f -exec chmod 644 {} \;
+
+# Ensure storage and bootstrap/cache are writable
+chmod -R 775 deployment/storage
+chmod -R 775 deployment/bootstrap/cache
+
 # Create a zip file for deployment
 echo "Creating deployment zip file..."
-if command -v zip &> /dev/null; then
+
+# Remove any existing zip file
+if [ -f "$DEPLOYMENT_ZIP" ]; then
+    echo "Removing existing deployment zip..."
+    rm -f "$DEPLOYMENT_ZIP"
+fi
+
+# Try to use 7-Zip if available (preferred on Windows)
+if command -v 7z &> /dev/null; then
+    echo "Using 7-Zip to create archive..."
+    7z a -tzip "$DEPLOYMENT_ZIP" "./deployment/*"
+elif command -v zip &> /dev/null; then
     # Use zip if available
+    echo "Using zip command to create archive..."
     cd deployment
     zip -r ../$DEPLOYMENT_ZIP .
     cd ..
 else
-    # Fallback to PowerShell if zip is not available
-    echo "zip command not found, using PowerShell instead..."
-    powershell -Command "Compress-Archive -Path deployment/* -DestinationPath $DEPLOYMENT_ZIP -Force"
+    # Fallback to PowerShell with improved error handling
+    echo "Using PowerShell to create archive..."
+    powershell -Command "
+        \$ErrorActionPreference = 'Stop'
+        try {
+            Get-ChildItem -Path './deployment' -Recurse |
+            Where-Object { ! \$_.PSIsContainer } |
+            ForEach-Object {
+                \$relativePath = \$_.FullName.Substring((Get-Location).Path.Length + 11)
+                [System.IO.Compression.ZipFile]::CreateFromDirectory('./deployment', '$DEPLOYMENT_ZIP')
+            }
+        } catch {
+            Write-Error \"Failed to create zip: \$_\"
+            exit 1
+        }
+    "
 fi
+
+# Verify the zip was created successfully
+if [ ! -f "$DEPLOYMENT_ZIP" ]; then
+    echo "Error: Failed to create deployment zip file"
+    exit 1
+fi
+
+echo "Successfully created $DEPLOYMENT_ZIP"
 
 echo "Deployment preparation completed!"
 echo ""

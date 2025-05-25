@@ -50,7 +50,7 @@ class ClientWorkSubmissionReviewedDbNotification extends Notification implements
             'job_assignment_id' => $jobAssignment->id,
             'job_id' => $jobAssignment->job_id,
             'status' => $status,
-            'url' => route('admin.jobs.assignments.show', $jobAssignment->id) // Link to admin view of the assignment
+            'url' => route('admin.job-assignments.show', $jobAssignment->id) // Link to admin view of the assignment
         ];
     }
 }

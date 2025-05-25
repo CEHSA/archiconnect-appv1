@@ -1,104 +1,24 @@
 ---
 deployment:
   tasks:
-    # Set deployment path and create it
     - export DEPLOYPATH=/home/architex/public_html/axis
-    - /bin/mkdir -p $DEPLOYPATH
-
-    # Pre-deployment cleanup
-    - /bin/rm -rf $DEPLOYPATH/*
-
-    # Build Vite assets locally (requires Node.js)
-    - npm ci
-    - npm run build
     
-    # Copy core application files
-    - /bin/cp -R app bootstrap config database public resources routes vendor $DEPLOYPATH/
-    - /bin/cp artisan composer.json composer.lock .htaccess $DEPLOYPATH/
+    # Copy files
+    - /bin/cp -R * $DEPLOYPATH
     
-    # Create and configure storage structure
-    - /bin/mkdir -p $DEPLOYPATH/storage/framework/{sessions,views,cache}
-    - /bin/mkdir -p $DEPLOYPATH/storage/app/public
-    - /bin/mkdir -p $DEPLOYPATH/bootstrap/cache
-    - /bin/cp -R storage/* $DEPLOYPATH/storage/
-    
-    # Set proper permissions
-    - /bin/chmod -R 755 $DEPLOYPATH/storage
-    - /bin/chmod -R 755 $DEPLOYPATH/bootstrap/cache
-    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 644 {} \;
-    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 644 {} \;
-    
-    # Environment setup
+    # Copy dot files
     - /bin/cp .env.production $DEPLOYPATH/.env
-    - /bin/chmod 644 $DEPLOYPATH/.env
+    - /bin/cp .htaccess $DEPLOYPATH/
     
-    # Fix any line endings
-    - /bin/dos2unix $DEPLOYPATH/.env
+    # Set permissions
+    - /bin/chmod 755 $DEPLOYPATH/storage -R
+    - /bin/chmod 755 $DEPLOYPATH/bootstrap/cache -R
     
-    # Generate application key
+    # Laravel commands
     - cd $DEPLOYPATH && php artisan key:generate --force
-    
-    # Wait for a moment to ensure the key is properly set
-    - sleep 5
-    
-    # Install production dependencies
-    - cd $DEPLOYPATH && php -d memory_limit=512M /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
-    
-    # Clear everything to start fresh
-    - cd $DEPLOYPATH && php artisan clear-compiled
-    - cd $DEPLOYPATH && php artisan cache:clear
-    - cd $DEPLOYPATH && php artisan config:clear
-    - cd $DEPLOYPATH && php artisan route:clear
-    - cd $DEPLOYPATH && php artisan view:clear
-    
-    # Create storage link first
     - cd $DEPLOYPATH && php artisan storage:link
-    
-    # Run migrations (with proper timeout)
-    - cd $DEPLOYPATH && php -d max_execution_time=300 artisan migrate --force
-    
-    # Generate fresh caches (in correct order)
+    - cd $DEPLOYPATH && php artisan migrate --force
     - cd $DEPLOYPATH && php artisan config:cache
     - cd $DEPLOYPATH && php artisan route:cache
     - cd $DEPLOYPATH && php artisan view:cache
     - cd $DEPLOYPATH && php artisan optimize
-    
-    # Set proper permissions on storage and bootstrap/cache
-    - /bin/chmod -R 755 $DEPLOYPATH/storage
-    - /bin/chmod -R 755 $DEPLOYPATH/bootstrap/cache
-    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 644 {} \;
-    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 644 {} \;
-    
-    # Create required directories if they don't exist
-    - /bin/mkdir -p $DEPLOYPATH/storage/framework/{sessions,views,cache}
-    - /bin/mkdir -p $DEPLOYPATH/storage/logs
-    
-    # Touch log file to ensure it exists
-    - /bin/touch $DEPLOYPATH/storage/logs/laravel.log
-    - /bin/chmod 644 $DEPLOYPATH/storage/logs/laravel.log
-    
-    # Set up storage link
-    - cd $DEPLOYPATH && php artisan storage:link
-    
-    # Database migrations
-    - cd $DEPLOYPATH && php artisan migrate --force
-    
-    # Optimize
-    - cd $DEPLOYPATH && php artisan optimize
-    
-    # Clean up development files
-    - /bin/rm -rf $DEPLOYPATH/node_modules
-    - /bin/rm -rf $DEPLOYPATH/.git*
-    - /bin/rm -rf $DEPLOYPATH/tests
-    - /bin/rm -f $DEPLOYPATH/phpunit.xml
-    - /bin/rm -f $DEPLOYPATH/README.md
-    - /bin/rm -f $DEPLOYPATH/package*.json
-    - /bin/rm -f $DEPLOYPATH/webpack.mix.js
-    - /bin/rm -f $DEPLOYPATH/yarn.lock
-    - /bin/rm -f $DEPLOYPATH/.env.example
-    - /bin/rm -f $DEPLOYPATH/public/hot
-    
-    # Set final permissions
-    - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} \;
-    - /bin/find $DEPLOYPATH -type d -exec chmod 755 {} \;
-    - /bin/chmod 755 $DEPLOYPATH/artisan

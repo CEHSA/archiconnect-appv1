@@ -39,8 +39,8 @@ echo -e "${YELLOW}Building frontend assets for production...${NC}"
 npm run build
 
 # Verify build success
-if [ ! -f "public/build/manifest.json" ]; then
-    echo -e "${RED}Error: Build failed - manifest.json not found in public/build/.${NC}"
+if [ ! -f "public/build/.vite/manifest.json" ]; then
+    echo -e "${RED}Error: Build failed - manifest.json not found in public/build/.vite/.${NC}"
     echo -e "${RED}The Vite build process did not complete successfully.${NC}"
     exit 1
 fi
@@ -64,7 +64,7 @@ if [ -f ".env.production" ]; then
         echo -e "${YELLOW}Setting APP_ENV=production in .env.production...${NC}"
         sed -i 's/APP_ENV=.*/APP_ENV=production/' .env.production
     fi
-    
+
     # Ensure debug is turned off
     if ! grep -q "APP_DEBUG=false" .env.production; then
         echo -e "${YELLOW}Setting APP_DEBUG=false in .env.production...${NC}"

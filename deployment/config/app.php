@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'ArchiTimeX Keeper'),
+    'name' => env('APP_NAME', 'Architex Axis'),
 
     /*
     |--------------------------------------------------------------------------

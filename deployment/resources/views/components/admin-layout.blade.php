@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'ArchiTimeX Keeper') }} Admin</title>
+        <title>{{ config('app.name', 'Architex Axis') }} Admin</title>
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -25,44 +25,102 @@
             <aside class="w-64 bg-architimex-sidebar text-white flex-shrink-0">
                 <div class="p-4 flex items-center space-x-2 border-b border-gray-700">
                     <img src="{{ asset('images/bird_logo.png') }}" alt="Logo" class="h-10 w-auto invert brightness-0"> {{-- Assuming logo is dark, invert for light on dark bg --}}
-                    <h1 class="text-xl font-semibold">{{ config('app.name', 'ArchiTimeX Keeper') }}</h1>
+                    <h1 class="text-xl font-semibold">{{ config('app.name', 'Architex Axis') }}</h1>
                 </div>
-                <nav class="mt-4 px-2">
-                    {{-- Sidebar Navigation Slot or Hardcoded Links --}}
-                    <x-admin-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                <nav class="mt-4 px-2 space-y-1" x-data="{ activeAccordion: '' }">
+                    <x-admin-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" @click="activeAccordion = ''">
                         {{ __('Dashboard') }}
                     </x-admin-nav-link>
-                    <x-admin-nav-link :href="route('admin.jobs.index')" :active="request()->routeIs('admin.jobs.*')">
-                        {{ __('Jobs') }}
-                    </x-admin-nav-link>
-                    <x-admin-nav-link :href="route('admin.messages.index')" :active="request()->routeIs('admin.messages.*')">
-                        <div class="flex items-center justify-between">
-                            <span>{{ __('Messages') }}</span>
-                            @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
-                                <span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-                                    {{ $unreadMessagesCount }}
-                                </span>
-                            @endif
+
+                    {{-- Jobs Section with Dropdown --}}
+                    <div class="relative">
+                        @php
+                            $jobsActive = request()->routeIs('admin.jobs.*') || request()->routeIs('admin.job-applications.*');
+                        @endphp
+                        <button @click="activeAccordion = (activeAccordion === 'jobs' ? '' : 'jobs')" 
+                                class="w-full flex items-center justify-between text-left {{ $jobsActive ? 'block px-4 py-2.5 text-sm text-white bg-architimex-primary font-semibold rounded-md' : 'block px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary-darker hover:text-white rounded-md' }} transition duration-150 ease-in-out">
+                            <span>{{ __('Jobs') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="{'rotate-180': activeAccordion === 'jobs'}" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'jobs'" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" 
+                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95"
+                             class="mt-1 ml-4 space-y-1" style="display: none;">
+                            <x-admin-nav-link :href="route('admin.jobs.index')" :active="request()->routeIs('admin.jobs.index') || request()->routeIs('admin.jobs.create') || request()->routeIs('admin.jobs.edit') || request()->routeIs('admin.jobs.show')" @click="activeAccordion = 'jobs'">
+                                {{ __('Manage Jobs') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.jobs.current')" :active="request()->routeIs('admin.jobs.current')" @click="activeAccordion = 'jobs'">
+                                {{ __('Current Jobs') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.job-applications.index')" :active="request()->routeIs('admin.job-applications.*')" @click="activeAccordion = 'jobs'">
+                                {{ __('Job Applications') }}
+                            </x-admin-nav-link>
                         </div>
-                    </x-admin-nav-link>
-                    {{-- Add more links as per your image: Users, Reports, Settings --}}
-                    <x-admin-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                    </div>
+
+                    {{-- Messages Section with Dropdown --}}
+                    <div class="relative">
+                        @php
+                            $messagesActive = request()->routeIs('admin.messages.*');
+                        @endphp
+                        <button @click="activeAccordion = (activeAccordion === 'messages' ? '' : 'messages')" 
+                                class="w-full flex items-center justify-between text-left {{ $messagesActive ? 'block px-4 py-2.5 text-sm text-white bg-architimex-primary font-semibold rounded-md' : 'block px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary-darker hover:text-white rounded-md' }} transition duration-150 ease-in-out">
+                            <div class="flex items-center justify-between w-full">
+                                <span>{{ __('Messages') }}</span>
+                                @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
+                                    <span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                                        {{ $unreadMessagesCount }}
+                                    </span>
+                                @endif
+                            </div>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="{'rotate-180': activeAccordion === 'messages'}" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'messages'" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" 
+                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95"
+                             class="mt-1 ml-4 space-y-1" style="display: none;">
+                            <x-admin-nav-link :href="route('admin.messages.index')" :active="request()->routeIs('admin.messages.index') || request()->routeIs('admin.messages.showConversation') || request()->routeIs('admin.messages.create')" @click="activeAccordion = 'messages'">
+                                {{ __('Conversations') }}
+                            </x-admin-nav-link>
+                            {{-- New History Link --}}
+                            <x-admin-nav-link :href="route('admin.messages.history')" :active="request()->routeIs('admin.messages.history')" @click="activeAccordion = 'messages'">
+                                {{ __('Message History') }}
+                            </x-admin-nav-link>
+                        </div>
+                    </div>
+
+                    <x-admin-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')" @click="activeAccordion = ''">
                         {{ __('Users') }}
                     </x-admin-nav-link>
-                    {{-- Reports Section --}}
-                    <x-admin-nav-link :href="route('admin.reports.job-progress')" :active="request()->routeIs('admin.reports.*')">
-                        {{ __('Reports') }}
-                    </x-admin-nav-link>
-                    {{-- Sub-links for Reports (Optional, could be a dropdown or separate links) --}}
-                    {{-- For now, just adding them as flat links under Reports --}}
-                    <x-admin-nav-link :href="route('admin.reports.client-project-status')" :active="request()->routeIs('admin.reports.client-project-status')" class="ml-4">
-                        {{ __('Client Project Status') }}
-                    </x-admin-nav-link>
-                    <x-admin-nav-link :href="route('admin.reports.financials')" :active="request()->routeIs('admin.reports.financials')" class="ml-4">
-                        {{ __('Financials') }}
-                    </x-admin-nav-link>
 
-                     <x-admin-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.settings.*')"> {{-- Placeholder route --}}
+                    {{-- Reports Section with Dropdown --}}
+                    <div class="relative">
+                        @php
+                            $reportsActive = request()->routeIs('admin.reports.*');
+                        @endphp
+                        <button @click="activeAccordion = (activeAccordion === 'reports' ? '' : 'reports')" 
+                                class="w-full flex items-center justify-between text-left {{ $reportsActive ? 'block px-4 py-2.5 text-sm text-white bg-architimex-primary font-semibold rounded-md' : 'block px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary-darker hover:text-white rounded-md' }} transition duration-150 ease-in-out">
+                            <span>{{ __('Reports') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" :class="{'rotate-180': activeAccordion === 'reports'}" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'reports'" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" 
+                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95"
+                             class="mt-1 ml-4 space-y-1" style="display: none;" {{-- Alpine will control display --}}>
+                            <x-admin-nav-link :href="route('admin.reports.client-project-status')" :active="request()->routeIs('admin.reports.client-project-status')" @click="activeAccordion = 'reports'">
+                                {{ __('Client Project Status') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.reports.financials')" :active="request()->routeIs('admin.reports.financials')" @click="activeAccordion = 'reports'">
+                                {{ __('Financials') }}
+                            </x-admin-nav-link>
+                        </div>
+                    </div>
+
+                    {{-- Settings Section (can be converted to dropdown if it has sub-items later) --}}
+                    <x-admin-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.settings.*')" @click="activeAccordion = ''"> {{-- Placeholder route --}}
                         {{ __('Settings') }}
                     </x-admin-nav-link>
                 </nav>
@@ -95,13 +153,9 @@
                         <!-- Right side of header: Notifications, User dropdown -->
                         <div class="flex items-center space-x-4">
                            <!-- Notifications Bell Icon -->
-                           <a href="{{ route('notifications.index') }}" class="relative text-gray-500 hover:text-gray-700">
+                           <a href="{{ route('notifications.index') }}" class="relative text-gray-500 hover:text-gray-700" x-data="{ unreadCount: {{ $unreadNotificationsCount ?? 0 }} }">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                @if(Auth::guard('admin')->user()->unreadNotifications->count() > 0)
-                                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-                                        {{ Auth::guard('admin')->user()->unreadNotifications->count() }}
-                                    </span>
-                                @endif
+                                <span x-show="unreadCount > 0" class="absolute top-0 right-0 block h-2 w-2 transform translate-x-1/2 -translate-y-1/2 rounded-full bg-red-600 ring-2 ring-white animate-pulse-red"></span>
                            </a>
                             <!-- Settings Dropdown -->
                             <div class="hidden sm:flex sm:items-center sm:ms-6">

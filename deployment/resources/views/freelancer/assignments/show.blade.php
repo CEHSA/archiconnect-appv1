@@ -1,4 +1,4 @@
-<x-freelancer-layout>
+<x-layouts.freelancer>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Job Assignment Details') }}
@@ -7,11 +7,11 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-green-300">
                 <div class="p-6 text-gray-900">
 
                     <div class="mb-6">
-                        <a href="{{ route('freelancer.assignments.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-400 active:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <a href="{{ route('freelancer.assignments.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition ease-in-out duration-150">
                             {{ __('Back to My Assignments') }}
                         </a>
                     </div>
@@ -34,28 +34,28 @@
                     <div x-data="{ activeTab: 'details' }" class="mb-6">
                         <div class="border-b border-gray-200">
                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                                <button @click="activeTab = 'details'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'details', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'details' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'details'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'details', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'details' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Details') }}
                                 </button>
-                                <button @click="activeTab = 'work-submissions'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'work-submissions', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'work-submissions' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'work-submissions'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'work-submissions', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'work-submissions' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Work Submissions') }}
                                 </button>
-                                <button @click="activeTab = 'time-logs'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'time-logs', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'time-logs' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'time-logs'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'time-logs', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'time-logs' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Time Logs') }}
                                 </button>
-                                <button @click="activeTab = 'task-progress'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'task-progress', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'task-progress' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'task-progress'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'task-progress', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'task-progress' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Task Progress') }}
                                 </button>
-                                <button @click="activeTab = 'messages'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'messages', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'messages' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'messages'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'messages', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'messages' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Messages') }}
                                 </button>
-                                <button @click="activeTab = 'disputes'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'disputes', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'disputes' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'disputes'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'disputes', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'disputes' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Disputes') }}
                                 </button>
-                                <button @click="activeTab = 'budget-appeals'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'budget-appeals', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'budget-appeals' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'budget-appeals'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'budget-appeals', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'budget-appeals' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Budget Appeals') }}
                                 </button>
-                                <button @click="activeTab = 'tasks'" :class="{ 'border-indigo-500 text-indigo-600': activeTab === 'tasks', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'tasks' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <button @click="activeTab = 'tasks'" :class="{ 'border-teal-500 text-teal-600': activeTab === 'tasks', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'tasks' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                     {{ __('Tasks') }}
                                 </button>
                             </nav>
@@ -117,7 +117,7 @@
                                 <h4 class="font-semibold text-lg mb-4">{{ __('Work Submissions') }}</h4>
                                 @if (in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested']))
                                 <div class="mb-4">
-                                    <a href="{{ route('freelancer.assignments.submissions.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:border-indigo-700 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                    <a href="{{ route('freelancer.assignments.submissions.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         {{ __('Submit New Work') }}
                                     </a>
                                 </div>
@@ -128,13 +128,13 @@
                                 @else
                                     <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
+                                            <thead class="bg-cyan-700">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin Remarks</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Title</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Submitted At</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Status</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">File</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Admin Remarks</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-gray-200">
@@ -154,7 +154,7 @@
                                                                 @if ($isImage)
                                                                     <img src="{{ $filePath }}" alt="{{ $submission->original_filename }}" class="max-w-xs h-auto mr-2 inline-block rounded-md shadow-sm">
                                                                 @endif
-                                                                <a href="{{ route('freelancer.submissions.download', $submission) }}" class="text-indigo-600 hover:underline">
+                                                                <a href="{{ route('freelancer.submissions.download', $submission) }}" class="text-blue-600 hover:text-blue-700 hover:underline">
                                                                     {{ $submission->original_filename ?? 'Download File' }}
                                                                 </a>
                                                                 ({{ \App\Helpers\FileHelper::formatBytes($submission->size) }})
@@ -231,12 +231,12 @@
                                 @else
                                     <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
+                                            <thead class="bg-cyan-700">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Description</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Start Time</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">End Time</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Duration</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Task Description</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-gray-200">
@@ -266,7 +266,7 @@
                                 <h4 class="font-semibold text-lg mb-4">{{ __('Task Progress Updates') }}</h4>
                                 @if (in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested']))
                                 <div class="mb-4">
-                                    <a href="{{ route('freelancer.assignments.progress.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:border-indigo-700 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                    <a href="{{ route('freelancer.assignments.progress.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         {{ __('Log New Progress') }}
                                     </a>
                                 </div>
@@ -277,11 +277,11 @@
                                 @else
                                     <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
+                                            <thead class="bg-cyan-700">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Submitted At</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Description</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">File</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-gray-200">
@@ -298,7 +298,7 @@
                                                                 @if ($isImage)
                                                                     <img src="{{ $filePath }}" alt="{{ $progress->original_filename }}" class="max-w-xs h-auto mr-2 inline-block rounded-md shadow-sm">
                                                                 @endif
-                                                                <a href="{{ route('freelancer.task-progress.download', $progress) }}" class="text-indigo-600 hover:underline">{{ $progress->original_filename ?? 'Download File' }}</a>
+                                                                <a href="{{ route('freelancer.task-progress.download', $progress) }}" class="text-blue-600 hover:text-blue-700 hover:underline">{{ $progress->original_filename ?? 'Download File' }}</a>
                                                             @else
                                                                 No file
                                                             @endif
@@ -315,7 +315,7 @@
                                 <h4 class="font-semibold text-lg mb-4">{{ __('Messages to Admin') }}</h4>
                                 @if (in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested']))
                                 <div class="mb-4">
-                                    <a href="{{ route('freelancer.assignments.messages.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                    <a href="{{ route('freelancer.assignments.messages.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         {{ __('Send New Message') }}
                                     </a>
                                 </div>
@@ -396,7 +396,7 @@
                                                     <p class="mt-2 text-sm text-gray-700">Admin Remarks: {{ $dispute->admin_remarks }}</p>
                                                 @endif
                                                 <div class="mt-4">
-                                                     <a href="{{ route('admin.disputes.show', $dispute) }}" class="text-indigo-600 hover:underline text-sm">{{ __('View Dispute Details (Admin Only)') }} &rarr;</a>
+                                                     <a href="{{ route('admin.disputes.show', $dispute) }}" class="text-blue-600 hover:text-blue-700 hover:underline text-sm">{{ __('View Dispute Details (Admin Only)') }} &rarr;</a>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -409,7 +409,7 @@
                                 @if (in_array($assignment->status, ['accepted', 'in_progress', 'revision_requested']))
                                 <div class="mb-4">
                                     {{-- TODO: Add logic to only show if no pending appeal exists --}}
-                                    <a href="{{ route('freelancer.assignments.budget-appeals.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-500 active:bg-yellow-700 focus:outline-none focus:border-yellow-700 focus:ring ring-yellow-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                    <a href="{{ route('freelancer.assignments.budget-appeals.create', $assignment->id) }}" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         {{ __('Submit Budget Appeal') }}
                                     </a>
                                 </div>
@@ -441,7 +441,7 @@
                             <div x-show="activeTab === 'tasks'">
                                 <div class="flex justify-between items-center mb-4">
                                     <h4 class="font-semibold text-lg">{{ __('Assignment Tasks') }}</h4>
-                                    <a href="{{ route('freelancer.assignments.tasks.create', $assignment) }}" class="inline-flex items-center px-4 py-2 bg-architimex-primary hover:bg-architimex-primary-darker text-white font-bold text-xs uppercase tracking-widest rounded">
+                                    <a href="{{ route('freelancer.assignments.tasks.create', $assignment) }}" class="inline-flex items-center px-4 py-2 bg-cyan-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-cyan-600 active:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         {{ __('Add New Task') }}
                                     </a>
                                 </div>
@@ -451,12 +451,12 @@
                                 @else
                                     <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
+                                            <thead class="bg-cyan-700">
                                                 <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Order</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Title</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Status</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Due Date</th>
                                                     <th scope="col" class="relative px-6 py-3">
                                                         <span class="sr-only">Actions</span>
                                                     </th>
@@ -483,7 +483,7 @@
                                                             {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : 'N/A' }}
                                                         </td>
                                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                            <a href="{{ route('freelancer.tasks.edit', $task) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
+                                                            <a href="{{ route('freelancer.tasks.edit', $task) }}" class="text-blue-600 hover:text-blue-700 mr-3">Edit</a>
                                                             <form action="{{ route('freelancer.tasks.destroy', $task) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this task?');">
                                                                 @csrf
                                                                 @method('DELETE')

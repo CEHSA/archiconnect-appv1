@@ -48,6 +48,13 @@ class DisputeController extends Controller
      */
     public function update(Request $request, Dispute $dispute)
     {
+        // Ensure only admins can update disputes
+        /** @var \App\Models\User $adminUser */
+        $adminUser = Auth::guard('admin')->user();
+        if (!$adminUser || !$adminUser->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'status' => 'required|string|in:open,under_review,awaiting_client_input,awaiting_freelancer_input,resolved,closed_resolved,closed_unresolved',
             'admin_remarks' => 'nullable|string',

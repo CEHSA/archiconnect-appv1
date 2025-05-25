@@ -1,12 +1,3 @@
-{{-- resources/views/layouts/admin.blade.php --}}
-{{-- Create an admin layout for ArchiConnect based on the provided image.
-     It should have a fixed dark teal sidebar ('bg-architimex-sidebar', text-white) approx 250px wide.
-     The main content area should have a light background ('bg-architimex-lightbg') and a subtle grid pattern.
-     The header bar above the main content should be white or light grey, with the app name "ArchiConnect" (and logo) on the left,
-     and user profile/logout dropdown on the right.
-     Use Tailwind CSS. The sidebar should contain navigation links.
-     The main content area should have a slot for page-specific headers and a main content slot.
---}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -23,71 +14,165 @@
             .subtle-grid {
                 background-image: linear-gradient(to right, rgba(200, 200, 200, 0.1) 1px, transparent 1px),
                                 linear-gradient(to bottom, rgba(200, 200, 200, 0.1) 1px, transparent 1px);
-                background-size: 20px 20px; /* Adjust grid size */
+                background-size: 20px 20px;
             }
+            [x-cloak] { display: none !important; }
         </style>
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased" x-data="{ sidebarOpen: false }">
         <div class="min-h-screen flex bg-architimex-lightbg">
             <!-- Sidebar -->
             <aside class="w-64 bg-architimex-sidebar text-white flex-shrink-0">
                 <div class="p-4 flex items-center space-x-2 border-b border-gray-700">
-                    <img src="{{ asset('images/bird_logo.png') }}" alt="Logo" class="h-10 w-auto invert brightness-0"> {{-- Assuming logo is dark, invert for light on dark bg --}}
+                    <img src="{{ asset('images/bird_logo.png') }}" alt="Logo" class="h-10 w-auto invert brightness-0">
                     <h1 class="text-xl font-semibold">{{ config('app.name', 'Architex Axis') }}</h1>
                 </div>
-                <nav class="mt-4 px-2">
-                    {{-- Sidebar Navigation Slot or Hardcoded Links --}}
+
+                <nav class="mt-4 px-2 space-y-1"
+                     x-data="{
+                         activeAccordion: $persist('{{ request()->segment(2) }}').as('adminMenuState'),
+                         isActiveSection(section) {
+                             return window.location.pathname.startsWith('/admin/' + section);
+                         }
+                     }">
                     <x-admin-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                         {{ __('Dashboard') }}
-                    </x-admin-nav-link>                    <x-admin-nav-link :href="route('admin.jobs.index')" :active="request()->routeIs('admin.jobs.*')">
-                        {{ __('Jobs') }}
                     </x-admin-nav-link>
-                    <x-admin-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
-                        {{ __('Users') }}
-                    </x-admin-nav-link>
-                    <x-admin-nav-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.*')">
-                        {{ __('Reports') }}
-                    </x-admin-nav-link>
-                     <x-admin-nav-link :href="route('admin.messages.index')" :active="request()->routeIs('admin.messages.*')">
-                        {{ __('Messages') }}
-                    </x-admin-nav-link>
-                     <x-admin-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
+
+                    <!-- Jobs Section -->
+                    <div class="space-y-1">
+                        <button @click.stop="activeAccordion = isActiveSection('jobs') ? 'jobs' : (activeAccordion === 'jobs' ? '' : 'jobs')"
+                                class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary hover:text-white rounded-md">
+                            <span>{{ __('Jobs') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform"
+                                :class="{'rotate-180': activeAccordion === 'jobs'}"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'jobs'"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             class="pl-4 pr-1 space-y-1">
+                            <x-admin-nav-link :href="route('admin.jobs.index')" :active="request()->routeIs('admin.jobs.index')">
+                                {{ __('All Jobs') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.jobs.current')" :active="request()->routeIs('admin.jobs.current')">
+                                {{ __('Current Jobs') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.jobs.create')" :active="request()->routeIs('admin.jobs.create')">
+                                {{ __('Create Job') }}
+                            </x-admin-nav-link>
+                        </div>
+                    </div>
+
+                    <!-- Users Section -->
+                    <div class="space-y-1">
+                        <button @click.stop="activeAccordion = isActiveSection('users') ? 'users' : (activeAccordion === 'users' ? '' : 'users')"
+                                class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary hover:text-white rounded-md">
+                            <span>{{ __('Users') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform"
+                                :class="{'rotate-180': activeAccordion === 'users'}"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'users'"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             class="pl-4 pr-1 space-y-1">
+                            <x-admin-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index')">
+                                {{ __('All Users') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.users.activity.index')" :active="request()->routeIs('admin.users.activity.index')">
+                                {{ __('User Activity') }}
+                            </x-admin-nav-link>
+                        </div>
+                    </div>
+
+                    <!-- Messages Section -->
+                    <div class="space-y-1">
+                        <button @click.stop="activeAccordion = isActiveSection('messages') ? 'messages' : (activeAccordion === 'messages' ? '' : 'messages')"
+                                class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary hover:text-white rounded-md">
+                            <span>{{ __('Messages') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform"
+                                :class="{'rotate-180': activeAccordion === 'messages'}"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'messages'"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             class="pl-4 pr-1 space-y-1">
+                            <x-admin-nav-link :href="route('admin.messages.index')" :active="request()->routeIs('admin.messages.index')">
+                                {{ __('Inbox') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.messages.history')" :active="request()->routeIs('admin.messages.history')">
+                                {{ __('History') }}
+                            </x-admin-nav-link>
+                        </div>
+                    </div>
+
+                    <!-- Reports Section -->
+                    <div class="space-y-1">
+                        <button @click.stop="activeAccordion = isActiveSection('reports') ? 'reports' : (activeAccordion === 'reports' ? '' : 'reports')"
+                                class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-300 hover:bg-architimex-primary hover:text-white rounded-md">
+                            <span>{{ __('Reports') }}</span>
+                            <svg class="w-4 h-4 transform transition-transform"
+                                :class="{'rotate-180': activeAccordion === 'reports'}"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="activeAccordion === 'reports'"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             class="pl-4 pr-1 space-y-1">
+                            <x-admin-nav-link :href="route('admin.reports.client-project-status')" :active="request()->routeIs('admin.reports.client-project-status')">
+                                {{ __('Project Status') }}
+                            </x-admin-nav-link>
+                            <x-admin-nav-link :href="route('admin.reports.financials')" :active="request()->routeIs('admin.reports.financials')">
+                                {{ __('Financials') }}
+                            </x-admin-nav-link>
+                        </div>
+                    </div>
+
+                    <!-- Settings Link -->
+                    <x-admin-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
                         {{ __('Settings') }}
                     </x-admin-nav-link>
-                    {{-- Add more links as per your image: Jobs, Users, Reports, Messages, Settings --}}
                 </nav>
+
                 <div class="p-4 mt-auto border-t border-gray-700">
                     <div class="flex items-center space-x-3">
-                        {{-- User avatar placeholder --}}
                         <div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white font-semibold">
                             {{ strtoupper(substr(Auth::guard('admin')->user()->name, 0, 1)) }}
                         </div>
                         <div>
                             <p class="text-sm font-medium">{{ Auth::guard('admin')->user()->name }}</p>
-                            <p class="text-xs text-gray-400">{{ ucfirst(Auth::guard('admin')->user()->role) }}</p>
+                            <p class="text-xs text-gray-400">Administrator</p>
                         </div>
                     </div>
                 </div>
             </aside>
 
-            <!-- Main content -->
+            <!-- Main Content -->
             <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Top header bar -->
-                <header class="bg-white shadow-sm">
+                <!-- Header -->
+                <header class="bg-white shadow">
                     <div class="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                        <!-- Page Specific Header -->
                         @if (isset($header))
                             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                                 {{ $header }}
                             </h2>
                         @endif
 
-                        <!-- Right side of header: Notifications, User dropdown -->
                         <div class="flex items-center space-x-4">
-                           {{-- Placeholder for bell icon --}}
-                           <button class="text-gray-500 hover:text-gray-700">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                           </button>
                             <!-- Settings Dropdown -->
                             <div class="hidden sm:flex sm:items-center sm:ms-6">
                                 <x-dropdown align="right" width="48">
@@ -101,10 +186,12 @@
                                             </div>
                                         </button>
                                     </x-slot>
+
                                     <x-slot name="content">
                                         <x-dropdown-link :href="route('admin.profile.edit')">
                                             {{ __('Profile') }}
                                         </x-dropdown-link>
+
                                         <!-- Authentication -->
                                         <form method="POST" action="{{ route('admin.logout') }}">
                                             @csrf
@@ -121,10 +208,12 @@
                     </div>
                 </header>
 
-                <!-- Main page content -->
-                <main class="flex-1 overflow-x-hidden overflow-y-auto subtle-grid">
-                    <div class="container mx-auto px-6 py-8">
-                        {{ $slot }}
+                <!-- Main Content Area -->
+                <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 subtle-grid">
+                    <div class="py-12">
+                        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                            {{ $slot }}
+                        </div>
                     </div>
                 </main>
             </div>

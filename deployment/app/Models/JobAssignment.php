@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough; // Added import
 use App\Models\Conversation; // Added import
+use App\Models\BudgetAppeal; // Added import for BudgetAppeal
 
 class JobAssignment extends Model
 {
@@ -21,7 +22,33 @@ class JobAssignment extends Model
         'status',
         'freelancer_remarks',
         'admin_remarks',
+        'progress_override_percentage', // Added
     ];
+
+    /**
+     * Get the effective progress percentage for this assignment.
+     * Considers admin override first, then calculates based on task completion.
+     */
+    public function getEffectiveProgressAttribute(): int
+    {
+        if (!is_null($this->progress_override_percentage)) {
+            return (int) $this->progress_override_percentage;
+        }
+
+        // Ensure tasks relationship is loaded if not already, to avoid N+1 in loops
+        if (!$this->relationLoaded('tasks')) {
+            $this->load('tasks');
+        }
+
+        $totalTasks = $this->tasks->count();
+        if ($totalTasks === 0) {
+            return 0; 
+        }
+
+        $completedTasks = $this->tasks->where('status', 'completed')->count();
+        
+        return (int) round(($completedTasks / $totalTasks) * 100);
+    }
 
     /**
      * Get the job that this assignment belongs to.
@@ -116,5 +143,13 @@ class JobAssignment extends Model
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);
+    }
+
+    /**
+     * Get the budget appeals for this job assignment.
+     */
+    public function budgetAppeals(): HasMany
+    {
+        return $this->hasMany(BudgetAppeal::class);
     }
 }

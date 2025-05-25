@@ -37,6 +37,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\AllowViteDevServerInCsp::class, // Add our CSP middleware
+            \App\Http\Middleware\LastUserActivity::class, // Track last user activity
+            \App\Http\Middleware\LogUserActivity::class, // Log user activity
         ],
 
         'api' => [
