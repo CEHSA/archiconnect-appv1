@@ -79,12 +79,17 @@ Write-Host "  ✅ Dependencies installed" -ForegroundColor Green
 # Run tests if not skipped
 if (!$SkipTests) {
     Write-Host "🧪 Running tests..." -ForegroundColor Yellow
-    if (Test-Path "vendor/bin/phpunit.bat") {
+    if (Test-Path "vendor/bin/pest.bat") {
+        # Use Pest if available
+        ./vendor/bin/pest.bat --parallel
+    } elseif (Test-Path "vendor/bin/pest") {
+        php vendor/bin/pest --parallel
+    } elseif (Test-Path "vendor/bin/phpunit.bat") {
         ./vendor/bin/phpunit.bat --testdox
     } elseif (Test-Path "vendor/bin/phpunit") {
         php vendor/bin/phpunit --testdox
     } else {
-        Write-Host "  ⚠️  PHPUnit not found, skipping tests" -ForegroundColor Yellow
+        Write-Host "  ⚠️  No test runner found, skipping tests" -ForegroundColor Yellow
     }
     
     if ($LASTEXITCODE -ne 0 -and !$Force) {

@@ -98,13 +98,13 @@ graph TD
 **Critical Settings to Update:**
 ```bash
 # Application
-APP_NAME="ArchiConnect AI"
+APP_NAME="ArchAxis"
 APP_URL=https://ai.architex.co.za
 
 # Database (UPDATE THESE!)
-DB_DATABASE=architex_ai
-DB_USERNAME=architex_ai
-DB_PASSWORD=YOUR_SECURE_PASSWORD
+DB_DATABASE=architex_axis
+DB_USERNAME=architex_axismain
+DB_PASSWORD=kGgEoYkbW35I
 
 # Security
 SESSION_DOMAIN=ai.architex.co.za
