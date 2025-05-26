@@ -39,8 +39,8 @@ echo -e "${YELLOW}Building frontend assets for production...${NC}"
 npm run build
 
 # Verify build success
-if [ ! -f "public/build/.vite/manifest.json" ]; then
-    echo -e "${RED}Error: Build failed - manifest.json not found in public/build/.vite/.${NC}"
+if [ ! -f "public/build/manifest.json" ]; then
+    echo -e "${RED}Error: Build failed - manifest.json not found in public/build/.${NC}"
     echo -e "${RED}The Vite build process did not complete successfully.${NC}"
     exit 1
 fi

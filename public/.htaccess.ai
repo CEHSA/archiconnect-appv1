@@ -1,0 +1,114 @@
+# Laravel Public Directory .htaccess for ai.architex.co.za
+# Handles all Laravel routing and asset serving
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header for API requests
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header for CSRF protection
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Force HTTPS for ai.architex.co.za
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} ^ai\.architex\.co\.za$ [NC]
+    RewriteRule ^(.*)$ https://ai.architex.co.za%{REQUEST_URI} [R=301,L]
+
+    # Handle www redirect for ai.architex.co.za
+    RewriteCond %{HTTP_HOST} ^www\.ai\.architex\.co\.za$ [NC]
+    RewriteRule ^(.*)$ https://ai.architex.co.za%{REQUEST_URI} [R=301,L]
+
+    # Redirect Trailing Slashes If Not A Folder
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Handle Front Controller Pattern
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Security Headers specific to Laravel public directory
+<IfModule mod_headers.c>
+    # HSTS for HTTPS enforcement
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options nosniff
+    
+    # Prevent clickjacking
+    Header set X-Frame-Options SAMEORIGIN
+    
+    # XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Remove Server information
+    Header unset Server
+    Header unset X-Powered-By
+    
+    # Cache control for static assets
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=2592000"
+        Header set Expires "Thu, 31 Dec 2025 23:59:59 GMT"
+    </FilesMatch>
+    
+    # No cache for dynamic content
+    <FilesMatch "\.(php|html)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>
+
+# PHP Configuration for Laravel
+<IfModule mod_php.c>
+    php_value upload_max_filesize 64M
+    php_value post_max_size 64M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value memory_limit 256M
+    php_value session.cookie_httponly 1
+    php_value session.cookie_secure 1
+    php_value session.use_strict_mode 1
+</IfModule>
+
+# Error handling for production
+ErrorDocument 404 /index.php
+ErrorDocument 403 /index.php
+ErrorDocument 500 /index.php
+
+# Block access to sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to Laravel specific files in public
+<FilesMatch "(\.env|web\.config|composer\.(json|lock)|package\.(json|lock))$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Compression for better performance
+<IfModule mod_deflate.c>
+    <FilesMatch "\.(css|js|html|htm|php|xml)$">
+        SetOutputFilter DEFLATE
+    </FilesMatch>
+</IfModule>
+
+# File type handling
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType application/font-woff .woff
+    AddType application/font-woff2 .woff2
+</IfModule>

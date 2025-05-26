@@ -15,6 +15,9 @@ export default defineConfig({
         minify: 'terser',
         rollupOptions: {
             output: {
+                entryFileNames: '[name].js',
+                chunkFileNames: '[name].js',
+                assetFileNames: '[name].[ext]',
                 manualChunks: {
                     vendor: [
                         // List vendor modules here if needed

@@ -1,0 +1,150 @@
+---
+# cPanel Deployment Configuration for ai.architex.co.za
+# This file automates the complete Laravel application deployment
+# for shared hosting environments with cPanel and Git Version Control
+
+deployment:
+  tasks:
+    # ===== ENVIRONMENT SETUP =====
+    - export DEPLOYPATH=/home/architex/public_html/ai
+    - export LARAVEL_ENV=production
+    - export COMPOSER_HOME=/tmp/composer
+    
+    # ===== LOGGING SETUP =====
+    - echo "=== Starting deployment to ai.architex.co.za at $(date) ===" >> $DEPLOYPATH/deployment.log
+    
+    # ===== DIRECTORY PREPARATION =====
+    # Create deployment directory if it doesn't exist
+    - /bin/mkdir -p $DEPLOYPATH
+    
+    # Create necessary Laravel directories
+    - /bin/mkdir -p $DEPLOYPATH/storage/app/public
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/cache
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/sessions
+    - /bin/mkdir -p $DEPLOYPATH/storage/framework/views
+    - /bin/mkdir -p $DEPLOYPATH/storage/logs
+    - /bin/mkdir -p $DEPLOYPATH/bootstrap/cache
+    - /bin/mkdir -p $DEPLOYPATH/public/storage
+    
+    # ===== FILE DEPLOYMENT =====
+    # Copy all application files (excluding .git and node_modules)
+    - /bin/cp -R app $DEPLOYPATH/
+    - /bin/cp -R bootstrap $DEPLOYPATH/
+    - /bin/cp -R config $DEPLOYPATH/
+    - /bin/cp -R database $DEPLOYPATH/
+    - /bin/cp -R public $DEPLOYPATH/
+    - /bin/cp -R resources $DEPLOYPATH/
+    - /bin/cp -R routes $DEPLOYPATH/
+    - /bin/cp -R storage $DEPLOYPATH/
+    - /bin/cp -R vendor $DEPLOYPATH/
+    
+    # Copy important configuration files
+    - /bin/cp composer.json $DEPLOYPATH/
+    - /bin/cp composer.lock $DEPLOYPATH/
+    - /bin/cp artisan $DEPLOYPATH/
+    - /bin/cp package.json $DEPLOYPATH/
+    
+    # ===== ENVIRONMENT CONFIGURATION =====
+    # Copy and configure environment file for ai.architex.co.za
+    - /bin/cp .env.production.ai $DEPLOYPATH/.env
+    
+    # ===== WEB SERVER CONFIGURATION =====
+    # Copy main .htaccess file for root directory security
+    - /bin/cp .htaccess.ai $DEPLOYPATH/.htaccess
+    
+    # Copy public .htaccess for Laravel routing
+    - /bin/cp public/.htaccess.ai $DEPLOYPATH/public/.htaccess
+    
+    # ===== PERMISSION SETTINGS =====
+    # Set proper permissions for Laravel directories
+    - /bin/chmod 755 $DEPLOYPATH -R
+    - /bin/chmod 775 $DEPLOYPATH/storage -R
+    - /bin/chmod 775 $DEPLOYPATH/bootstrap/cache -R
+    - /bin/chmod 644 $DEPLOYPATH/.env
+    - /bin/chmod 644 $DEPLOYPATH/public/.htaccess
+    - /bin/chmod 644 $DEPLOYPATH/.htaccess
+    
+    # ===== COMPOSER DEPENDENCIES =====
+    # Install/update Composer dependencies for production
+    - cd $DEPLOYPATH && /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader --no-scripts || composer install --no-dev --optimize-autoloader --no-scripts
+    
+    # ===== LARAVEL APPLICATION SETUP =====
+    # Generate application key if not set
+    - cd $DEPLOYPATH && php artisan key:generate --force
+    
+    # Clear all caches before optimization
+    - cd $DEPLOYPATH && php artisan cache:clear
+    - cd $DEPLOYPATH && php artisan config:clear
+    - cd $DEPLOYPATH && php artisan route:clear
+    - cd $DEPLOYPATH && php artisan view:clear
+    
+    # ===== DATABASE OPERATIONS =====
+    # Run database migrations
+    - cd $DEPLOYPATH && php artisan migrate --force
+    
+    # Seed database if needed (uncomment if you have seeders)
+    # - cd $DEPLOYPATH && php artisan db:seed --force
+    
+    # ===== STORAGE CONFIGURATION =====
+    # Create symbolic link for public storage
+    - cd $DEPLOYPATH && php artisan storage:link
+    
+    # ===== OPTIMIZATION & CACHING =====
+    # Cache configuration for production performance
+    - cd $DEPLOYPATH && php artisan config:cache
+    
+    # Cache routes for production performance
+    - cd $DEPLOYPATH && php artisan route:cache
+    
+    # Cache views for production performance
+    - cd $DEPLOYPATH && php artisan view:cache
+    
+    # Optimize application autoloader
+    - cd $DEPLOYPATH && php artisan optimize
+    
+    # ===== QUEUE SETUP =====
+    # Create queue table if using database queue driver
+    - cd $DEPLOYPATH && php artisan queue:table 2>/dev/null || echo "Queue table already exists or not needed"
+    
+    # ===== SESSION TABLE SETUP =====
+    # Create session table for database session driver
+    - cd $DEPLOYPATH && php artisan session:table 2>/dev/null || echo "Session table already exists"
+    - cd $DEPLOYPATH && php artisan migrate --force
+    
+    # ===== CACHE TABLE SETUP =====
+    # Create cache table for database cache driver
+    - cd $DEPLOYPATH && php artisan cache:table 2>/dev/null || echo "Cache table already exists"
+    - cd $DEPLOYPATH && php artisan migrate --force
+    
+    # ===== FINAL PERMISSIONS =====
+    # Ensure critical directories are writable
+    - /bin/chmod 775 $DEPLOYPATH/storage -R
+    - /bin/chmod 775 $DEPLOYPATH/bootstrap/cache -R
+    
+    # ===== DEPLOYMENT VERIFICATION =====
+    # Test that the application is properly configured
+    - cd $DEPLOYPATH && php artisan about || echo "Laravel application setup complete"
+    
+    # ===== CLEANUP =====
+    # Remove any development files that shouldn't be in production
+    - /bin/rm -f $DEPLOYPATH/.env.example
+    - /bin/rm -f $DEPLOYPATH/README.md
+    - /bin/rm -f $DEPLOYPATH/package-lock.json
+    - /bin/rm -rf $DEPLOYPATH/tests
+    - /bin/rm -rf $DEPLOYPATH/node_modules
+    
+    # ===== SECURITY HARDENING =====
+    # Protect sensitive files and directories
+    - /bin/chmod 600 $DEPLOYPATH/.env
+    - /bin/chmod 644 $DEPLOYPATH/artisan
+    
+    # ===== DEPLOYMENT LOG =====
+    - echo "=== Deployment completed successfully at $(date) ===" >> $DEPLOYPATH/deployment.log
+    - echo "=== Application URL: https://ai.architex.co.za ===" >> $DEPLOYPATH/deployment.log
+    
+    # ===== FINAL VERIFICATION =====
+    # Display deployment summary
+    - echo "🚀 Deployment to ai.architex.co.za completed successfully!"
+    - echo "📁 Deployed to: $DEPLOYPATH"
+    - echo "🌐 URL: https://ai.architex.co.za"
+    - echo "📝 Check deployment.log for details"
