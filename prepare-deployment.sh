@@ -79,6 +79,46 @@ if ! php -r "exit(version_compare(PHP_VERSION, '8.1', '>=') ? 0 : 1);"; then
     echo -e "${YELLOW}⚠️  Warning: PHP 8.1+ recommended for Laravel${NC}"
 fi
 
+# Setup temporary local environment to avoid production DB connections during preparation
+temp_local_env="APP_NAME=ArchiConnect-Local
+APP_ENV=local
+APP_KEY=base64:KrPUo79XKGr24lj/KlR1E5UssOFf4O1vKR2LrRLgJRA=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+LOG_CHANNEL=single
+LOG_LEVEL=debug
+
+# Use SQLite for local preparation to avoid remote DB connections
+DB_CONNECTION=sqlite
+DB_DATABASE=database/local_prep.sqlite
+
+CACHE_STORE=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync"
+
+# Backup existing .env if it exists
+env_backup_name=""
+if [[ -f ".env" ]]; then
+    env_backup_name=".env.backup.prepare.$(date +%Y%m%d-%H%M%S)"
+    cp ".env" "$env_backup_name"
+    echo -e "${YELLOW}📋 Backed up existing .env to $env_backup_name${NC}"
+fi
+
+# Create temporary local .env for preparation
+echo "$temp_local_env" > ".env"
+echo -e "${YELLOW}⚙️  Created temporary local environment for preparation${NC}"
+
+# Create SQLite database file if it doesn't exist
+sqlite_path="database/local_prep.sqlite"
+if [[ ! -d "database" ]]; then
+    mkdir -p "database"
+fi
+if [[ ! -f "$sqlite_path" ]]; then
+    touch "$sqlite_path"
+    echo -e "${YELLOW}📁 Created SQLite database for local preparation${NC}"
+fi
+
 # Backup current .cpanel.yml if it exists and is different
 if [[ -f ".cpanel.yml" ]]; then
     backup_name=".cpanel.yml.backup.$(date +%Y%m%d-%H%M%S)"
@@ -97,28 +137,44 @@ echo -e "${GREEN}  ✅ Dependencies installed${NC}"
 # Run tests if not skipped
 if [[ "$SKIP_TESTS" == false ]]; then
     echo -e "${YELLOW}🧪 Running tests...${NC}"
-    if [[ -f "vendor/bin/phpunit" ]]; then
-        if ! php vendor/bin/phpunit --testdox; then
-            if [[ "$FORCE" == false ]]; then
-                echo -e "${RED}❌ Tests failed. Use --force to deploy anyway${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${GREEN}  ✅ All tests passed${NC}"
-        fi
+    
+    # Temporarily use testing environment to avoid production DB connection
+    original_env="$APP_ENV"
+    export APP_ENV="testing"
+    
+    if [[ -f "vendor/bin/pest" ]]; then
+        # Use Pest if available
+        php vendor/bin/pest --parallel --env=testing
+        test_result=$?
+    elif [[ -f "vendor/bin/phpunit" ]]; then
+        php vendor/bin/phpunit --testdox
+        test_result=$?
     else
-        echo -e "${YELLOW}  ⚠️  PHPUnit not found, skipping tests${NC}"
+        echo -e "${YELLOW}  ⚠️  No test runner found, skipping tests${NC}"
+        test_result=0
+    fi
+    
+    # Restore original environment
+    export APP_ENV="$original_env"
+    
+    if [[ $test_result -ne 0 && "$FORCE" == false ]]; then
+        echo -e "${RED}❌ Tests failed. Use --force to deploy anyway${NC}"
+        exit 1
+    elif [[ $test_result -eq 0 ]]; then
+        echo -e "${GREEN}  ✅ All tests passed${NC}"
     fi
 else
     echo -e "${YELLOW}⏭️  Skipping tests (as requested)${NC}"
 fi
 
-# Clear local caches
+# Clear local caches (use local environment to avoid DB connection issues)
 echo -e "${YELLOW}🧹 Clearing local caches...${NC}"
-php artisan config:clear
-php artisan cache:clear
+export APP_ENV="local"
+php artisan config:clear --env=local
+php artisan cache:clear --env=local
 php artisan route:clear
 php artisan view:clear
+unset APP_ENV
 echo -e "${GREEN}  ✅ Local caches cleared${NC}"
 
 # Check .env.production configuration
@@ -265,6 +321,15 @@ echo -e "${WHITE}6. Run verification script: https://ai.architex.co.za/verify-de
 
 echo ""
 echo -e "${GREEN}🚀 Ready for deployment to ai.architex.co.za!${NC}"
+
+# Cleanup: Restore original .env if it existed
+if [[ -n "$env_backup_name" && -f "$env_backup_name" ]]; then
+    mv "$env_backup_name" ".env"
+    echo -e "${YELLOW}🔄 Restored original .env file${NC}"
+elif [[ -f ".env" ]]; then
+    rm ".env"
+    echo -e "${YELLOW}🗑️  Removed temporary .env file${NC}"
+fi
 
 # Make script executable
 chmod +x "$0"

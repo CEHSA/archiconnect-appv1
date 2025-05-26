@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Architex Axis'),
+    'name' => env('APP_NAME', 'ArchiConnect AI'),
 
     /*
     |--------------------------------------------------------------------------
