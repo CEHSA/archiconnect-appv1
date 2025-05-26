@@ -1,0 +1,210 @@
+# ArchiConnect AI - Laravel Public Directory .htaccess for ai.architex.co.za
+# Optimized for Production Performance & Security
+
+# ===================================================================
+# 🔧 CORE LARAVEL ROUTING
+# ===================================================================
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header for API authentication
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ===================================================================
+# 🔒 SECURITY HEADERS FOR AI.ARCHITEX.CO.ZA
+# ===================================================================
+
+<IfModule mod_headers.c>
+    # Security Headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy optimized for Laravel + Vite
+    Header always set Content-Security-Policy "default-src 'self' https://ai.architex.co.za; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://ai.architex.co.za; style-src 'self' 'unsafe-inline' https://ai.architex.co.za https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://ai.architex.co.za; connect-src 'self' https://ai.architex.co.za wss://ai.architex.co.za; media-src 'self' https://ai.architex.co.za"
+    
+    # HSTS for secure connections
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    
+    # Remove server information
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# ===================================================================
+# 🚫 FILE ACCESS PROTECTION
+# ===================================================================
+
+# Protect sensitive files
+<FilesMatch "^(\.env|\.env\.|composer\.(json|lock)|package\.json|yarn\.lock|webpack\.|gulpfile\.|artisan)">
+    Require all denied
+</FilesMatch>
+
+# Block access to version control and development files
+<FilesMatch "\.(git|gitignore|gitattributes|md|txt|log|ini|conf|bak|backup|swp|tmp)$">
+    Require all denied
+</FilesMatch>
+
+# ===================================================================
+# 🚀 PERFORMANCE OPTIMIZATION
+# ===================================================================
+
+# Enable GZIP compression
+<IfModule mod_deflate.c>
+    SetOutputFilter DEFLATE
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+    
+    # Exclude images from compression (already compressed)
+    SetEnvIfNoCase Request_URI \
+        \.(?:gif|jpe?g|png|ico)$ no-gzip dont-vary
+</IfModule>
+
+# Browser caching for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # CSS and JavaScript
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    
+    # Images
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType image/ico "access plus 1 year"
+    
+    # Fonts
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    
+    # Documents and data
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType application/json "access plus 1 day"
+    ExpiresByType application/xml "access plus 1 day"
+    ExpiresByType text/xml "access plus 1 day"
+    
+    # HTML (dynamic content)
+    ExpiresByType text/html "access plus 1 hour"
+</IfModule>
+
+# Set cache headers for static assets
+<IfModule mod_headers.c>
+    # Cache static assets for 1 year
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    
+    # Cache HTML for 1 hour
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "public, max-age=3600"
+    </FilesMatch>
+    
+    # No cache for dynamic files
+    <FilesMatch "\.(php|json|xml)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>
+
+# ===================================================================
+# 🌐 MIME TYPES & ENCODING
+# ===================================================================
+
+# Set UTF-8 encoding
+AddDefaultCharset UTF-8
+
+# Add proper MIME types
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType font/woff .woff
+    AddType font/woff2 .woff2
+    AddType application/font-woff .woff
+    AddType application/font-woff2 .woff2
+</IfModule>
+
+# ===================================================================
+# 🛡️ ADDITIONAL SECURITY
+# ===================================================================
+
+# Disable directory browsing
+Options -Indexes
+
+# Disable server signature
+ServerSignature Off
+
+# Block access to PHP files in assets directories
+<DirectoryMatch "^.*(assets|css|js|images|fonts).*">
+    <Files "*.php">
+        Require all denied
+    </Files>
+</DirectoryMatch>
+
+# Prevent execution of PHP in uploads directory
+<Directory "storage">
+    <Files "*.php">
+        Require all denied
+    </Files>
+</Directory>
+
+# ===================================================================
+# 🔧 ERROR HANDLING
+# ===================================================================
+
+# Custom error pages (optional - Laravel handles these)
+# ErrorDocument 404 /index.php
+# ErrorDocument 403 /index.php
+# ErrorDocument 500 /index.php
+
+# ===================================================================
+# 📱 MOBILE & PWA SUPPORT
+# ===================================================================
+
+# Service Worker caching
+<FilesMatch "service-worker\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch>
+
+# Manifest.json caching
+<FilesMatch "manifest\.json$">
+    Header set Cache-Control "public, max-age=86400"
+</FilesMatch>

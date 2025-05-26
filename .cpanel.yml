@@ -1,24 +1,111 @@
 ---
+# ArchiConnect AI Deployment Configuration for ai.architex.co.za
+# cPanel Deployment Automation - 100% Automated Laravel Setup
+
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/architex/public_html/axis
+    # Pre-deployment cleanup and preparation
+    - export DEPLOYMENT_PATH=/home/architex/public_html/ai
+    - export COMPOSER_ALLOW_SUPERUSER=1
+    - export COMPOSER_NO_INTERACTION=1
+    - echo "🚀 Starting ArchiConnect AI deployment to ai.architex.co.za..."
     
-    # Copy files
-    - /bin/cp -R * $DEPLOYPATH
+    # Ensure deployment directory exists
+    - mkdir -p $DEPLOYMENT_PATH
+    - cd $DEPLOYMENT_PATH
     
-    # Copy dot files
-    - /bin/cp .env.production $DEPLOYPATH/.env
-    - /bin/cp .htaccess $DEPLOYPATH/
+    # Copy environment configuration
+    - cp .env.production .env
+    - echo "✅ Environment configuration copied"
     
-    # Set permissions
-    - /bin/chmod 755 $DEPLOYPATH/storage -R
-    - /bin/chmod 755 $DEPLOYPATH/bootstrap/cache -R
+    # Install/Update Composer dependencies (production optimized)
+    - /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+    - echo "✅ Composer dependencies installed"
     
-    # Laravel commands
-    - cd $DEPLOYPATH && php artisan key:generate --force
-    - cd $DEPLOYPATH && php artisan storage:link
-    - cd $DEPLOYPATH && php artisan migrate --force
-    - cd $DEPLOYPATH && php artisan config:cache
-    - cd $DEPLOYPATH && php artisan route:cache
-    - cd $DEPLOYPATH && php artisan view:cache
-    - cd $DEPLOYPATH && php artisan optimize
+    # Generate application key if not set
+    - php artisan key:generate --force
+    - echo "✅ Application key configured"
+    
+    # Clear all caches before setup
+    - php artisan config:clear
+    - php artisan cache:clear
+    - php artisan route:clear
+    - php artisan view:clear
+    - echo "✅ All caches cleared"
+    
+    # Database setup and migrations
+    - php artisan migrate --force
+    - echo "✅ Database migrations completed"
+    
+    # Storage setup and optimization
+    - php artisan storage:link
+    - mkdir -p storage/framework/sessions
+    - mkdir -p storage/framework/views
+    - mkdir -p storage/framework/cache/data
+    - mkdir -p storage/logs
+    - chmod -R 775 storage
+    - chmod -R 775 bootstrap/cache
+    - echo "✅ Storage directories configured"
+    
+    # Cache optimization for production
+    - php artisan config:cache
+    - php artisan route:cache
+    - php artisan view:cache
+    - echo "✅ Production caches generated"
+    
+    # Queue and session tables setup
+    - php artisan queue:table --quiet || echo "Queue table exists"
+    - php artisan session:table --quiet || echo "Session table exists"
+    - php artisan migrate --force
+    - echo "✅ Queue and session tables ready"
+    
+    # Copy and configure .htaccess files
+    - cp .htaccess.production .htaccess
+    - cp public/.htaccess.production public/.htaccess
+    - echo "✅ Web server configuration applied"
+    
+    # Set proper permissions for shared hosting
+    - find . -type f -exec chmod 644 {} \;
+    - find . -type d -exec chmod 755 {} \;
+    - chmod -R 775 storage
+    - chmod -R 775 bootstrap/cache
+    - chmod 644 .htaccess
+    - chmod 644 public/.htaccess
+    - echo "✅ File permissions configured"
+    
+    # Final cache warming
+    - php artisan config:cache
+    - php artisan optimize
+    - echo "✅ Application optimized"
+    
+    # Security hardening
+    - echo "User-agent: *" > public/robots.txt
+    - echo "Disallow: /admin" >> public/robots.txt
+    - echo "Disallow: /api" >> public/robots.txt
+    - echo "✅ Security measures applied"
+    
+    # Deployment verification
+    - php artisan about --only=environment
+    - echo "🎉 ArchiConnect AI deployment completed successfully!"
+    - echo "🌐 Your application is now live at: https://ai.architex.co.za"
+    - echo "📋 Run verification script at: https://ai.architex.co.za/verify-deployment.php"
+
+# Additional deployment settings
+exclude:
+  - .git/
+  - .github/
+  - .vscode/
+  - node_modules/
+  - tests/
+  - .env.example
+  - .env.testing
+  - .gitignore
+  - .gitattributes
+  - phpunit.xml
+  - webpack.mix.js
+  - package*.json
+  - yarn.lock
+  - *.md
+  - prepare-*.ps1
+  - prepare-*.sh
+  - verify-deployment.php
