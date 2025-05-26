@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project Configuration Schema",
+  "description": "Schema for project configuration files",
+  "type": "object",
+  "properties": {
+    "enableStatusBarItem": {
+      "type": "boolean",
+      "description": "Enable status bar item"
+    },
+    "enableQuickPick": {
+      "type": "boolean",
+      "description": "Enable quick pick functionality"
+    },
+    "uploadOnSave": {
+      "type": "boolean",
+      "description": "Upload files on save"
+    },
+    "autoDelete": {
+      "type": "boolean",
+      "description": "Automatically delete files"
+    },
+    "checkGitignore": {
+      "type": "boolean",
+      "description": "Check gitignore patterns"
+    },
+    "activeTargets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of active targets"
+    },
+    "concurrency": {
+      "type": "integer",
+      "description": "Number of concurrent operations"
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Patterns to ignore"
+    },
+    "include": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Patterns to include"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["sftp", "ftp"]
+          },
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "user": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "dir": {
+            "type": "string"
+          },
+          "baseDir": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "type", "host"]
+      }
+    }
+  }
+}
