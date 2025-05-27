@@ -12,10 +12,12 @@ deployment:
     
     # Ensure deployment directory exists
     - mkdir -p $DEPLOYMENT_PATH
+    # Copy environment configuration from repository root to DEPLOYMENT_PATH
+    - cp .env.production $DEPLOYMENT_PATH/.env.production-temp-copy 
     - cd $DEPLOYMENT_PATH
-    
-    # Copy environment configuration
-    - cp .env.production .env
+    # Now copy the temporarily placed file to .env
+    - cp .env.production-temp-copy .env
+    - rm .env.production-temp-copy # Clean up temporary file
     - echo "✅ Environment configuration copied"
     
     # Install/Update Composer dependencies (production optimized)
