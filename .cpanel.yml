@@ -8,7 +8,7 @@ deployment:
     - export DEPLOYMENT_PATH=/home/architex/public_html/login.architex.co.za
     - export COMPOSER_ALLOW_SUPERUSER=1
     - export COMPOSER_NO_INTERACTION=1
-    - echo "🚀 Starting ArchiConnect AI deployment to ai.architex.co.za..."
+    - echo "🚀 Starting ArchiConnect deployment to login.architex.co.za..."
     
     # Ensure deployment directory exists
     - mkdir -p $DEPLOYMENT_PATH
@@ -89,9 +89,9 @@ deployment:
     
     # Deployment verification
     - php artisan about --only=environment
-    - echo "🎉 ArchiConnect AI deployment completed successfully!"
-    - echo "🌐 Your application is now live at: https://ai.architex.co.za"
-    - echo "📋 Run verification script at: https://ai.architex.co.za/verify-deployment.php"
+    - echo "🎉 ArchiConnect deployment completed successfully!"
+    - echo "🌐 Your application is now live at: https://login.architex.co.za"
+    - echo "📋 Run verification script at: https://login.architex.co.za/verify-deployment.php"
 
 # Additional deployment settings
 exclude:
