@@ -5,7 +5,7 @@
 deployment:
   tasks:
     # Pre-deployment cleanup and preparation
-    - export DEPLOYMENT_PATH=/home/architex/public_html/ai
+    - export DEPLOYMENT_PATH=/home/architex/public_html/login.architex.co.za
     - export COMPOSER_ALLOW_SUPERUSER=1
     - export COMPOSER_NO_INTERACTION=1
     - echo "🚀 Starting ArchiConnect AI deployment to ai.architex.co.za..."
